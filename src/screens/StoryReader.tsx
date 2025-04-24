@@ -14,7 +14,7 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
-import { generateStoryPage, StoryGenerationParams } from '@/services/ai';
+import { generateStoryPage, translateText, StoryGenerationParams } from '@/services/ai';
 
 interface StoryPage {
   content: string;
@@ -45,6 +45,8 @@ export default function StoryReader() {
   const [currentPage, setCurrentPage] = useState<StoryPage | null>(null);
   const [selectedSentence, setSelectedSentence] = useState<string | null>(null);
   const [translation, setTranslation] = useState<string | null>(null);
+  const [translationLoading, setTranslationLoading] = useState(false);
+  const [translationLanguage, setTranslationLanguage] = useState<string>('English');
   const [showPersonalizeModal, setShowPersonalizeModal] = useState(false);
   const [newTargetWord, setNewTargetWord] = useState('');
   const [personalizedTargetWords, setPersonalizedTargetWords] = useState<string[]>([]);
@@ -52,7 +54,28 @@ export default function StoryReader() {
 
   useEffect(() => {
     fetchStoryAndPage();
+    fetchTranslationLanguage();
   }, [storyId, pageNumber]);
+
+  const fetchTranslationLanguage = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('preferred_translation_language')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      if (data?.preferred_translation_language) {
+        setTranslationLanguage(data.preferred_translation_language);
+      }
+    } catch (error) {
+      console.error('Error fetching translation language:', error);
+    }
+  };
 
   const fetchStoryAndPage = async () => {
     try {
@@ -119,8 +142,49 @@ export default function StoryReader() {
 
   const handleSentencePress = async (sentence: string) => {
     setSelectedSentence(sentence);
-    // TODO: Implement translation logic using OpenAI
-    setTranslation('Translation will be implemented here');
+    setTranslationLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Check if translation exists in cache
+      const { data: cachedTranslation, error: cacheError } = await supabase
+        .from('translations')
+        .select('translated_text')
+        .eq('user_id', user.id)
+        .eq('original_text', sentence)
+        .eq('target_language', translationLanguage)
+        .single();
+
+      if (cacheError && cacheError.code !== 'PGRST116') {
+        throw cacheError;
+      }
+
+      if (cachedTranslation) {
+        setTranslation(cachedTranslation.translated_text);
+      } else {
+        // Generate new translation
+        const translatedText = await translateText(sentence, translationLanguage);
+        
+        // Cache the translation
+        const { error: insertError } = await supabase
+          .from('translations')
+          .insert({
+            user_id: user.id,
+            original_text: sentence,
+            target_language: translationLanguage,
+            translated_text: translatedText,
+          });
+
+        if (insertError) throw insertError;
+        setTranslation(translatedText);
+      }
+    } catch (error) {
+      console.error('Error translating sentence:', error);
+      Alert.alert('Error', 'Failed to translate sentence');
+    } finally {
+      setTranslationLoading(false);
+    }
   };
 
   const generateNewPage = async (customTargetWords?: string[]) => {
@@ -252,24 +316,28 @@ export default function StoryReader() {
       <ScrollView style={styles.content}>
         <View style={styles.pageContent}>
           {sentences.map((sentence, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => handleSentencePress(sentence)}
-              style={[
-                styles.sentence,
-                selectedSentence === sentence && styles.selectedSentence
-              ]}
-            >
-              <Text style={styles.sentenceText}>{sentence}</Text>
-            </TouchableOpacity>
+            <View key={index} style={styles.sentenceContainer}>
+              <TouchableOpacity
+                onPress={() => handleSentencePress(sentence)}
+                style={[
+                  styles.sentence,
+                  selectedSentence === sentence && styles.selectedSentence
+                ]}
+              >
+                <Text style={styles.sentenceText}>{sentence}</Text>
+              </TouchableOpacity>
+              {selectedSentence === sentence && (
+                <View style={styles.inlineTranslation}>
+                  {translationLoading ? (
+                    <ActivityIndicator size="small" color="#0066cc" />
+                  ) : (
+                    <Text style={styles.inlineTranslationText}>{translation}</Text>
+                  )}
+                </View>
+              )}
+            </View>
           ))}
         </View>
-
-        {selectedSentence && translation && (
-          <View style={styles.translationBox}>
-            <Text style={styles.translationText}>{translation}</Text>
-          </View>
-        )}
 
         {currentPage.target_words.length > 0 && (
           <View style={styles.targetWordsContainer}>
@@ -421,28 +489,28 @@ const styles = StyleSheet.create({
   pageContent: {
     padding: 16,
   },
+  sentenceContainer: {
+    marginBottom: 8,
+  },
   sentence: {
     paddingVertical: 4,
   },
   selectedSentence: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f0f8ff', // Light blue background for selected sentence
     borderRadius: 4,
   },
   sentenceText: {
     fontSize: 18,
     lineHeight: 28,
   },
-  translationBox: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e1e8ed',
+  inlineTranslation: {
+    marginLeft: 16,
+    marginTop: 4,
   },
-  translationText: {
+  inlineTranslationText: {
     fontSize: 16,
-    color: '#666',
+    color: '#0066cc', // Nice blue color for translation
+    fontStyle: 'italic',
   },
   targetWordsContainer: {
     padding: 16,

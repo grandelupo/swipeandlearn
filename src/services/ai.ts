@@ -59,7 +59,7 @@ export async function generateStoryTitle(params: StoryGenerationParams): Promise
   const guidelines = CEFR_GUIDELINES[difficulty];
   
   const prompt = `Create a short, engaging title for a language learning story in ${language} at CEFR level ${difficulty}.
-Theme: ${theme}
+${theme !== 'free form' ? `Theme: ${theme}` : 'Create any engaging theme appropriate for language learners.'}
 ${targetWords?.length ? `Target words to incorporate if possible: ${targetWords.join(', ')}` : ''}
 
 Guidelines for ${difficulty} level:
@@ -89,7 +89,7 @@ export async function generateStoryPage(params: StoryGenerationParams, pageNumbe
   const guidelines = CEFR_GUIDELINES[difficulty];
   
   const prompt = `Create page ${pageNumber} of a language learning story in ${language} at CEFR level ${difficulty}.
-Theme: ${theme}
+${theme !== 'free form' ? `Theme: ${theme}` : 'Create any engaging theme appropriate for language learners.'}
 ${targetWords?.length ? `Target words to incorporate naturally: ${targetWords.join(', ')}` : ''}
 
 Guidelines for ${difficulty} level:
@@ -124,30 +124,25 @@ Response should be just the story text, no additional formatting or metadata.`;
   }
 }
 
-export const translateText = async ({
-  text,
-  fromLanguage,
-  toLanguage,
-  context,
-}: TranslationParams): Promise<string> => {
+export async function translateText(text: string, targetLanguage: string): Promise<string> {
   try {
-    const prompt = `Translate the following text from ${fromLanguage} to ${toLanguage}.
-    ${context ? 'Context: ' + context : ''}
-    Text to translate: "${text}"
-    Please provide only the translation, no additional explanations.`;
+    const prompt = `Translate the following text to ${targetLanguage}. Provide only the translation, no additional explanations:
+
+${text}`;
 
     const completion = await openai.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'gpt-4',
+      model: "gpt-4-turbo-preview",
+      messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
+      max_tokens: 200,
     });
 
-    return completion.choices[0]?.message?.content || '';
+    return completion.choices[0]?.message?.content?.trim() || '';
   } catch (error) {
     console.error('Error translating text:', error);
     throw new Error('Failed to translate text');
   }
-};
+}
 
 export const generateBookCover = async (
   theme: string,

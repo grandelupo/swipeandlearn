@@ -23,6 +23,7 @@ const SUPPORTED_LANGUAGES = [
   { label: 'German', value: 'German' },
   { label: 'Italian', value: 'Italian' },
   { label: 'Portuguese', value: 'Portuguese' },
+  { label: 'Polish', value: 'Polish' },
 ];
 
 const DIFFICULTY_LEVELS: Array<{ label: string; value: Difficulty; description: string }> = [
@@ -81,11 +82,6 @@ export default function NewStoryScreen() {
   };
 
   const handleCreateStory = async () => {
-    if (!theme.trim()) {
-      Alert.alert('Error', 'Please provide a theme for your story');
-      return;
-    }
-
     setLoading(true);
     try {
       // Get current user
@@ -99,7 +95,7 @@ export default function NewStoryScreen() {
       if (!storyTitle) {
         storyTitle = await generateStoryTitle({
           language,
-          theme,
+          theme: theme.trim() || 'free form',
           targetWords,
           difficulty,
         });
@@ -109,8 +105,9 @@ export default function NewStoryScreen() {
       const storyData = {
         title: storyTitle,
         language,
-        total_pages: 4, // We'll generate 4 pages
+        total_pages: 0, // Let the trigger handle the counting
         user_id: user.id,
+        theme: theme.trim() || null, // Store null if no theme provided
       };
 
       const { data: story, error: storyError } = await supabase
@@ -129,7 +126,7 @@ export default function NewStoryScreen() {
         const pageContent = await generateStoryPage(
           {
             language,
-            theme,
+            theme: theme.trim() || 'free form',
             targetWords,
             difficulty,
           },
@@ -227,9 +224,9 @@ export default function NewStoryScreen() {
             {DIFFICULTY_LEVELS.find(level => level.value === difficulty)?.description}
           </Text>
 
-          <Text style={styles.label}>Theme (Required)</Text>
+          <Text style={styles.label}>Theme (Optional)</Text>
           <Input
-            placeholder="Enter story theme (e.g., Adventure, Mystery)"
+            placeholder="Enter story theme (e.g., Adventure, Mystery) or leave blank for free form"
             value={theme}
             onChangeText={setTheme}
           />

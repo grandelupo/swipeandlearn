@@ -1,15 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { Text, Button, ListItem } from 'react-native-elements';
+import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import { Text, Button, ListItem, Input } from 'react-native-elements';
+import { Picker } from '@react-native-picker/picker';
 import { supabase } from '@/services/supabase';
+
+const TRANSLATION_LANGUAGES = [
+  { label: 'English', value: 'English' },
+  { label: 'Spanish', value: 'Spanish' },
+  { label: 'French', value: 'French' },
+  { label: 'German', value: 'German' },
+  { label: 'Italian', value: 'Italian' },
+  { label: 'Portuguese', value: 'Portuguese' },
+  { label: 'Chinese', value: 'Chinese' },
+  { label: 'Japanese', value: 'Japanese' },
+  { label: 'Korean', value: 'Korean' },
+  { label: 'Russian', value: 'Russian' },
+  { label: 'Arabic', value: 'Arabic' },
+  { label: 'Polish', value: 'Polish' },
+];
 
 export default function ProfileScreen() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [totalStories, setTotalStories] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
+  const [translationLanguage, setTranslationLanguage] = useState<string>('English');
 
   useEffect(() => {
     fetchUserData();
+    fetchProfile();
   }, []);
 
   const fetchUserData = async () => {
@@ -30,6 +49,28 @@ export default function ProfileScreen() {
     }
   };
 
+  const fetchProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+      if (data?.preferred_translation_language) {
+        setTranslationLanguage(data.preferred_translation_language);
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      Alert.alert('Error', 'Failed to load profile');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -37,6 +78,28 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error('Error signing out:', error);
       Alert.alert('Error', 'Failed to sign out');
+    }
+  };
+
+  const updateTranslationLanguage = async (language: string) => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ preferred_translation_language: language })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setTranslationLanguage(language);
+      Alert.alert('Success', 'Translation language updated successfully');
+    } catch (error) {
+      console.error('Error updating translation language:', error);
+      Alert.alert('Error', 'Failed to update translation language');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,12 +112,32 @@ export default function ProfileScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>Profile</Text>
       </View>
 
       <View style={styles.content}>
+        <Text h4 style={styles.sectionTitle}>Profile Settings</Text>
+
+        <Text style={styles.label}>Preferred Translation Language</Text>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={translationLanguage}
+            onValueChange={updateTranslationLanguage}
+            style={styles.picker}
+            enabled={!loading}
+          >
+            {TRANSLATION_LANGUAGES.map((lang) => (
+              <Picker.Item
+                key={lang.value}
+                label={lang.label}
+                value={lang.value}
+              />
+            ))}
+          </Picker>
+        </View>
+
         <ListItem bottomDivider>
           <ListItem.Content>
             <ListItem.Title>Email</ListItem.Title>
@@ -77,7 +160,7 @@ export default function ProfileScreen() {
           />
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -96,7 +179,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   content: {
-    flex: 1,
+    padding: 20,
+  },
+  sectionTitle: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    marginLeft: 10,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#86939e',
+    borderRadius: 4,
+    marginBottom: 20,
+    marginHorizontal: 10,
+  },
+  picker: {
+    height: 50,
   },
   buttonContainer: {
     padding: 20,
