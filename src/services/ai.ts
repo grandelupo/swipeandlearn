@@ -157,7 +157,7 @@ export const generateBookCover = async (
     console.log('Generating book cover with params:', { theme, title });
     const response = await openai.images.generate({
       model: "dall-e-3",
-      prompt: `Create a beautiful, appropriate book cover for a language learning story titled "${title}" with theme "${theme}". The style should be engaging and suitable for all ages. Make sure no to include any text on the cover.`,
+      prompt: `Create a beautiful, appropriate book cover for a language learning story titled "${title}" with theme "${theme}". The style should be engaging and suitable for all ages. Make sure no to include any text, words or letters on the cover.`,
       n: 1,
       size: "1024x1024",
     });
