@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { supabase } from '@/services/supabase';
 import { generateStoryPage, generateStoryTitle } from '@/services/ai';
 
-type Difficulty = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+type Difficulty = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'Divine';
 
 const SUPPORTED_LANGUAGES = [
   { label: 'English', value: 'English' },
@@ -57,6 +57,11 @@ const DIFFICULTY_LEVELS: Array<{ label: string; value: Difficulty; description: 
     value: 'C2',
     description: 'Virtually everything heard or read. Can express themselves spontaneously, very fluently and precisely.'
   },
+  {
+    label: 'Divine - Beyond Mortal Understanding',
+    value: 'Divine',
+    description: 'Transcends conventional language mastery. Features archaic forms, complex metaphysical concepts, and intricate literary devices beyond classical epics. Challenges even educated native speakers.'
+  }
 ];
 
 export default function NewStoryScreen() {
@@ -108,6 +113,7 @@ export default function NewStoryScreen() {
         total_pages: 0, // Let the trigger handle the counting
         user_id: user.id,
         theme: theme.trim() || null, // Store null if no theme provided
+        difficulty, // Add the difficulty level
       };
 
       const { data: story, error: storyError } = await supabase

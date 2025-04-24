@@ -9,7 +9,7 @@ const openai = new OpenAI({
 
 export interface StoryGenerationParams {
   language: string;
-  difficulty: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  difficulty: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'Divine';
   theme: string;
   targetWords?: string[];
 }
@@ -52,6 +52,11 @@ const CEFR_GUIDELINES = {
     grammar: 'Use all grammatical structures with complete flexibility.',
     complexity: 'Use sophisticated sentence structures. Include complex rhetorical devices.',
   },
+  Divine: {
+    vocabulary: 'Use archaic, esoteric, and philosophical terminology. Include rare literary allusions and metaphysical concepts.',
+    grammar: 'Transcend conventional grammar. Employ experimental syntax and innovative linguistic structures.',
+    complexity: 'Create labyrinthine sentences with multiple layers of meaning. Weave complex metaphors and abstract symbolism.',
+  }
 };
 
 export async function generateStoryTitle(params: StoryGenerationParams): Promise<string> {
