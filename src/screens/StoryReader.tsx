@@ -371,10 +371,9 @@ export default function StoryReader() {
     setSelectedWord(word);
     setShowDictionary(true);
     setIsDictionaryLoading(true);
-    setDefinitions(null);
 
     try {
-      const defs = await fetchDefinitions(word);
+      const defs = await fetchDefinitions(word, story?.language || 'English');
       setDefinitions(defs);
     } catch (error) {
       console.error('Error fetching definitions:', error);
@@ -619,6 +618,7 @@ export default function StoryReader() {
 
       <Dictionary
         word={selectedWord || ''}
+        language={story?.language || 'English'}
         isVisible={showDictionary}
         onClose={() => {
           setShowDictionary(false);

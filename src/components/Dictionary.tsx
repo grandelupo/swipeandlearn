@@ -10,22 +10,24 @@ import {
 import { Text } from 'react-native-elements';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
+export interface Definition {
+  partOfSpeech: string;
+  definitions: string[];
+  examples: string[];
+}
+
 interface DictionaryProps {
   word: string;
+  language: string;
   isVisible: boolean;
   onClose: () => void;
   definitions: Definition[] | null;
   isLoading: boolean;
 }
 
-export interface Definition {
-  partOfSpeech: string;
-  definitions: string[];
-  examples?: string[];
-}
-
 export default function Dictionary({
   word,
+  language,
   isVisible,
   onClose,
   definitions,
@@ -41,24 +43,32 @@ export default function Dictionary({
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Text h4 style={styles.word}>{word}</Text>
+            <View style={styles.word}>
+              <Text h4>{word}</Text>
+              <Text style={styles.languageText}>({language})</Text>
+            </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Icon name="close" size={24} color="#666" />
+              <Icon name="close" size={24} color="#000" />
             </TouchableOpacity>
           </View>
 
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#0066cc" />
+              <Text style={styles.loadingText}>Loading definition...</Text>
             </View>
           ) : definitions && definitions.length > 0 ? (
             <ScrollView style={styles.definitionsContainer}>
               {definitions.map((def, index) => (
                 <View key={index} style={styles.definitionGroup}>
-                  <Text style={styles.partOfSpeech}>{def.partOfSpeech}</Text>
+                  {def.partOfSpeech !== 'error' && (
+                    <Text style={styles.partOfSpeech}>{def.partOfSpeech}</Text>
+                  )}
                   {def.definitions.map((definition, defIndex) => (
                     <View key={defIndex} style={styles.definition}>
-                      <Text style={styles.definitionNumber}>{defIndex + 1}.</Text>
+                      {def.partOfSpeech !== 'error' && (
+                        <Text style={styles.definitionNumber}>{defIndex + 1}.</Text>
+                      )}
                       <Text style={styles.definitionText}>{definition}</Text>
                     </View>
                   ))}
@@ -66,7 +76,7 @@ export default function Dictionary({
                     <View style={styles.examples}>
                       {def.examples.map((example, exIndex) => (
                         <Text key={exIndex} style={styles.example}>
-                          • {example}
+                          "{example}"
                         </Text>
                       ))}
                     </View>
@@ -115,12 +125,21 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 16,
   },
+  languageText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
   closeButton: {
     padding: 4,
   },
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    color: '#666',
   },
   definitionsContainer: {
     maxHeight: '90%',
