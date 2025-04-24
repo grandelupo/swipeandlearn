@@ -12,7 +12,7 @@ import { Input, Button, Text, Chip } from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '@/services/supabase';
-import { generateStoryPage, generateStoryTitle } from '@/services/ai';
+import { generateStoryContent } from '@/services/edgeFunctions';
 
 type Difficulty = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'Divine';
 
@@ -95,66 +95,37 @@ export default function NewStoryScreen() {
       if (!user) throw new Error('User not authenticated');
 
       setProgress('Generating title...');
-      // Generate title if not provided
-      let storyTitle = title.trim();
-      if (!storyTitle) {
-        storyTitle = await generateStoryTitle({
-          language,
-          theme: theme.trim() || 'free form',
-          targetWords,
-          difficulty,
-        });
-      }
-
-      // Create story in database first
-      const storyData = {
-        title: storyTitle,
+      // Generate title and create story
+      const result = await generateStoryContent({
         language,
-        total_pages: 0, // Let the trigger handle the counting
-        user_id: user.id,
-        theme: theme.trim() || null, // Store null if no theme provided
-        difficulty, // Add the difficulty level
-      };
-
-      const { data: story, error: storyError } = await supabase
-        .from('stories')
-        .insert(storyData)
-        .select()
-        .single();
-
-      if (storyError) throw storyError;
+        theme: theme.trim() || 'free form',
+        targetWords,
+        difficulty,
+        pageNumber: 0,
+        userId: user.id,
+      });
+      
+      const storyTitle = title.trim() || result.content;
+      const storyId = result.storyId!;
 
       // Generate and insert pages one by one
       let previousPages: string[] = [];
       for (let pageNumber = 1; pageNumber <= 4; pageNumber++) {
         setProgress(`Generating page ${pageNumber} of 4...`);
         
-        const pageContent = await generateStoryPage(
-          {
-            language,
-            theme: theme.trim() || 'free form',
-            targetWords,
-            difficulty,
-          },
+        const result = await generateStoryContent({
+          language,
+          theme: theme.trim() || 'free form',
+          targetWords,
+          difficulty,
           pageNumber,
-          previousPages
-        );
-
-        const pageData = {
-          story_id: story.id,
-          page_number: pageNumber,
-          content: pageContent,
-          target_words: targetWords,
-        };
-
-        const { error: pageError } = await supabase
-          .from('story_pages')
-          .insert(pageData);
-
-        if (pageError) throw pageError;
+          previousPages,
+          storyId,
+          userId: user.id,
+        });
 
         // Update previous pages for context
-        previousPages.push(pageContent);
+        previousPages.push(result.content);
       }
 
       Alert.alert('Success', 'Story created successfully with 4 pages!');

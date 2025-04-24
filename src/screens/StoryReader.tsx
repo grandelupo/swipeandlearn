@@ -15,12 +15,12 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
-import { generateStoryPage, translateText, StoryGenerationParams } from '@/services/ai';
-import { generateSpeech, uploadAudioToStorage, VoiceId } from '@/services/elevenlabs';
+import { generateStoryContent, generateSpeech, translateText, createStoryPage } from '@/services/edgeFunctions';
 import AudioPlayer from '@/components/AudioPlayer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Dictionary, { Definition } from '@/components/Dictionary';
 import { fetchDefinitions } from '@/services/dictionary';
+import { VoiceId } from '@/services/elevenlabs';
 
 interface StoryPage {
   content: string;
@@ -182,38 +182,13 @@ export default function StoryReader() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Check if translation exists in cache
-      const { data: cachedTranslation, error: cacheError } = await supabase
-        .from('translations')
-        .select('translated_text')
-        .eq('user_id', user.id)
-        .eq('original_text', sentence)
-        .eq('target_language', translationLanguage)
-        .single();
+      const translation = await translateText({
+        text: sentence,
+        targetLanguage: translationLanguage,
+        userId: user.id,
+      });
 
-      if (cacheError && cacheError.code !== 'PGRST116') {
-        throw cacheError;
-      }
-
-      if (cachedTranslation) {
-        setTranslation(cachedTranslation.translated_text);
-      } else {
-        // Generate new translation
-        const translatedText = await translateText(sentence, translationLanguage);
-        
-        // Cache the translation
-        const { error: insertError } = await supabase
-          .from('translations')
-          .insert({
-            user_id: user.id,
-            original_text: sentence,
-            target_language: translationLanguage,
-            translated_text: translatedText,
-          });
-
-        if (insertError) throw insertError;
-        setTranslation(translatedText);
-      }
+      setTranslation(translation);
     } catch (error) {
       console.error('Error translating sentence:', error);
       Alert.alert('Error', 'Failed to translate sentence');
@@ -227,43 +202,22 @@ export default function StoryReader() {
     
     setGenerating(true);
     try {
-      const params: StoryGenerationParams = {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { content: newContent } = await generateStoryContent({
         language: story.language,
         difficulty: story.difficulty,
-        theme: story.theme,
-        targetWords: customTargetWords || currentPage?.target_words || [],
-      };
-
-      // Generate new page content
-      const newPageContent = await generateStoryPage(
-        params,
-        (story.total_pages || 0) + 1,
-        previousPages
-      );
-
-      // Insert new page
-      const newPageNumber = (story.total_pages || 0) + 1;
-      const { error: pageError } = await supabase
-        .from('story_pages')
-        .insert({
-          story_id: storyId,
-          page_number: newPageNumber,
-          content: newPageContent,
-          target_words: customTargetWords || currentPage?.target_words || [],
-        });
-
-      if (pageError) throw pageError;
-
-      // Update story total pages
-      const { error: storyError } = await supabase
-        .from('stories')
-        .update({ total_pages: newPageNumber })
-        .eq('id', storyId);
-
-      if (storyError) throw storyError;
+        theme: story.theme || 'free form',
+        targetWords: customTargetWords || [],
+        pageNumber: (story.total_pages || 0) + 1,
+        previousPages,
+        storyId,
+        userId: user.id,
+      });
 
       // Navigate to the new page
-      navigation.setParams({ pageNumber: newPageNumber });
+      navigation.setParams({ pageNumber: (story.total_pages || 0) + 1 });
       
       // Reset personalization state
       setPersonalizedTargetWords([]);
@@ -271,7 +225,11 @@ export default function StoryReader() {
 
     } catch (error) {
       console.error('Error generating new page:', error);
-      Alert.alert('Error', 'Failed to generate new page');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      Alert.alert(
+        'Error',
+        `Failed to generate new page: ${errorMessage}. Please try again.`
+      );
     } finally {
       setGenerating(false);
     }
@@ -321,42 +279,12 @@ export default function StoryReader() {
 
     setAudioLoading(true);
     try {
-      // Check if audio already exists - get the most recent recording
-      const { data: existingAudio, error: fetchError } = await supabase
-        .from('audio_recordings')
-        .select('audio_url')
-        .eq('story_id', storyId)
-        .eq('page_number', pageNumber)
-        .eq('voice_id', voiceId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-
-      if (existingAudio) {
-        setAudioUrl(existingAudio.audio_url);
-        return;
-      }
-
-      // Generate new audio
-      const audioBuffer = await generateSpeech(currentPage.content, voiceId);
-      const audioUrl = await uploadAudioToStorage(audioBuffer);
-
-      // Save to database
-      const { error: insertError } = await supabase
-        .from('audio_recordings')
-        .insert({
-          story_id: storyId,
-          page_number: pageNumber,
-          voice_id: voiceId,
-          audio_url: audioUrl,
-          created_at: new Date().toISOString(),
-        });
-
-      if (insertError) throw insertError;
+      const audioUrl = await generateSpeech({
+        text: currentPage.content,
+        voiceId,
+        storyId,
+        pageNumber: pageNumber,
+      });
 
       setAudioUrl(audioUrl);
     } catch (error) {

@@ -16,7 +16,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainStackParamList, MainTabParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
-import { generateBookCover } from '@/services/ai';
+import { generateBookCover } from '@/services/edgeFunctions';
 
 interface Story {
   id: string;
@@ -83,95 +83,17 @@ export default function BookshelfScreen() {
       if (authError) throw authError;
       if (!user) throw new Error('Not authenticated');
 
-      // Generate image using DALL-E
-      console.log('Generating image with DALL-E...');
-      const dallEImageUrl = await generateBookCover(selectedStory.theme || 'general', selectedStory.title);
-      console.log('DALL-E URL received:', dallEImageUrl);
-      
-      if (!dallEImageUrl) {
-        throw new Error('No image URL received from DALL-E');
-      }
-
-      // Download the image from DALL-E URL using XMLHttpRequest
-      console.log('Fetching image from DALL-E URL...');
-      const imageData = await new Promise<ArrayBuffer>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', dallEImageUrl);
-        xhr.responseType = 'arraybuffer';
-        xhr.onerror = () => {
-          console.error('XHR error:', xhr.statusText);
-          reject(new Error('Failed to download image: ' + xhr.statusText));
-        };
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            resolve(xhr.response);
-          } else {
-            console.error('XHR status:', xhr.status, xhr.statusText);
-            reject(new Error('Failed to download image: ' + xhr.statusText));
-          }
-        };
-        xhr.send();
+      // Generate image using Edge Function
+      const imageUrl = await generateBookCover({
+        theme: selectedStory.theme || 'general',
+        title: selectedStory.title,
+        storyId: selectedStory.id,
       });
-
-      console.log('Image data received, size:', imageData.byteLength);
-      
-      if (imageData.byteLength === 0) {
-        throw new Error('Received empty image data');
-      }
-
-      // Convert ArrayBuffer to Uint8Array for Supabase upload
-      const uint8Array = new Uint8Array(imageData);
-
-      // Generate a unique filename with timestamp only
-      const timestamp = Date.now();
-      const filename = `${selectedStory.id}-${timestamp}.png`;
-      const filePath = filename; // Store directly in the bucket root
-      
-      // Upload to Supabase Storage
-      console.log('Uploading to Supabase Storage...', {
-        bucket: 'book-covers',
-        filePath,
-        contentType: 'image/png',
-        size: uint8Array.length
-      });
-      const { error: uploadError, data } = await supabase.storage
-        .from('book-covers')
-        .upload(filePath, uint8Array, {
-          contentType: 'image/png',
-          upsert: true
-        });
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
-
-      // Get the public URL for the uploaded image
-      console.log('Getting public URL...');
-      const { data: { publicUrl } } = supabase.storage
-        .from('book-covers')
-        .getPublicUrl(filePath);
-
-      if (!publicUrl) {
-        throw new Error('Failed to get public URL for uploaded image');
-      }
-
-      // Update the story with new cover image URL
-      console.log('Updating story record...');
-      const { error: updateError } = await supabase
-        .from('stories')
-        .update({ cover_image_url: publicUrl })
-        .eq('id', selectedStory.id);
-
-      if (updateError) {
-        console.error('Update error:', updateError);
-        throw updateError;
-      }
 
       // Update local state
       setStories(stories.map(story => 
         story.id === selectedStory.id 
-          ? { ...story, cover_image_url: publicUrl }
+          ? { ...story, cover_image_url: imageUrl }
           : story
       ));
 
