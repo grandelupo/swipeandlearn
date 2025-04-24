@@ -8,6 +8,7 @@ import {
   Alert,
   Modal,
   TextInput,
+  Pressable,
 } from 'react-native';
 import { Text, Button, Input } from 'react-native-elements';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -18,6 +19,8 @@ import { generateStoryPage, translateText, StoryGenerationParams } from '@/servi
 import { generateSpeech, uploadAudioToStorage, VoiceId } from '@/services/elevenlabs';
 import AudioPlayer from '@/components/AudioPlayer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Dictionary, { Definition } from '@/components/Dictionary';
+import { fetchDefinitions } from '@/services/dictionary';
 
 interface StoryPage {
   content: string;
@@ -58,6 +61,10 @@ export default function StoryReader() {
   const [audioLoading, setAudioLoading] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<VoiceId>('21m00Tcm4TlvDq8ikWAM');
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [showDictionary, setShowDictionary] = useState(false);
+  const [definitions, setDefinitions] = useState<Definition[] | null>(null);
+  const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
 
   useEffect(() => {
     fetchStoryAndPage();
@@ -360,6 +367,77 @@ export default function StoryReader() {
     }
   };
 
+  const handleWordLongPress = async (word: string) => {
+    setSelectedWord(word);
+    setShowDictionary(true);
+    setIsDictionaryLoading(true);
+    setDefinitions(null);
+
+    try {
+      const defs = await fetchDefinitions(word);
+      setDefinitions(defs);
+    } catch (error) {
+      console.error('Error fetching definitions:', error);
+      Alert.alert('Error', 'Failed to fetch word definition');
+    } finally {
+      setIsDictionaryLoading(false);
+    }
+  };
+
+  const renderContent = () => {
+    if (!currentPage?.content) return null;
+
+    const sentences = currentPage.content
+      .split(/([.!?]+\s+)/)
+      .filter(Boolean)
+      .map((part, i, arr) => {
+        if (i % 2 === 0 && i + 1 < arr.length) {
+          return part + arr[i + 1];
+        }
+        return i % 2 === 0 ? part : '';
+      })
+      .filter(Boolean);
+
+    return (
+      <View style={styles.textContainer}>
+        {sentences.map((sentence, index) => {
+          const words = sentence.trim().split(/\s+/);
+          return (
+            <View key={index} style={styles.sentenceWrapper}>
+              <View
+                style={[
+                  styles.sentenceContainer,
+                  selectedSentence === sentence.trim() && styles.highlightedSentence
+                ]}
+              >
+                {words.map((word, wordIndex) => (
+                  <Pressable
+                    key={wordIndex}
+                    onLongPress={() => handleWordLongPress(word.replace(/[.,!?]$/, ''))}
+                    onPress={() => handleSentencePress(sentence.trim())}
+                    delayLongPress={500}
+                    style={styles.wordWrapper}
+                  >
+                    <Text style={styles.word}>{word}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              {selectedSentence === sentence.trim() && (
+                <View style={styles.inlineTranslationContainer}>
+                  {translationLoading ? (
+                    <ActivityIndicator size="small" color="#0066cc" />
+                  ) : (
+                    translation && <Text style={styles.translationText}>{translation}</Text>
+                  )}
+                </View>
+              )}
+            </View>
+          );
+        })}
+      </View>
+    );
+  };
+
   if (loading || generating) {
     return (
       <View style={styles.loadingContainer}>
@@ -402,7 +480,6 @@ export default function StoryReader() {
   }
 
   const isLastPage = pageNumber >= story.total_pages;
-  const sentences = currentPage.content.split(/(?<=[.!?])\s+/);
 
   return (
     <View style={styles.container}>
@@ -435,29 +512,8 @@ export default function StoryReader() {
       )}
 
       <ScrollView style={styles.content}>
-        <View style={styles.pageContent}>
-          {sentences.map((sentence, index) => (
-            <View key={index} style={styles.sentenceContainer}>
-              <TouchableOpacity
-                onPress={() => handleSentencePress(sentence)}
-                style={[
-                  styles.sentence,
-                  selectedSentence === sentence && styles.selectedSentence
-                ]}
-              >
-                <Text style={styles.sentenceText}>{sentence}</Text>
-              </TouchableOpacity>
-              {selectedSentence === sentence && (
-                <View style={styles.inlineTranslation}>
-                  {translationLoading ? (
-                    <ActivityIndicator size="small" color="#0066cc" />
-                  ) : (
-                    <Text style={styles.inlineTranslationText}>{translation}</Text>
-                  )}
-                </View>
-              )}
-            </View>
-          ))}
+        <View style={styles.textContainer}>
+          {renderContent()}
         </View>
 
         {currentPage.target_words.length > 0 && (
@@ -560,6 +616,18 @@ export default function StoryReader() {
           </View>
         </View>
       </Modal>
+
+      <Dictionary
+        word={selectedWord || ''}
+        isVisible={showDictionary}
+        onClose={() => {
+          setShowDictionary(false);
+          setSelectedWord(null);
+          setDefinitions(null);
+        }}
+        definitions={definitions}
+        isLoading={isDictionaryLoading}
+      />
     </View>
   );
 }
@@ -610,31 +678,20 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  pageContent: {
-    padding: 16,
+  textContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 10,
   },
-  sentenceContainer: {
-    marginBottom: 8,
+  wordWrapper: {
+    marginRight: 4,
   },
-  sentence: {
-    paddingVertical: 4,
+  word: {
+    fontSize: 19,
+    lineHeight: 24,
   },
-  selectedSentence: {
-    backgroundColor: '#f0f8ff', // Light blue background for selected sentence
-    borderRadius: 4,
-  },
-  sentenceText: {
-    fontSize: 18,
-    lineHeight: 28,
-  },
-  inlineTranslation: {
-    marginLeft: 16,
-    marginTop: 4,
-  },
-  inlineTranslationText: {
-    fontSize: 16,
-    color: '#0066cc', // Nice blue color for translation
-    fontStyle: 'italic',
+  highlightedWord: {
+    backgroundColor: '#e1e8ed',
   },
   targetWordsContainer: {
     padding: 16,
@@ -705,5 +762,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
+  },
+  sentenceWrapper: {
+    marginBottom: 8,
+    width: '100%',
+  },
+  sentenceContainer: {
+    marginBottom: 4,
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+  },
+  sentenceText: {
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  highlightedSentence: {
+    backgroundColor: '#e1e8ed',
+    borderRadius: 4,
+  },
+  inlineTranslationContainer: {
+    marginTop: 4,
+    marginLeft: 16,
+    paddingLeft: 8,
+    borderLeftWidth: 2,
+    borderLeftColor: '#0066cc',
+  },
+  translationText: {
+    fontSize: 16,
+    color: '#0066cc',
   },
 }); 
