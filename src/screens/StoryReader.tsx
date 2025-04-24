@@ -15,6 +15,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { generateStoryPage, translateText, StoryGenerationParams } from '@/services/ai';
+import { generateSpeech, uploadAudioToStorage, VoiceId } from '@/services/elevenlabs';
+import AudioPlayer from '@/components/AudioPlayer';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 interface StoryPage {
   content: string;
@@ -51,10 +54,15 @@ export default function StoryReader() {
   const [newTargetWord, setNewTargetWord] = useState('');
   const [personalizedTargetWords, setPersonalizedTargetWords] = useState<string[]>([]);
   const [previousPages, setPreviousPages] = useState<string[]>([]);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState<VoiceId>('21m00Tcm4TlvDq8ikWAM');
+  const [showAudioPlayer, setShowAudioPlayer] = useState(false);
 
   useEffect(() => {
     fetchStoryAndPage();
     fetchTranslationLanguage();
+    fetchUserVoicePreference();
   }, [storyId, pageNumber]);
 
   const fetchTranslationLanguage = async () => {
@@ -74,6 +82,26 @@ export default function StoryReader() {
       }
     } catch (error) {
       console.error('Error fetching translation language:', error);
+    }
+  };
+
+  const fetchUserVoicePreference = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('preferred_voice_id')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      if (data?.preferred_voice_id) {
+        setSelectedVoice(data.preferred_voice_id);
+      }
+    } catch (error) {
+      console.error('Error fetching voice preference:', error);
     }
   };
 
@@ -259,6 +287,79 @@ export default function StoryReader() {
     }
   };
 
+  const handleVoiceChange = async (voiceId: VoiceId) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      setSelectedVoice(voiceId);
+      
+      // Update user preference
+      const { error } = await supabase
+        .from('profiles')
+        .update({ preferred_voice_id: voiceId })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Generate new audio with selected voice
+      generatePageAudio(voiceId);
+    } catch (error) {
+      console.error('Error updating voice preference:', error);
+    }
+  };
+
+  const generatePageAudio = async (voiceId: VoiceId = selectedVoice) => {
+    if (!currentPage || !story) return;
+
+    setAudioLoading(true);
+    try {
+      // Check if audio already exists - get the most recent recording
+      const { data: existingAudio, error: fetchError } = await supabase
+        .from('audio_recordings')
+        .select('audio_url')
+        .eq('story_id', storyId)
+        .eq('page_number', pageNumber)
+        .eq('voice_id', voiceId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
+
+      if (existingAudio) {
+        setAudioUrl(existingAudio.audio_url);
+        return;
+      }
+
+      // Generate new audio
+      const audioBuffer = await generateSpeech(currentPage.content, voiceId);
+      const audioUrl = await uploadAudioToStorage(audioBuffer);
+
+      // Save to database
+      const { error: insertError } = await supabase
+        .from('audio_recordings')
+        .insert({
+          story_id: storyId,
+          page_number: pageNumber,
+          voice_id: voiceId,
+          audio_url: audioUrl,
+          created_at: new Date().toISOString(),
+        });
+
+      if (insertError) throw insertError;
+
+      setAudioUrl(audioUrl);
+    } catch (error) {
+      console.error('Error generating audio:', error);
+      Alert.alert('Error', 'Failed to generate audio');
+    } finally {
+      setAudioLoading(false);
+    }
+  };
+
   if (loading || generating) {
     return (
       <View style={styles.loadingContainer}>
@@ -310,8 +411,28 @@ export default function StoryReader() {
         <View style={styles.headerInfo}>
           <Text>Page {pageNumber} of {story.total_pages || 1}</Text>
           <Text style={styles.difficultyBadge}>CEFR {story.difficulty}</Text>
+          <TouchableOpacity
+            style={styles.audioIconButton}
+            onPress={() => setShowAudioPlayer(!showAudioPlayer)}
+          >
+            <Icon 
+              name={showAudioPlayer ? "cancel" : "headphones"} 
+              size={20} 
+              color="#0066cc"
+            />
+          </TouchableOpacity>
         </View>
       </View>
+
+      {showAudioPlayer && (
+        <AudioPlayer
+          audioUrl={audioUrl}
+          isLoading={audioLoading}
+          onVoiceChange={handleVoiceChange}
+          selectedVoice={selectedVoice}
+          onPlay={generatePageAudio}
+        />
+      )}
 
       <ScrollView style={styles.content}>
         <View style={styles.pageContent}>
@@ -473,15 +594,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
+    gap: 8,
   },
   difficultyBadge: {
-    marginLeft: 8,
     backgroundColor: '#e1e8ed',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  audioIconButton: {
+    padding: 4,
   },
   content: {
     flex: 1,
