@@ -154,16 +154,28 @@ export const generateBookCover = async (
   title: string
 ): Promise<string> => {
   try {
+    console.log('Generating book cover with params:', { theme, title });
     const response = await openai.images.generate({
       model: "dall-e-3",
-      prompt: `Create a beautiful, appropriate book cover for a language learning story titled "${title}" with theme "${theme}". The style should be engaging and suitable for all ages.`,
+      prompt: `Create a beautiful, appropriate book cover for a language learning story titled "${title}" with theme "${theme}". The style should be engaging and suitable for all ages. Make sure no to include any text on the cover.`,
       n: 1,
       size: "1024x1024",
     });
 
-    return response.data[0]?.url || '';
-  } catch (error) {
-    console.error('Error generating book cover:', error);
-    throw new Error('Failed to generate book cover');
+    console.log('DALL-E response:', JSON.stringify(response, null, 2));
+
+    if (!response.data?.[0]?.url) {
+      throw new Error('No image URL in DALL-E response');
+    }
+
+    return response.data[0].url;
+  } catch (error: any) {
+    console.error('Error generating book cover:', {
+      error,
+      message: error.message,
+      name: error.name,
+      stack: error.stack
+    });
+    throw error; // Throw the original error to preserve error details
   }
 }; 
