@@ -459,12 +459,13 @@ export default function StoryReader() {
       </ScrollView>
 
       <View style={styles.navigation}>
-        <Button
-          title="Previous"
+        <TouchableOpacity
           onPress={() => navigateToPage(pageNumber - 1)}
           disabled={pageNumber <= 1}
-          type="outline"
-        />
+          style={[styles.navButton, pageNumber <= 1 && styles.disabledButton]}
+        >
+          <Icon name="arrow-back" size={24} color={pageNumber <= 1 ? '#ccc' : '#0066cc'} />
+        </TouchableOpacity>
         {isLastPage ? (
           <View style={styles.lastPageButtons}>
             <Button
@@ -480,11 +481,12 @@ export default function StoryReader() {
             />
           </View>
         ) : (
-          <Button
-            title="Next"
+          <TouchableOpacity
             onPress={() => navigateToPage(pageNumber + 1)}
-            type="outline"
-          />
+            style={[styles.navButton, pageNumber >= story.total_pages && styles.disabledButton]}
+          >
+            <Icon name="arrow-forward" size={24} color={pageNumber >= story.total_pages ? '#ccc' : '#0066cc'} />
+          </TouchableOpacity>
         )}
       </View>
 
@@ -651,12 +653,12 @@ const styles = StyleSheet.create({
   navigation: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#e1e8ed',
   },
   lastPageButtons: {
     flexDirection: 'row',
+    padding: 14,
   },
   personalizeButton: {
     marginRight: 8,
@@ -722,5 +724,12 @@ const styles = StyleSheet.create({
   translationText: {
     fontSize: 16,
     color: '#0066cc',
+  },
+  navButton: {
+    borderRadius: 16,
+    padding: 14,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 }); 
