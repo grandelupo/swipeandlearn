@@ -8,6 +8,7 @@ import {
   Dimensions,
   Modal,
   Alert,
+  Platform,
 } from 'react-native';
 import { Text, Button } from 'react-native-elements';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -17,6 +18,8 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainStackParamList, MainTabParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { generateBookCover } from '@/services/edgeFunctions';
+import * as ImagePicker from 'expo-image-picker';
+import { toByteArray } from 'base64-js';
 
 interface Story {
   id: string;
@@ -44,6 +47,7 @@ export default function BookshelfScreen() {
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const navigation = useNavigation<BookshelfScreenNavigationProp>();
 
   useFocusEffect(
@@ -111,6 +115,81 @@ export default function BookshelfScreen() {
       );
     } finally {
       setGeneratingImage(false);
+      setShowModal(false);
+      setSelectedStory(null);
+    }
+  };
+
+  const handleUploadImage = async () => {
+    if (!selectedStory) return;
+
+    try {
+      // Request permissions
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Please allow access to your photo library to upload images.');
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [2, 3],
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setUploadingImage(true);
+        const asset = result.assets[0];
+
+        // Convert base64 to Uint8Array if base64 is available
+        if (!asset.base64) {
+          throw new Error('No base64 data available from selected image');
+        }
+
+        const imageData = toByteArray(asset.base64);
+        const fileExt = asset.uri.split('.').pop()?.toLowerCase() || 'jpg';
+        const filePath = `book-covers/${selectedStory.id}/cover.${fileExt}`;
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('book-covers')
+          .upload(filePath, imageData, {
+            contentType: `image/${fileExt}`,
+            upsert: true
+          });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('book-covers')
+          .getPublicUrl(filePath);
+
+        // Update story record with new cover image URL
+        const { error: updateError } = await supabase
+          .from('stories')
+          .update({ cover_image_url: publicUrl })
+          .eq('id', selectedStory.id);
+
+        if (updateError) throw updateError;
+
+        // Update local state
+        setStories(stories.map(story =>
+          story.id === selectedStory.id
+            ? { ...story, cover_image_url: publicUrl }
+            : story
+        ));
+
+        Alert.alert('Success', 'Cover image uploaded successfully!');
+      }
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', 'Failed to upload image. Please try again.');
+    } finally {
+      setUploadingImage(false);
       setShowModal(false);
       setSelectedStory(null);
     }
@@ -184,12 +263,20 @@ export default function BookshelfScreen() {
               title={generatingImage ? "Generating..." : "Generate New Cover Image"}
               onPress={handleGenerateImage}
               loading={generatingImage}
-              disabled={generatingImage}
+              disabled={generatingImage || uploadingImage}
               containerStyle={styles.modalButton}
             />
             <Button
-              title="Cancel"
+              title={uploadingImage ? "Uploading..." : "Upload Custom Cover"}
+              onPress={handleUploadImage}
+              loading={uploadingImage}
+              disabled={uploadingImage || generatingImage}
+              containerStyle={styles.modalButton}
               type="outline"
+            />
+            <Button
+              title="Cancel"
+              type="clear"
               onPress={() => setShowModal(false)}
               containerStyle={styles.modalButton}
             />

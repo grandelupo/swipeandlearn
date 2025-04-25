@@ -43,15 +43,11 @@ serve(async (req) => {
     const basePrompt = `Create a beautiful, appropriate book cover for a language learning story titled "${title}" with theme "${theme}". The style should be engaging and suitable for all ages. Make sure no to include any text, words or letters on the cover.`
     
     let imagePrompt: string
-    if (useGrok) {
-      console.log('Generating image prompt with Grok')
-      imagePrompt = await generateWithGrok(
-        `You are a professional book cover designer. Create a detailed prompt for an AI image generator to create a book cover. Base prompt: ${basePrompt}\nMake the prompt more specific and artistic, but keep the core requirements. Return only the prompt text. Make sure the prompt is no longer than 1024 characters.`
-      )
-      imagePrompt = imagePrompt.slice(0, 1024)
-    } else {
-      imagePrompt = basePrompt
-    }
+    imagePrompt = await generateWithGrok(
+      `You are a professional book cover designer. Create a detailed prompt for an AI image generator to create a book cover. Base prompt: ${basePrompt}\nMake the prompt more specific and artistic, but keep the core requirements. Return only the prompt text. Make sure the prompt is no longer than 1024 characters.`
+    )
+    imagePrompt = imagePrompt.slice(0, 1024)
+
     console.log('Final image prompt:', imagePrompt)
 
     // Generate image with either xAI or DALL-E based on the story's model
