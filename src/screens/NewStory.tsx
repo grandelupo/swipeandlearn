@@ -165,7 +165,7 @@ export default function NewStoryScreen() {
             language,
             difficulty,
             theme: theme.trim() || 'free form',
-            target_words: targetWords,
+            generation_model: useGrok ? 'grok' : 'gpt-4',
             user_id: user.id
           })
           .select()

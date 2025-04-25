@@ -93,34 +93,3 @@ export const translateText = async (params: TranslationParams): Promise<string> 
   if (error) throw error
   return data.translation
 }
-
-export const createStoryPage = async (params: CreatePageParams): Promise<CreatePageResponse> => {
-  const { data, error } = await supabase.functions.invoke('create-story-page', {
-    body: params,
-  })
-
-  if (error) {
-    console.error('Edge function error:', error)
-    // Try to parse the error message from the response if available
-    let errorMessage = 'Failed to create story page'
-    let errorDetails = null
-    try {
-      const responseData = JSON.parse(error.message)
-      errorMessage = responseData.error || errorMessage
-      errorDetails = responseData.details
-      if (errorDetails) {
-        console.error('Error details:', errorDetails)
-      }
-      if (responseData.stack) {
-        console.error('Error stack:', responseData.stack)
-      }
-    } catch (parseError) {
-      // If we can't parse the error message, just use the original error
-      console.error('Error parsing error response:', parseError)
-      errorMessage = error.message
-    }
-    throw new Error(errorMessage)
-  }
-
-  return data
-} 

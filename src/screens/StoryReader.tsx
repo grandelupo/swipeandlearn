@@ -15,7 +15,7 @@ import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
-import { generateStoryContent, generateSpeech, translateText, createStoryPage } from '@/services/edgeFunctions';
+import { generateStoryContent, generateSpeech, translateText } from '@/services/edgeFunctions';
 import AudioPlayer from '@/components/AudioPlayer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Dictionary, { Definition } from '@/components/Dictionary';

@@ -77,8 +77,8 @@ serve(async (req) => {
     
     if (pageNumber === 0) {
       // Generate title
-      prompt = `Create a short, engaging title for a language learning story in ${language} at CEFR level ${difficulty}.
-${theme !== 'free form' ? `Theme: ${theme}` : 'Create any engaging theme appropriate for language learners.'}
+      prompt = `Create a short, captivating title for a language learning story in ${language} at CEFR level ${difficulty}. The title should spark curiosity and hint at an exciting adventure or intriguing situation.
+${theme !== 'free form' ? `Theme: ${theme}` : 'Create an engaging theme that promises excitement, mystery, or humor.'}
 ${targetWords?.length ? `Target words to incorporate if possible: ${targetWords.join(', ')}` : ''}
 
 Guidelines for ${difficulty} level:
@@ -86,7 +86,7 @@ Guidelines for ${difficulty} level:
 - Grammar: ${guidelines.grammar}
 - Complexity: ${guidelines.complexity}
 
-The title should be 2-6 words long and appropriate for language learners at ${difficulty} level.`
+The title should be 2-6 words long, appropriate for language learners at ${difficulty} level, and make readers curious to discover what happens in the story.`
 
       if (useGrok) {
         content = await generateWithGrok(prompt)
@@ -136,8 +136,8 @@ The title should be 2-6 words long and appropriate for language learners at ${di
       const useGrokForPage = story.generation_model === 'grok'
 
       // Generate story page
-      prompt = `Create page ${pageNumber} of a language learning story in ${language} at CEFR level ${difficulty}.
-${theme !== 'free form' ? `Theme: ${theme}` : 'Create any engaging theme appropriate for language learners.'}
+      prompt = `Create page ${pageNumber} of a captivating language learning story in ${language} at CEFR level ${difficulty}. Make it engaging, emotionally resonant, and occasionally humorous where appropriate.
+${theme !== 'free form' ? `Theme: ${theme}` : 'Create an engaging theme with clear protagonists and antagonists, mixing adventure, mystery, or humor.'}
 ${targetWords?.length ? `Target words to incorporate naturally: ${targetWords.join(', ')}` : ''}
 
 Guidelines for ${difficulty} level:
@@ -147,13 +147,24 @@ Guidelines for ${difficulty} level:
 
 ${previousPages.length ? `Previous pages:\n${previousPages.join('\n\n')}` : ''}
 
-Write a coherent continuation of the story that:
+Write a compelling continuation of the story that:
 1. Maintains consistent difficulty level (${difficulty})
 2. Uses language appropriate for ${difficulty} level learners
 3. Naturally incorporates target words if provided
 4. Connects logically to previous pages if provided
-5. Creates engagement through appropriate storytelling
-6. Keeps each page to about 100-150 words
+5. Creates strong emotional engagement through:
+   - Relatable characters with clear motivations
+   - Moments of tension, humor, or discovery
+   - Clear stakes or consequences for the characters
+   - Vivid descriptions that bring scenes to life
+6. Ends each page with a mini-cliffhanger or hook that makes readers eager to continue:
+   - A surprising revelation
+   - An unresolved conflict
+   - A character's emotional reaction
+   - A mysterious observation
+   - A moment of suspense
+7. Keeps each page to about 100-150 words
+8. Balances positive and negative emotions to maintain reader interest
 
 Response should be just the story text, no additional formatting or metadata.`
 
