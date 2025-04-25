@@ -9,6 +9,7 @@ import { RootStackParamList, AuthStackParamList } from './src/navigation/types';
 import MainStack from './src/navigation/MainStack';
 import LoginScreen from './src/screens/auth/Login';
 import RegisterScreen from './src/screens/auth/Register';
+import { StoryCacheProvider } from './src/contexts/StoryCacheContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -37,15 +38,17 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          {session ? (
-            <Stack.Screen name="Main" component={MainStack} />
-          ) : (
-            <Stack.Screen name="Auth" component={AuthNavigator} />
-          )}
-        </Stack.Navigator>
-      </NavigationContainer>
+      <StoryCacheProvider>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {session ? (
+              <Stack.Screen name="Main" component={MainStack} />
+            ) : (
+              <Stack.Screen name="Auth" component={AuthNavigator} />
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      </StoryCacheProvider>
     </SafeAreaProvider>
   );
-} 
+}

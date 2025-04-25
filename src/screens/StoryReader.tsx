@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -21,6 +21,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Dictionary, { Definition } from '@/components/Dictionary';
 import { fetchDefinitions } from '@/services/dictionary';
 import { VoiceId } from '@/services/elevenlabs';
+import { useStoryCache } from '../contexts/StoryCacheContext';
 
 interface StoryPage {
   content: string;
@@ -44,6 +45,8 @@ export default function StoryReader() {
   const route = useRoute<StoryReaderScreenRouteProp>();
   const navigation = useNavigation<StoryReaderScreenNavigationProp>();
   const { storyId, pageNumber = 1 } = route.params;
+  const scrollViewRef = useRef<ScrollView>(null);
+  const { getCachedPage, getCachedStory, cachePage } = useStoryCache();
 
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -65,6 +68,7 @@ export default function StoryReader() {
   const [showDictionary, setShowDictionary] = useState(false);
   const [definitions, setDefinitions] = useState<Definition[] | null>(null);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStoryAndPage();
@@ -112,9 +116,23 @@ export default function StoryReader() {
     }
   };
 
-  const fetchStoryAndPage = async () => {
+  const fetchStoryAndPage = useCallback(async () => {
     try {
-      // Fetch story details
+      setLoading(true);
+      setError(null);
+
+      // Check cache first
+      const cachedStory = getCachedStory(storyId);
+      const cachedPage = getCachedPage(storyId, pageNumber);
+
+      if (cachedStory && cachedPage) {
+        setStory(cachedStory);
+        setCurrentPage(cachedPage);
+        setLoading(false);
+        return;
+      }
+
+      // If not in cache, fetch from Supabase
       const { data: storyData, error: storyError } = await supabase
         .from('stories')
         .select('*')
@@ -122,9 +140,7 @@ export default function StoryReader() {
         .single();
 
       if (storyError) throw storyError;
-      setStory(storyData);
 
-      // Fetch current page
       const { data: pageData, error: pageError } = await supabase
         .from('story_pages')
         .select('*')
@@ -132,17 +148,12 @@ export default function StoryReader() {
         .eq('page_number', pageNumber)
         .single();
 
-      if (pageError) {
-        if (pageError.code === 'PGRST116') { // No results found
-          if (pageNumber > (storyData?.total_pages || 0)) {
-            // If trying to access a page beyond the total, navigate to the last available page
-            navigation.setParams({ pageNumber: storyData.total_pages });
-            return;
-          }
-        } else {
-          throw pageError;
-        }
-      }
+      if (pageError) throw pageError;
+
+      // Cache the fetched data
+      cachePage(storyId, storyData, pageData);
+
+      setStory(storyData);
       setCurrentPage(pageData);
 
       // Fetch previous pages for context
@@ -167,13 +178,12 @@ export default function StoryReader() {
         .update({ last_accessed: new Date().toISOString() })
         .eq('id', storyId);
 
-    } catch (error) {
-      console.error('Error fetching story:', error);
-      Alert.alert('Error', 'Failed to load story');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
-  };
+  }, [storyId, pageNumber, getCachedStory, getCachedPage, cachePage]);
 
   const handleSentencePress = async (sentence: string) => {
     setSelectedSentence(sentence);
@@ -251,6 +261,7 @@ export default function StoryReader() {
     if (story && newPage > 0 && newPage <= story.total_pages) {
       navigation.setParams({ pageNumber: newPage });
     }
+    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   };
 
   const handleVoiceChange = async (voiceId: VoiceId) => {
@@ -366,6 +377,51 @@ export default function StoryReader() {
     );
   };
 
+  const preloadPages = useCallback(async () => {
+    if (!story || !currentPage) return;
+    
+    const currentPageNumber = currentPage.page_number;
+    const pagesToPreload = [];
+
+    // Add pages before current page
+    for (let i = Math.max(1, currentPageNumber - 5); i < currentPageNumber; i++) {
+      pagesToPreload.push(i);
+    }
+
+    // Add pages after current page
+    for (let i = currentPageNumber + 1; i <= Math.min(story.total_pages, currentPageNumber + 5); i++) {
+      pagesToPreload.push(i);
+    }
+
+    // Preload each page
+    for (const pageNumber of pagesToPreload) {
+      // Skip if already cached
+      if (getCachedPage(storyId, pageNumber)) continue;
+
+      try {
+        const { data: pageData, error: pageError } = await supabase
+          .from('story_pages')
+          .select('*')
+          .eq('story_id', storyId)
+          .eq('page_number', pageNumber)
+          .single();
+
+        if (pageError) continue;
+
+        // Cache the page
+        cachePage(storyId, story, pageData);
+      } catch (err) {
+        console.error(`Error preloading page ${pageNumber}:`, err);
+      }
+    }
+  }, [story, currentPage, storyId, getCachedPage, cachePage]);
+
+  useEffect(() => {
+    if (currentPage) {
+      preloadPages();
+    }
+  }, [currentPage, preloadPages]);
+
   if (loading || generating) {
     return (
       <View style={styles.loadingContainer}>
@@ -439,7 +495,7 @@ export default function StoryReader() {
         />
       )}
 
-      <ScrollView style={styles.content}>
+      <ScrollView ref={scrollViewRef} style={styles.content}>
         <View style={styles.textContainer}>
           {renderContent()}
         </View>
