@@ -326,43 +326,83 @@ export default function StoryReader() {
   const renderContent = () => {
     if (!currentPage?.content) return null;
 
-    const sentences = currentPage.content
-      .split(/([.!?]+\s+)/)
-      .filter(Boolean)
-      .map((part, i, arr) => {
-        if (i % 2 === 0 && i + 1 < arr.length) {
-          return part + arr[i + 1];
-        }
-        return i % 2 === 0 ? part : '';
-      })
-      .filter(Boolean);
+    // Check if the language is Arabic
+    const isArabic = story?.language.toLowerCase() === 'arabic';
+    
+    // Check if the language is Chinese or Japanese
+    const isCJK = ['chinese', 'japanese'].includes(story?.language.toLowerCase() || '');
+
+    let sentences;
+    if (isCJK) {
+      // For Chinese and Japanese, split by CJK punctuation marks
+      sentences = currentPage.content
+        .split(/([。！？]+)/)
+        .filter(Boolean)
+        .map((part, i, arr) => {
+          if (i % 2 === 0 && i + 1 < arr.length) {
+            return part + arr[i + 1];
+          }
+          return i % 2 === 0 ? part : '';
+        })
+        .filter(Boolean);
+    } else {
+      // For other languages, use standard punctuation
+      sentences = currentPage.content
+        .split(/([.!?]+\s+)/)
+        .filter(Boolean)
+        .map((part, i, arr) => {
+          if (i % 2 === 0 && i + 1 < arr.length) {
+            return part + arr[i + 1];
+          }
+          return i % 2 === 0 ? part : '';
+        })
+        .filter(Boolean);
+    }
 
     return (
-      <View style={styles.textContainer}>
+      <View style={[
+        styles.textContainer,
+        isArabic && styles.arabicTextContainer
+      ]}>
         {sentences.map((sentence, index) => {
-          const words = sentence.trim().split(/\s+/);
+          let words;
+          if (isCJK) {
+            // For Chinese and Japanese, split by individual characters
+            words = sentence.trim().split('');
+          } else {
+            words = sentence.trim().split(/\s+/);
+          }
+          
           return (
             <View key={index} style={styles.sentenceWrapper}>
               <View
                 style={[
                   styles.sentenceContainer,
-                  selectedSentence === sentence.trim() && styles.highlightedSentence
+                  selectedSentence === sentence.trim() && styles.highlightedSentence,
+                  isArabic && styles.arabicSentenceContainer
                 ]}
               >
                 {words.map((word, wordIndex) => (
                   <Pressable
                     key={wordIndex}
-                    onLongPress={() => handleWordLongPress(word.replace(/[.,!?]$/, ''))}
+                    onLongPress={() => handleWordLongPress(word.replace(/[.,!?。！？]$/, ''))}
                     onPress={() => handleSentencePress(sentence.trim())}
                     delayLongPress={500}
                     style={styles.wordWrapper}
                   >
-                    <Text style={styles.word}>{word}</Text>
+                    <Text style={[
+                      styles.word,
+                      isArabic && styles.arabicWord,
+                      isCJK && styles.cjkWord
+                    ]}>{word}</Text>
                   </Pressable>
                 ))}
               </View>
               {selectedSentence === sentence.trim() && (
-                <View style={styles.inlineTranslationContainer}>
+                <View style={[
+                  styles.inlineTranslationContainer,
+                  isArabic && styles.arabicTranslationContainer
+                ]}>
                   {translationLoading ? (
                     <ActivityIndicator size="small" color="#0066cc" />
                   ) : (
@@ -670,12 +710,23 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     padding: 10,
   },
+  arabicTextContainer: {
+    flexDirection: 'row-reverse',
+  },
   wordWrapper: {
     marginRight: 4,
   },
   word: {
     fontSize: 19,
     lineHeight: 24,
+  },
+  arabicWord: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  cjkWord: {
+    fontSize: 20,
+    lineHeight: 26,
   },
   highlightedWord: {
     backgroundColor: '#e1e8ed',
@@ -762,9 +813,8 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
   },
-  sentenceText: {
-    fontSize: 16,
-    lineHeight: 24,
+  arabicSentenceContainer: {
+    flexDirection: 'row-reverse',
   },
   highlightedSentence: {
     backgroundColor: '#e1e8ed',
@@ -776,6 +826,15 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     borderLeftWidth: 2,
     borderLeftColor: '#0066cc',
+  },
+  arabicTranslationContainer: {
+    marginLeft: 0,
+    marginRight: 16,
+    paddingLeft: 0,
+    paddingRight: 8,
+    borderLeftWidth: 0,
+    borderRightWidth: 2,
+    borderRightColor: '#0066cc',
   },
   translationText: {
     fontSize: 16,
