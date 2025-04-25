@@ -8,6 +8,7 @@ import {
   Platform,
   ActivityIndicator,
   Switch,
+  TouchableOpacity,
 } from 'react-native';
 import { Input, Button, Text, Chip } from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
@@ -15,7 +16,10 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
-import { generateStoryContent } from '@/services/edgeFunctions';
+import { generateStoryContent, generateBookCover } from '@/services/edgeFunctions';
+import { useCoins as useCoinContext } from '../contexts/CoinContext';
+import { FUNCTION_COSTS } from '@/services/revenuecat';
+import { Icon } from 'react-native-elements';
 
 type NewStoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -84,7 +88,9 @@ export default function NewStoryScreen() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState('');
   const [useGrok, setUseGrok] = useState(false);
+  const [generateCover, setGenerateCover] = useState(false);
   const navigation = useNavigation<NewStoryScreenNavigationProp>();
+  const { useCoins, showInsufficientCoinsAlert } = useCoinContext();
 
   useEffect(() => {
     fetchUserPreferences();
@@ -141,6 +147,37 @@ export default function NewStoryScreen() {
   };
 
   const handleCreateStory = async () => {
+    // Check if user has enough coins for the story
+    const hasStoryCoins = await useCoins('GENERATE_STORY');
+    if (!hasStoryCoins) {
+      showInsufficientCoinsAlert('GENERATE_STORY', () => {});
+      return;
+    }
+
+    // If generating cover, check if user has enough coins for that too
+    if (generateCover) {
+      const hasCoverCoins = await useCoins('GENERATE_COVER');
+      if (!hasCoverCoins) {
+        // If they don't have enough coins for the cover, ask if they want to continue without it
+        Alert.alert(
+          'Insufficient Coins for Cover',
+          `You don't have enough coins (${FUNCTION_COSTS.GENERATE_COVER}) to generate a cover image. Would you like to continue without a cover?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Continue without cover', 
+              onPress: () => {
+                setGenerateCover(false);
+                // Re-attempt creation without cover
+                setTimeout(() => handleCreateStory(), 500);
+              }
+            }
+          ]
+        );
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       // Get current user
@@ -185,6 +222,27 @@ export default function NewStoryScreen() {
         storyTitle = title.trim();
       }
 
+      // Generate a cover image if requested
+      if (generateCover) {
+        setProgress('Generating cover image...');
+        try {
+          const coverUrl = await generateBookCover({
+            theme: theme.trim() || 'fantasy story',
+            title: storyTitle,
+            storyId,
+          });
+
+          // Update the story with the cover URL
+          await supabase
+            .from('stories')
+            .update({ cover_image_url: coverUrl })
+            .eq('id', storyId);
+        } catch (coverError) {
+          console.error('Error generating cover:', coverError);
+          // Continue without stopping the whole process
+        }
+      }
+
       // Generate and insert pages one by one
       let previousPages: string[] = [];
       for (let pageNumber = 1; pageNumber <= 4; pageNumber++) {
@@ -200,9 +258,6 @@ export default function NewStoryScreen() {
           storyId,
           userId: user.id,
         });
-
-        console.log('result', result);
-        console.log('pageNumber', pageNumber);
 
         // Update previous pages for context
         previousPages.push(result.content);
@@ -328,6 +383,22 @@ export default function NewStoryScreen() {
             ))}
           </View>
 
+          <View style={styles.coverSwitchContainer}>
+            <View style={styles.coverSwitchLabelContainer}>
+              <Text style={styles.coverSwitchLabel}>Generate cover image</Text>
+              <View style={styles.coinCostContainer}>
+                <Text style={styles.coinCostText}>{FUNCTION_COSTS.GENERATE_COVER}</Text>
+                <Icon name="monetization-on" size={16} color="#FFD700" style={styles.coinIcon} />
+              </View>
+            </View>
+            <Switch
+              value={generateCover}
+              onValueChange={setGenerateCover}
+              trackColor={{ false: '#767577', true: '#81b0ff' }}
+              thumbColor={generateCover ? '#2196F3' : '#f4f3f4'}
+            />
+          </View>
+
           {loading && (
             <View style={styles.progressContainer}>
               <ActivityIndicator size="small" />
@@ -335,12 +406,19 @@ export default function NewStoryScreen() {
             </View>
           )}
 
-          <Button
-            title={loading ? 'Creating Story...' : 'Create Story'}
+          <TouchableOpacity
             onPress={handleCreateStory}
-            loading={loading}
-            containerStyle={styles.createButton}
-          />
+            style={styles.createButton}
+            disabled={loading}
+          >
+            <Text style={styles.createButtonText}>
+              {loading ? 'Creating Story...' : 'Create Story'}
+            </Text>
+            <Text style={styles.createButtonPrice}>
+              {FUNCTION_COSTS.GENERATE_STORY + (generateCover ? FUNCTION_COSTS.GENERATE_COVER : 0)}
+            </Text>
+            <Icon name="monetization-on" size={16} color="#FFD700" style={styles.createButtonIcon} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -410,7 +488,27 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0066cc',
+    padding: 12,
+    borderRadius: 8,
     marginTop: 20,
+  },
+  createButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  createButtonPrice: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  createButtonIcon: {
+    marginLeft: -4,
   },
   modelSelector: {
     marginBottom: 20,
@@ -422,5 +520,35 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginLeft: 10,
     gap: 8,
+  },
+  coverSwitchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 15,
+  },
+  coverSwitchLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  coverSwitchLabel: {
+    fontSize: 16,
+    color: '#333',
+    marginRight: 8,
+  },
+  coinCostContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  coinCostText: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  coinIcon: {
+    marginLeft: -4,
   },
 }); 

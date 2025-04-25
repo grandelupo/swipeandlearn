@@ -22,6 +22,8 @@ import Dictionary, { Definition } from '@/components/Dictionary';
 import { fetchDefinitions } from '@/services/dictionary';
 import { VoiceId } from '@/services/elevenlabs';
 import { useStoryCache } from '../contexts/StoryCacheContext';
+import { useCoins as useCoinContext } from '../contexts/CoinContext';
+import { FUNCTION_COSTS } from '@/services/revenuecat';
 
 interface StoryPage {
   content: string;
@@ -47,6 +49,7 @@ export default function StoryReader() {
   const { storyId, pageNumber = 1 } = route.params;
   const scrollViewRef = useRef<ScrollView>(null);
   const { getCachedPage, getCachedStory, cachePage } = useStoryCache();
+  const { useCoins, showInsufficientCoinsAlert } = useCoinContext();
 
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -211,6 +214,15 @@ export default function StoryReader() {
   const generateNewPage = async (customTargetWords?: string[]) => {
     if (!story) return;
     
+    // Check if the user has enough coins
+    const hasCoins = await useCoins('GENERATE_NEW_PAGE');
+    if (!hasCoins) {
+      showInsufficientCoinsAlert('GENERATE_NEW_PAGE', () => 
+        setShowPersonalizeModal(false) // Close the personalize modal if open
+      );
+      return;
+    }
+    
     setGenerating(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -289,6 +301,20 @@ export default function StoryReader() {
   const generatePageAudio = async (voiceId: VoiceId = selectedVoice) => {
     if (!currentPage || !story) return;
 
+    // Check for existing cached audio first
+    // If we already have audio for this page/voice, we don't charge again
+    if (audioUrl && selectedVoice === voiceId) {
+      setShowAudioPlayer(true);
+      return;
+    }
+
+    // Otherwise, check if the user has enough coins
+    const hasCoins = await useCoins('GENERATE_AUDIO');
+    if (!hasCoins) {
+      showInsufficientCoinsAlert('GENERATE_AUDIO', () => {});
+      return;
+    }
+
     setAudioLoading(true);
     try {
       const audioUrl = await generateSpeech({
@@ -299,6 +325,7 @@ export default function StoryReader() {
       });
 
       setAudioUrl(audioUrl);
+      setShowAudioPlayer(true);
     } catch (error) {
       console.error('Error generating audio:', error);
       Alert.alert('Error', 'Failed to generate audio');
@@ -570,11 +597,16 @@ export default function StoryReader() {
               type="outline"
               buttonStyle={styles.personalizeButton}
             />
-            <Button
-              title="Continue Story"
+            <TouchableOpacity
               onPress={() => generateNewPage()}
-              type="solid"
-            />
+              style={styles.continueButton}
+            >
+              <Text style={styles.continueButtonText}>
+                Continue Story 
+              </Text>
+              <Text style={styles.continueButtonPrice}>{FUNCTION_COSTS.GENERATE_NEW_PAGE}</Text>
+              <Icon name="monetization-on" size={16} color="#FFD700" style={styles.continueButtonIcon} />
+            </TouchableOpacity>
           </View>
         ) : (
           <TouchableOpacity
@@ -846,5 +878,27 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
+  },
+  continueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0066cc',
+    padding: 12,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  continueButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  continueButtonPrice: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  continueButtonIcon: {
   },
 }); 

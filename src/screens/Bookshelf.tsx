@@ -18,6 +18,9 @@ import { supabase } from '@/services/supabase';
 import { generateBookCover } from '@/services/edgeFunctions';
 import * as ImagePicker from 'expo-image-picker';
 import { toByteArray } from 'base64-js';
+import { useCoins } from '@/contexts/CoinContext';
+import { FUNCTION_COSTS } from '@/services/revenuecat';
+import { Icon } from 'react-native-elements';
 
 interface Story {
   id: string;
@@ -44,6 +47,7 @@ export default function BookshelfScreen() {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const navigation = useNavigation<BookshelfScreenNavigationProp>();
+  const { useCoins: useCoinContext, showInsufficientCoinsAlert } = useCoins();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -74,6 +78,15 @@ export default function BookshelfScreen() {
 
   const handleGenerateImage = async () => {
     if (!selectedStory) return;
+    
+    // Check if user has enough coins
+    const hasCoins = await useCoinContext('GENERATE_COVER');
+    if (!hasCoins) {
+      showInsufficientCoinsAlert('GENERATE_COVER', () => {});
+      setShowModal(false);
+      setSelectedStory(null);
+      return;
+    }
     
     setGeneratingImage(true);
     try {
@@ -262,15 +275,19 @@ export default function BookshelfScreen() {
         >
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{selectedStory?.title}</Text>
-            <Button
-              title={generatingImage ? "Generating..." : "Generate New Cover Image"}
+            <TouchableOpacity
               onPress={handleGenerateImage}
-              loading={generatingImage}
-              disabled={generatingImage || uploadingImage}
-              containerStyle={styles.modalButton}
-            />
+              style={styles.generateButton}
+              disabled={generatingImage}
+            >
+              <Text style={styles.generateButtonText}>
+                {generatingImage ? "Generating..." : "Generate new cover image"}
+              </Text>
+              <Text style={styles.generateButtonPrice}>{FUNCTION_COSTS.GENERATE_COVER}</Text>
+              <Icon name="monetization-on" size={16} color="#FFD700" style={styles.generateButtonIcon} />
+            </TouchableOpacity>
             <Button
-              title={uploadingImage ? "Uploading..." : "Upload Custom Cover"}
+              title={uploadingImage ? "Uploading..." : "Upload custom cover"}
               onPress={handleUploadImage}
               loading={uploadingImage}
               disabled={uploadingImage || generatingImage}
@@ -357,7 +374,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   modalContent: {
     backgroundColor: 'white',
@@ -392,5 +408,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 20,
+  },
+  generateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0066cc',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  generateButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  generateButtonPrice: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  generateButtonIcon: {
+    marginLeft: -4,
   },
 }); 

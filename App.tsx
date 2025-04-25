@@ -10,6 +10,8 @@ import MainStack from './src/navigation/MainStack';
 import LoginScreen from './src/screens/auth/Login';
 import RegisterScreen from './src/screens/auth/Register';
 import { StoryCacheProvider } from './src/contexts/StoryCacheContext';
+import { CoinProvider } from './src/contexts/CoinContext';
+import { initializeRevenueCat } from './src/services/revenuecat';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -27,6 +29,10 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
+    // Initialize RevenueCat
+    initializeRevenueCat();
+
+    // Set up Supabase auth
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
@@ -39,15 +45,17 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StoryCacheProvider>
-        <NavigationContainer>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            {session ? (
-              <Stack.Screen name="Main" component={MainStack} />
-            ) : (
-              <Stack.Screen name="Auth" component={AuthNavigator} />
-            )}
-          </Stack.Navigator>
-        </NavigationContainer>
+        <CoinProvider>
+          <NavigationContainer>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+              {session ? (
+                <Stack.Screen name="Main" component={MainStack} />
+              ) : (
+                <Stack.Screen name="Auth" component={AuthNavigator} />
+              )}
+            </Stack.Navigator>
+          </NavigationContainer>
+        </CoinProvider>
       </StoryCacheProvider>
     </SafeAreaProvider>
   );

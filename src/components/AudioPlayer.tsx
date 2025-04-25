@@ -10,13 +10,14 @@ import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { VoiceId, AVAILABLE_VOICES } from '@/services/elevenlabs';
+import { FUNCTION_COSTS } from '@/services/revenuecat';
 
 interface AudioPlayerProps {
   audioUrl: string | null;
   isLoading: boolean;
   onVoiceChange: (voiceId: VoiceId) => void;
   selectedVoice: VoiceId;
-  onPlay: (voiceId?: VoiceId) => Promise<void>;
+  onPlay: (voiceId: VoiceId) => void;
 }
 
 export default function AudioPlayer({
@@ -166,29 +167,44 @@ export default function AudioPlayer({
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#0066cc" />
+        <Text style={styles.loadingText}>Generating audio...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.controls}>
-        <TouchableOpacity onPress={handleRewind} style={styles.button}>
-          <Icon name="replay-5" size={24} color="#000" />
+      {!audioUrl ? (
+        <TouchableOpacity
+          style={styles.generateButton}
+          onPress={() => onPlay(selectedVoice)}
+        >
+          <Icon name="volume-up" size={24} color="#fff" />
+          <Text style={styles.generateButtonText}>
+            Generate audio for this page
+          </Text>
+          <Text style={styles.generateButtonPrice}>{FUNCTION_COSTS.GENERATE_AUDIO}</Text>
+          <Icon name="monetization-on" size={16} color="#FFD700" style={styles.generateButtonIcon} />
         </TouchableOpacity>
+      ) : (
+        <View style={styles.controls}>
+          <TouchableOpacity onPress={handleRewind} style={styles.button}>
+            <Icon name="replay-5" size={24} color="#000" />
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={handlePlayPause} style={styles.playButton}>
-          <Icon
-            name={isPlaying ? 'pause' : 'play-arrow'}
-            size={32}
-            color="#000"
-          />
-        </TouchableOpacity>
+          <TouchableOpacity onPress={handlePlayPause} style={styles.playButton}>
+            <Icon
+              name={isPlaying ? 'pause' : 'play-arrow'}
+              size={32}
+              color="#000"
+            />
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={handleForward} style={styles.button}>
-          <Icon name="forward-5" size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity onPress={handleForward} style={styles.button}>
+            <Icon name="forward-5" size={24} color="#000" />
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.progressContainer}>
         <Text style={styles.time}>{formatTime(position)}</Text>
@@ -356,5 +372,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 4,
+  },
+  generateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0066cc',
+    padding: 12,
+    borderRadius: 8,
+  },
+  generateButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  generateButtonPrice: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 4,
+  },
+  generateButtonIcon: {
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
   },
 }); 
