@@ -12,8 +12,12 @@ import {
 import { Input, Button, Text, Chip } from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { generateStoryContent } from '@/services/edgeFunctions';
+
+type NewStoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 type Difficulty = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'Divine';
 
@@ -24,6 +28,11 @@ const SUPPORTED_LANGUAGES = [
   { label: 'German', value: 'German' },
   { label: 'Italian', value: 'Italian' },
   { label: 'Portuguese', value: 'Portuguese' },
+  { label: 'Chinese', value: 'Chinese' },
+  { label: 'Japanese', value: 'Japanese' },
+  { label: 'Korean', value: 'Korean' },
+  { label: 'Russian', value: 'Russian' },
+  { label: 'Arabic', value: 'Arabic' },
   { label: 'Polish', value: 'Polish' },
 ];
 
@@ -75,7 +84,7 @@ export default function NewStoryScreen() {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState('');
   const [useGrok, setUseGrok] = useState(false);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NewStoryScreenNavigationProp>();
 
   useEffect(() => {
     fetchUserPreferences();
@@ -199,14 +208,14 @@ export default function NewStoryScreen() {
         previousPages.push(result.content);
       }
 
-      Alert.alert('Success', 'Story created successfully with 4 pages!');
-      // Reset form and navigate back to Bookshelf
+      // Reset form and navigate to the story
       setTitle('');
       setTheme('');
       setTargetWords([]);
       setLanguage(SUPPORTED_LANGUAGES[0].value);
       setDifficulty(DIFFICULTY_LEVELS[0].value);
-      navigation.goBack();
+      // navigate to the story
+      navigation.navigate('StoryReader', { storyId, pageNumber: 1 });
     } catch (error: any) {
       console.error('Full error object:', error);
       Alert.alert(

@@ -12,10 +12,8 @@ import {
 } from 'react-native';
 import { Text, Button } from 'react-native-elements';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { MainStackParamList, MainTabParamList } from '@/navigation/types';
+import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { generateBookCover } from '@/services/edgeFunctions';
 import * as ImagePicker from 'expo-image-picker';
@@ -36,10 +34,7 @@ const GRID_PADDING = 16;
 const ITEM_SPACING = 10;
 const ITEM_WIDTH = (width - (GRID_PADDING * 2) - (ITEM_SPACING * (COLUMN_COUNT - 1))) / COLUMN_COUNT;
 
-type BookshelfScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'Bookshelf'>,
-  NativeStackNavigationProp<MainStackParamList>
->;
+type BookshelfScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
 export default function BookshelfScreen() {
   const [stories, setStories] = useState<Story[]>([]);
@@ -201,7 +196,7 @@ export default function BookshelfScreen() {
       onPress={() => {
         navigation.navigate('StoryReader', {
           storyId: item.id,
-          pageNumber: 1
+          pageNumber: item.total_pages
         });
       }}
       onLongPress={() => handleLongPress(item)}
@@ -222,14 +217,22 @@ export default function BookshelfScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text>Loading stories...</Text>
+        <Text style={styles.loadingText}>Loading stories...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>My Stories</Text>
+      <View style={styles.headerContainer}>
+        <Text style={styles.headerText}>My Stories</Text>
+        <Button
+          title="+ New"
+          onPress={() => navigation.navigate('NewStory')}
+          type="clear"
+          titleStyle={styles.newStoryButtonText}
+        />
+      </View>
       {stories.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
@@ -373,5 +376,21 @@ const styles = StyleSheet.create({
   modalButton: {
     width: '100%',
     marginVertical: 5,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+  },
+  newStoryButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
   },
 }); 

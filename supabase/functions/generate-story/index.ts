@@ -78,15 +78,14 @@ serve(async (req) => {
     if (pageNumber === 0) {
       // Generate title
       prompt = `Create a short, captivating title for a language learning story in ${language} at CEFR level ${difficulty}. The title should spark curiosity and hint at an exciting adventure or intriguing situation.
-${theme !== 'free form' ? `Theme: ${theme}` : 'Create an engaging theme that promises excitement, mystery, or humor.'}
-${targetWords?.length ? `Target words to incorporate if possible: ${targetWords.join(', ')}` : ''}
+${theme !== 'free form' ? `Theme: ${theme}` : ''}
 
 Guidelines for ${difficulty} level:
 - Vocabulary: ${guidelines.vocabulary}
 - Grammar: ${guidelines.grammar}
 - Complexity: ${guidelines.complexity}
 
-The title should be 2-6 words long, appropriate for language learners at ${difficulty} level, and make readers curious to discover what happens in the story.`
+The title should be 2-6 words long, appropriate for language learners at ${difficulty} level, and make readers curious to discover what happens in the story. Only respond with the title, no additional formatting or metadata.`
 
       if (useGrok) {
         content = await generateWithGrok(prompt)

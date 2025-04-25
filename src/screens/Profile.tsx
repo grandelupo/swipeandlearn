@@ -128,7 +128,7 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text>Loading profile...</Text>
+        <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
   }
@@ -136,11 +136,10 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>Profile</Text>
+        <Text style={styles.headerText}>Profile settings</Text>
       </View>
 
       <View style={styles.content}>
-        <Text h4 style={styles.sectionTitle}>Profile Settings</Text>
         <View style={styles.modelPreference}>
           <Text style={styles.modelPreferenceText}>Allow inappropriate language in story generation</Text>
           <Switch
@@ -252,5 +251,11 @@ const styles = StyleSheet.create({
   modelPreferenceText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
   },
 }); 

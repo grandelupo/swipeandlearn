@@ -9,17 +9,13 @@ export type AuthStackParamList = {
 };
 
 export type MainStackParamList = {
-  MainTabs: undefined;
+  Bookshelf: undefined;
+  NewStory: undefined;
+  Profile: undefined;
   StoryReader: {
     storyId: string;
     pageNumber?: number;
   };
-};
-
-export type MainTabParamList = {
-  Bookshelf: undefined;
-  NewStory: undefined;
-  Profile: undefined;
 };
 
 export type BookshelfStackParamList = {
