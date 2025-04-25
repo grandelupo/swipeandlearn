@@ -107,7 +107,7 @@ export default function BookshelfScreen() {
       });
       Alert.alert(
         'Error',
-        `Failed to generate new cover image: ${error.message || 'Unknown error'}`
+        `Check if the content of the story is appropriate. If it is, please try again.`
       );
     } finally {
       setGeneratingImage(false);

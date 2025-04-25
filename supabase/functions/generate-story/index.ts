@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { openai, supabaseAdmin } from '../_shared/config.ts'
+import { openai, supabaseAdmin, generateWithGrok } from '../_shared/config.ts'
 import { corsHeaders } from '../_shared/cors.ts'
 
 interface StoryGenerationParams {
@@ -61,6 +61,17 @@ serve(async (req) => {
     const { language, difficulty, theme, targetWords, pageNumber = 1, previousPages = [], storyId, userId } = await req.json() as StoryGenerationParams
     const guidelines = CEFR_GUIDELINES[difficulty]
 
+    // Get user's preferred model
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('preferred_model')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) throw profileError
+    const useGrok = profile?.preferred_model === 'grok'
+    const generationModel = useGrok ? 'grok' : 'gpt-4'
+
     let prompt: string
     let content: string
     
@@ -77,14 +88,17 @@ Guidelines for ${difficulty} level:
 
 The title should be 2-6 words long and appropriate for language learners at ${difficulty} level.`
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4-turbo-preview",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 50,
-      })
-
-      content = completion.choices[0]?.message?.content?.trim() || 'Untitled Story'
+      if (useGrok) {
+        content = await generateWithGrok(prompt)
+      } else {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4-turbo-preview",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 50,
+        })
+        content = completion.choices[0]?.message?.content?.trim() || 'Untitled Story'
+      }
 
       // Create new story in database
       const { data: story, error: storyError } = await supabaseAdmin
@@ -96,6 +110,7 @@ The title should be 2-6 words long and appropriate for language learners at ${di
           user_id: userId,
           theme: theme || null,
           difficulty,
+          generation_model: generationModel,
         })
         .select()
         .single()
@@ -110,6 +125,16 @@ The title should be 2-6 words long and appropriate for language learners at ${di
         },
       )
     } else {
+      // Get story's generation model
+      const { data: story, error: storyError } = await supabaseAdmin
+        .from('stories')
+        .select('generation_model')
+        .eq('id', storyId)
+        .single()
+
+      if (storyError) throw storyError
+      const useGrokForPage = story.generation_model === 'grok'
+
       // Generate story page
       prompt = `Create page ${pageNumber} of a language learning story in ${language} at CEFR level ${difficulty}.
 ${theme !== 'free form' ? `Theme: ${theme}` : 'Create any engaging theme appropriate for language learners.'}
@@ -132,21 +157,24 @@ Write a coherent continuation of the story that:
 
 Response should be just the story text, no additional formatting or metadata.`
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4-turbo-preview",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.7,
-        max_tokens: 500,
-      })
-
-      content = completion.choices[0]?.message?.content?.trim() || 'Error generating content.'
+      if (useGrokForPage) {
+        content = await generateWithGrok(prompt)
+      } else {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4-turbo-preview",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 500,
+        })
+        content = completion.choices[0]?.message?.content?.trim() || 'Error generating content.'
+      }
 
       if (!storyId) {
         throw new Error('Story ID is required for generating pages')
       }
 
       // Insert new page
-      const { error: pageError } = await supabaseAdmin
+      const { error: pageError, data: pageData } = await supabaseAdmin
         .from('story_pages')
         .insert({
           story_id: storyId,
@@ -154,6 +182,8 @@ Response should be just the story text, no additional formatting or metadata.`
           content: content,
           target_words: targetWords,
         })
+
+      console.log('pageData', pageData);
 
       if (pageError) throw pageError
 
@@ -167,7 +197,7 @@ Response should be just the story text, no additional formatting or metadata.`
     }
 
     return new Response(
-      JSON.stringify({ content }),
+      JSON.stringify({ content, storyId }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,

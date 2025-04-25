@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { Input, Button, Text, Chip } from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
@@ -73,7 +74,51 @@ export default function NewStoryScreen() {
   const [targetWords, setTargetWords] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState('');
+  const [useGrok, setUseGrok] = useState(false);
   const navigation = useNavigation();
+
+  useEffect(() => {
+    fetchUserPreferences();
+  }, []);
+
+  const fetchUserPreferences = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('preferred_model')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      setUseGrok(data?.preferred_model === 'grok');
+    } catch (error) {
+      console.error('Error fetching user preferences:', error);
+    }
+  };
+
+  const updateUserPreferences = async (useGrok: boolean) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ preferred_model: useGrok ? 'grok' : 'gpt4' })
+        .eq('id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating user preferences:', error);
+    }
+  };
+
+  const handleModelToggle = (value: boolean) => {
+    setUseGrok(value);
+    updateUserPreferences(value);
+  };
 
   const addTargetWord = () => {
     if (targetWord.trim() && !targetWords.includes(targetWord.trim())) {
@@ -94,19 +139,42 @@ export default function NewStoryScreen() {
       if (userError) throw userError;
       if (!user) throw new Error('User not authenticated');
 
-      setProgress('Generating title...');
-      // Generate title and create story
-      const result = await generateStoryContent({
-        language,
-        theme: theme.trim() || 'free form',
-        targetWords,
-        difficulty,
-        pageNumber: 0,
-        userId: user.id,
-      });
-      
-      const storyTitle = title.trim() || result.content;
-      const storyId = result.storyId!;
+      let storyId: string;
+      let storyTitle: string;
+
+      if (!title.trim()) {
+        setProgress('Generating title...');
+        // Generate title only if not provided
+        const result = await generateStoryContent({
+          language,
+          theme: theme.trim() || 'free form',
+          targetWords,
+          difficulty,
+          pageNumber: 0,
+          userId: user.id,
+        });
+        
+        storyTitle = result.content;
+        storyId = result.storyId!;
+      } else {
+        // If title is provided, create story entry directly
+        const { data: storyData, error: storyError } = await supabase
+          .from('stories')
+          .insert({
+            title: title.trim(),
+            language,
+            difficulty,
+            theme: theme.trim() || 'free form',
+            target_words: targetWords,
+            user_id: user.id
+          })
+          .select()
+          .single();
+
+        if (storyError) throw storyError;
+        storyId = storyData.id;
+        storyTitle = title.trim();
+      }
 
       // Generate and insert pages one by one
       let previousPages: string[] = [];
@@ -123,6 +191,9 @@ export default function NewStoryScreen() {
           storyId,
           userId: user.id,
         });
+
+        console.log('result', result);
+        console.log('pageNumber', pageNumber);
 
         // Update previous pages for context
         previousPages.push(result.content);
@@ -157,6 +228,18 @@ export default function NewStoryScreen() {
         <View style={styles.content}>
           <Text style={styles.headerText}>Create New Story</Text>
           
+          <View style={styles.modelSelector}>
+            <View style={styles.switchContainer}>
+              <Text>Allow inappropriate language</Text>
+              <Switch
+                value={useGrok}
+                onValueChange={handleModelToggle}
+                trackColor={{ false: '#767577', true: '#81b0ff' }}
+                thumbColor={useGrok ? '#2196F3' : '#f4f3f4'}
+              />
+            </View>
+          </View>
+
           <Text style={styles.label}>Story Title (Optional)</Text>
           <Input
             placeholder="Leave blank for auto-generated title"
@@ -319,5 +402,16 @@ const styles = StyleSheet.create({
   },
   createButton: {
     marginTop: 20,
+  },
+  modelSelector: {
+    marginBottom: 20,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginTop: 8,
+    marginLeft: 10,
+    gap: 8,
   },
 }); 

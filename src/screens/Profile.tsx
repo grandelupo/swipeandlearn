@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, ScrollView } from 'react-native';
-import { Text, Button, ListItem, Input } from 'react-native-elements';
+import { Text, Button, ListItem, Input, Switch } from 'react-native-elements';
 import { Picker } from '@react-native-picker/picker';
 import { supabase } from '@/services/supabase';
 
@@ -25,6 +25,7 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [translationLanguage, setTranslationLanguage] = useState<string>('English');
+  const [useGrok, setUseGrok] = useState(false);
 
   useEffect(() => {
     fetchUserData();
@@ -65,6 +66,7 @@ export default function ProfileScreen() {
       if (data?.preferred_translation_language) {
         setTranslationLanguage(data.preferred_translation_language);
       }
+      setUseGrok(data?.preferred_model === 'grok');
     } catch (error) {
       console.error('Error fetching profile:', error);
       Alert.alert('Error', 'Failed to load profile');
@@ -94,10 +96,30 @@ export default function ProfileScreen() {
 
       if (error) throw error;
       setTranslationLanguage(language);
-      Alert.alert('Success', 'Translation language updated successfully');
     } catch (error) {
       console.error('Error updating translation language:', error);
       Alert.alert('Error', 'Failed to update translation language');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateModelPreference = async (useGrok: boolean) => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ preferred_model: useGrok ? 'grok' : 'gpt4' })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setUseGrok(useGrok);
+    } catch (error) {
+      console.error('Error updating AI model preference:', error);
+      Alert.alert('Error', 'Failed to update AI model preference');
     } finally {
       setLoading(false);
     }
@@ -119,6 +141,15 @@ export default function ProfileScreen() {
 
       <View style={styles.content}>
         <Text h4 style={styles.sectionTitle}>Profile Settings</Text>
+        <View style={styles.modelPreference}>
+          <Text style={styles.modelPreferenceText}>Allow inappropriate language in story generation</Text>
+          <Switch
+            value={useGrok}
+            onValueChange={updateModelPreference}
+            style={styles.switch}
+            disabled={loading}
+          />
+        </View>
 
         <Text style={styles.label}>Preferred Translation Language</Text>
         <View style={styles.pickerContainer}>
@@ -206,5 +237,20 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: '#ff6b6b',
+  },
+  modelPreference: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginBottom: 20,
+    marginLeft: 10,
+    marginRight: 50,
+  },
+  switch: {
+    marginHorizontal: 8,
+  },
+  modelPreferenceText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

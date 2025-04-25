@@ -28,6 +28,7 @@ export interface TranslationParams {
   text: string
   targetLanguage: string
   userId: string
+  storyId: string
 }
 
 export interface CreatePageParams {

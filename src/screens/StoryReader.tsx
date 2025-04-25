@@ -186,6 +186,7 @@ export default function StoryReader() {
         text: sentence,
         targetLanguage: translationLanguage,
         userId: user.id,
+        storyId,
       });
 
       setTranslation(translation);
