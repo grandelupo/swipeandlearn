@@ -10,7 +10,7 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { Text, Button } from 'react-native-elements';
+import { Text, Button } from '@rneui/themed';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
@@ -20,7 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { toByteArray } from 'base64-js';
 import { useCoins } from '@/contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
-import { Icon } from 'react-native-elements';
+import { Icon } from '@rneui/base';
 
 interface Story {
   id: string;

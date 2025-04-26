@@ -13,7 +13,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useCoins } from '@/contexts/CoinContext';
 import { getAvailablePackages, PackageDetails, CoinPackage } from '@/services/revenuecat';
-import { Button } from 'react-native-elements';
+import { Button } from '@rneui/themed';
 
 const CoinCounter = () => {
   const { coins, isLoading, purchaseCoins } = useCoins();

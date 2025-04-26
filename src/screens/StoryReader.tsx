@@ -10,7 +10,7 @@ import {
   TextInput,
   Pressable,
 } from 'react-native';
-import { Text, Button, Input } from 'react-native-elements';
+import { Text, Button, Input } from '@rneui/themed';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';

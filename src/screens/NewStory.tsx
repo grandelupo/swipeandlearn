@@ -10,7 +10,8 @@ import {
   Switch,
   TouchableOpacity,
 } from 'react-native';
-import { Input, Button, Text, Chip } from 'react-native-elements';
+import { Input, Button, Text, Chip } from '@rneui/themed';
+import { Icon } from '@rneui/base';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,7 +20,6 @@ import { supabase } from '@/services/supabase';
 import { generateStoryContent, generateBookCover } from '@/services/edgeFunctions';
 import { useCoins as useCoinContext } from '../contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
-import { Icon } from 'react-native-elements';
 
 type NewStoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 

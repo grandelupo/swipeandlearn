@@ -6,7 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Input, Button, Text } from 'react-native-elements';
+import { Input, Button, Text } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';

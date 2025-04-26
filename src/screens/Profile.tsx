@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert, ScrollView } from 'react-native';
-import { Text, Button, ListItem, Input, Switch } from 'react-native-elements';
+import { Text, Button, ListItem, Input, Switch } from '@rneui/themed';
 import { Picker } from '@react-native-picker/picker';
 import { supabase } from '@/services/supabase';
 
