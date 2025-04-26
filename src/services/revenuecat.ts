@@ -1,10 +1,7 @@
 import { Platform } from 'react-native';
 import { EXPO_PUBLIC_REVENUECAT_API_KEY } from '@env';
 import { supabase } from './supabase';
-
-// Mock implementation for development/testing
-// In production, replace with actual RevenueCat imports
-// import { Purchases, PurchasesPackage, CustomerInfo } from 'react-native-purchases';
+import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
 
 export enum CoinPackage {
   SMALL = 'small_coin_pack',
@@ -18,30 +15,25 @@ export interface PackageDetails {
   coins: number;
   price: string;
   rawPrice: number;
+  package: PurchasesPackage;
 }
 
 // Coin package definitions
-export const COIN_PACKAGES: PackageDetails[] = [
+export const COIN_PACKAGES: Omit<PackageDetails, 'package' | 'price' | 'rawPrice'>[] = [
   {
     id: CoinPackage.SMALL,
     name: '100 Coins',
     coins: 100,
-    price: '$2.99',
-    rawPrice: 2.99,
   },
   {
     id: CoinPackage.MEDIUM,
     name: '300 Coins',
     coins: 300,
-    price: '$6.99',
-    rawPrice: 6.99,
   },
   {
     id: CoinPackage.LARGE,
     name: '1000 Coins',
     coins: 1000,
-    price: '$14.99',
-    rawPrice: 14.99,
   },
 ];
 
@@ -55,40 +47,60 @@ export const FUNCTION_COSTS = {
 
 // Initialize RevenueCat
 export async function initializeRevenueCat() {
-  // In a real implementation, this would initialize RevenueCat
-  // For example:
-  // await Purchases.configure({
-  //   apiKey: Platform.OS === 'ios' 
-  //     ? EXPO_PUBLIC_REVENUECAT_API_KEY 
-  //     : EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY,
-  // });
+  await Purchases.configure({
+    apiKey: EXPO_PUBLIC_REVENUECAT_API_KEY,
+  });
   console.log('RevenueCat initialized with API key:', EXPO_PUBLIC_REVENUECAT_API_KEY ? 'present' : 'missing');
 }
 
 // Get available packages
 export async function getAvailablePackages(): Promise<PackageDetails[]> {
-  // In a real implementation, this would fetch packages from RevenueCat
-  // For example:
-  // const offerings = await Purchases.getOfferings();
-  // return offerings.current?.availablePackages || [];
-  return COIN_PACKAGES;
+  try {
+    const offerings = await Purchases.getOfferings();
+    const currentOffering = offerings.current;
+    
+    if (!currentOffering) {
+      console.warn('No current offering available');
+      return [];
+    }
+
+    const packages = currentOffering.availablePackages.map((pkg: PurchasesPackage) => {
+      const packageId = pkg.identifier as CoinPackage;
+      const basePackage = COIN_PACKAGES.find(p => p.id === packageId);
+      
+      if (!basePackage) {
+        console.warn(`No matching package found for ${packageId}`);
+        return null;
+      }
+
+      const packageDetails: PackageDetails = {
+        ...basePackage,
+        package: pkg,
+        price: pkg.product.priceString,
+        rawPrice: pkg.product.price,
+      };
+
+      return packageDetails;
+    }).filter((pkg): pkg is PackageDetails => pkg !== null);
+
+    return packages;
+  } catch (error) {
+    console.error('Error fetching packages:', error);
+    return [];
+  }
 }
 
 // Purchase a package
 export async function purchasePackage(packageId: CoinPackage): Promise<boolean> {
   try {
-    // In a real implementation, this would process the purchase via RevenueCat
-    // For example:
-    // const packages = await getAvailablePackages();
-    // const packageToPurchase = packages.find(p => p.identifier === packageId);
-    // if (!packageToPurchase) throw new Error('Package not found');
-    // const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
+    const packages = await getAvailablePackages();
+    const packageToPurchase = packages.find(p => p.id === packageId);
     
-    // For our mock implementation, we'll just add coins directly
-    const selectedPackage = COIN_PACKAGES.find(p => p.id === packageId);
-    if (!selectedPackage) {
+    if (!packageToPurchase?.package) {
       throw new Error('Package not found');
     }
+
+    const { customerInfo } = await Purchases.purchasePackage(packageToPurchase.package);
     
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -96,19 +108,8 @@ export async function purchasePackage(packageId: CoinPackage): Promise<boolean> 
       throw new Error('User not authenticated');
     }
     
-    // Get current coins
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('coins')
-      .eq('id', user.id)
-      .single();
-      
-    if (profileError) {
-      throw profileError;
-    }
-    
     // Update coins in database
-    const newCoinBalance = (profile.coins || 0) + selectedPackage.coins;
+    const newCoinBalance = (await getCoinBalance()) + packageToPurchase.coins;
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ coins: newCoinBalance })
@@ -118,7 +119,7 @@ export async function purchasePackage(packageId: CoinPackage): Promise<boolean> 
       throw updateError;
     }
     
-    console.log(`Added ${selectedPackage.coins} coins. New balance: ${newCoinBalance}`);
+    console.log(`Added ${packageToPurchase.coins} coins. New balance: ${newCoinBalance}`);
     return true;
   } catch (error) {
     console.error('Purchase error:', error);

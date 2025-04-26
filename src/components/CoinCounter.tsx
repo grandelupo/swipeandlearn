@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -12,13 +12,34 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useCoins } from '@/contexts/CoinContext';
-import { COIN_PACKAGES, CoinPackage } from '@/services/revenuecat';
+import { getAvailablePackages, PackageDetails, CoinPackage } from '@/services/revenuecat';
 import { Button } from 'react-native-elements';
 
 const CoinCounter = () => {
   const { coins, isLoading, purchaseCoins } = useCoins();
   const [modalVisible, setModalVisible] = useState(false);
   const [purchaseInProgress, setPurchaseInProgress] = useState(false);
+  const [availablePackages, setAvailablePackages] = useState<PackageDetails[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState(true);
+
+  useEffect(() => {
+    if (modalVisible) {
+      loadPackages();
+    }
+  }, [modalVisible]);
+
+  const loadPackages = async () => {
+    try {
+      setPackagesLoading(true);
+      const packages = await getAvailablePackages();
+      setAvailablePackages(packages);
+    } catch (error) {
+      console.error('Error loading packages:', error);
+      Alert.alert('Error', 'Failed to load available packages. Please try again.');
+    } finally {
+      setPackagesLoading(false);
+    }
+  };
 
   const handlePurchase = async (packageId: CoinPackage) => {
     try {
@@ -79,26 +100,42 @@ const CoinCounter = () => {
               </Text>
             </View>
 
-            <FlatList
-              data={COIN_PACKAGES}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <View style={styles.packageItem}>
-                  <View style={styles.packageInfo}>
-                    <Text style={styles.packageName}>{item.name}</Text>
-                    <Text style={styles.packagePrice}>{item.price}</Text>
+            {packagesLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#0066cc" />
+                <Text style={styles.loadingText}>Loading packages...</Text>
+              </View>
+            ) : availablePackages.length === 0 ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>No packages available at the moment.</Text>
+                <Button
+                  title="Retry"
+                  onPress={loadPackages}
+                  buttonStyle={styles.retryButton}
+                />
+              </View>
+            ) : (
+              <FlatList
+                data={availablePackages}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <View style={styles.packageItem}>
+                    <View style={styles.packageInfo}>
+                      <Text style={styles.packageName}>{item.name}</Text>
+                      <Text style={styles.packagePrice}>{item.price}</Text>
+                    </View>
+                    <Button
+                      title="Buy"
+                      disabled={purchaseInProgress}
+                      loading={purchaseInProgress}
+                      onPress={() => handlePurchase(item.id as CoinPackage)}
+                      buttonStyle={styles.buyButton}
+                    />
                   </View>
-                  <Button
-                    title="Buy"
-                    disabled={purchaseInProgress}
-                    loading={purchaseInProgress}
-                    onPress={() => handlePurchase(item.id)}
-                    buttonStyle={styles.buyButton}
-                  />
-                </View>
-              )}
-              contentContainerStyle={styles.packageList}
-            />
+                )}
+                contentContainerStyle={styles.packageList}
+              />
+            )}
 
             <Text style={styles.disclaimerText}>
               Purchases will be charged to your App Store or Google Play account.
@@ -200,6 +237,31 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 20,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#666',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#0066cc',
+    paddingHorizontal: 20,
   },
 });
 
