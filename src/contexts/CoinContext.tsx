@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { getCoinBalance, spendCoins, purchasePackage, CoinPackage } from '@/services/revenuecat';
 import { Alert } from 'react-native';
+import { supabase } from '@/services/supabase';
 
 interface CoinContextType {
   coins: number;
@@ -94,6 +95,19 @@ export const CoinProvider = ({ children }: CoinProviderProps) => {
 
   useEffect(() => {
     refreshBalance();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        refreshBalance();
+      } else {
+        setCoins(0);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
