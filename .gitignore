@@ -44,3 +44,11 @@ yarn-error.*
 *.xcodeworkspace
 *.xcworkspace
 *.xcuserdata
+
+# android
+android/
+
+# ios
+ios/
+
+

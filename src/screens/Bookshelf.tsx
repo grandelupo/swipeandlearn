@@ -216,7 +216,7 @@ export default function BookshelfScreen() {
       delayLongPress={500}
     >
       <Image
-        source={item.cover_image_url ? { uri: item.cover_image_url } : require('../../assets/default-cover.jpg')}
+        source={item.cover_image_url ? { uri: item.cover_image_url } : require('../../assets/images/default-cover.jpg')}
         style={styles.coverImage}
       />
       <View style={styles.storyInfo}>
