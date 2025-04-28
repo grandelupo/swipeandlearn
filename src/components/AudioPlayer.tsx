@@ -11,6 +11,7 @@ import { Audio } from 'expo-av';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { VoiceId, AVAILABLE_VOICES } from '@/services/elevenlabs';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
+import { COLORS } from '@/constants/colors';
 
 interface AudioPlayerProps {
   audioUrl: string | null;
@@ -184,7 +185,7 @@ export default function AudioPlayer({
             Generate audio for this page
           </Text>
           <Text style={styles.generateButtonPrice}>{FUNCTION_COSTS.GENERATE_AUDIO}</Text>
-          <Icon name="monetization-on" size={16} color="#FFD700" style={styles.generateButtonIcon} />
+          <Icon name="monetization-on" size={16} color={COLORS.card} style={styles.generateButtonIcon} />
         </TouchableOpacity>
       ) : (
         <View style={styles.controls}>
@@ -277,14 +278,15 @@ export default function AudioPlayer({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: 20,
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 4,
+    marginBottom: 12,
   },
   controls: {
     flexDirection: 'row',
@@ -293,17 +295,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   button: {
-    padding: 8,
+    padding: 10,
+    backgroundColor: COLORS.brighter,
+    borderRadius: 16,
+    marginHorizontal: 2,
   },
   playButton: {
     padding: 8,
     marginHorizontal: 16,
-    backgroundColor: '#e1e8ed',
+    backgroundColor: COLORS.accent,
     borderRadius: 24,
-    width: 48,
-    height: 48,
+    width: 56,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   progressContainer: {
     flexDirection: 'row',
@@ -311,9 +321,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   time: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 13,
+    color: COLORS.primary,
     width: 40,
+    fontFamily: 'Poppins-SemiBold',
+    textAlign: 'center',
   },
   slider: {
     flex: 1,
@@ -324,79 +336,115 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 8,
   },
   voiceButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 8,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 16,
+    padding: 10,
+    backgroundColor: COLORS.bright,
+    borderRadius: 18,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   voiceButtonText: {
     marginLeft: 8,
-    fontSize: 14,
+    fontSize: 15,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-SemiBold',
   },
   speedControls: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   speedLabel: {
     marginRight: 8,
     fontSize: 14,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-SemiBold',
   },
   speedButton: {
     padding: 4,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: COLORS.accent,
     borderRadius: 12,
     marginHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   voiceSelector: {
     marginTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e1e8ed',
+    borderTopColor: COLORS.brighter,
     paddingTop: 16,
+    backgroundColor: COLORS.card,
+    borderRadius: 14,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   voiceOption: {
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 8,
+    backgroundColor: COLORS.bright,
   },
   selectedVoice: {
-    backgroundColor: '#f0f8ff',
+    backgroundColor: COLORS.accent,
   },
   voiceName: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
   },
   voiceDescription: {
     fontSize: 12,
-    color: '#666',
+    color: COLORS.primary,
     marginTop: 4,
+    fontFamily: 'Poppins-Regular',
   },
   generateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0066cc',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: COLORS.accent,
+    padding: 14,
+    borderRadius: 24,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+    marginBottom: 8,
   },
   generateButtonText: {
-    color: '#fff',
+    color: COLORS.card,
     fontWeight: 'bold',
     fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    marginLeft: 8,
   },
   generateButtonPrice: {
-    color: '#FFD700',
+    color: COLORS.card,
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 4,
+    fontFamily: 'Poppins-Bold',
   },
   generateButtonIcon: {
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#666',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
   },
 }); 

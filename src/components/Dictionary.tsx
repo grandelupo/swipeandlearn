@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Text } from '@rneui/themed';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { COLORS } from '@/constants/colors';
 
 export interface Definition {
   partOfSpeech: string;
@@ -98,28 +99,28 @@ export default function Dictionary({
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    width: '100%',
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    width: '92%',
     maxHeight: '80%',
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    padding: 28,
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 8,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   word: {
     flex: 1,
@@ -127,11 +128,19 @@ const styles = StyleSheet.create({
   },
   languageText: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.accent,
     marginTop: 4,
+    fontFamily: 'Poppins-SemiBold',
   },
   closeButton: {
-    padding: 4,
+    padding: 6,
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   loadingContainer: {
     padding: 20,
@@ -139,7 +148,8 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 8,
-    color: '#666',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Regular',
   },
   definitionsContainer: {
     maxHeight: '90%',
@@ -150,9 +160,10 @@ const styles = StyleSheet.create({
   partOfSpeech: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#0066cc',
+    color: COLORS.accent,
     marginBottom: 8,
     fontStyle: 'italic',
+    fontFamily: 'Poppins-Bold',
   },
   definition: {
     flexDirection: 'row',
@@ -161,19 +172,24 @@ const styles = StyleSheet.create({
   },
   definitionNumber: {
     width: 24,
-    color: '#666',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-SemiBold',
   },
   definitionText: {
     flex: 1,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Regular',
   },
   examples: {
     marginTop: 8,
     paddingLeft: 24,
   },
   example: {
-    color: '#666',
+    color: COLORS.primary,
     fontStyle: 'italic',
     marginBottom: 4,
+    fontFamily: 'Poppins-Regular',
+    opacity: 0.7,
   },
   noDefinitions: {
     padding: 20,

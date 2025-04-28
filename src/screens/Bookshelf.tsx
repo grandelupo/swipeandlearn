@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,7 +8,9 @@ import {
   Dimensions,
   Modal,
   Alert,
-  Platform,
+  Animated,
+  Easing,
+  Text as RNText,
 } from 'react-native';
 import { Text, Button } from '@rneui/themed';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -21,6 +23,7 @@ import { toByteArray } from 'base64-js';
 import { useCoins } from '@/contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { Icon } from '@rneui/base';
+import { COLORS } from '@/constants/colors';
 
 interface Story {
   id: string;
@@ -35,7 +38,7 @@ interface Story {
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 2;
 const GRID_PADDING = 16;
-const ITEM_SPACING = 10;
+const ITEM_SPACING = 16;
 const ITEM_WIDTH = (width - (GRID_PADDING * 2) - (ITEM_SPACING * (COLUMN_COUNT - 1))) / COLUMN_COUNT;
 
 type BookshelfScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
@@ -49,6 +52,32 @@ export default function BookshelfScreen() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const navigation = useNavigation<BookshelfScreenNavigationProp>();
   const { useCoins: useCoinContext, showInsufficientCoinsAlert } = useCoins();
+
+  // Animated accent circles
+  const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
+  const circle2 = useRef(new Animated.ValueXY({ x: width * 0.4, y: width * 0.2 })).current;
+  const circle3 = useRef(new Animated.ValueXY({ x: width * 0.1, y: width * 0.9 })).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle1, { toValue: { x: -60, y: -40 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle1, { toValue: { x: -80, y: -60 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle2, { toValue: { x: width * 0.45, y: width * 0.25 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle2, { toValue: { x: width * 0.4, y: width * 0.2 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle3, { toValue: { x: width * 0.12, y: width * 0.92 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle3, { toValue: { x: width * 0.1, y: width * 0.9 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
+  }, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -225,7 +254,7 @@ export default function BookshelfScreen() {
 
   const renderStoryItem = ({ item }: { item: Story }) => (
     <TouchableOpacity
-      style={styles.storyItem}
+      style={styles.storyCard}
       onPress={() => {
         navigation.navigate('StoryReader', {
           storyId: item.id,
@@ -235,36 +264,42 @@ export default function BookshelfScreen() {
       onLongPress={() => handleLongPress(item)}
       delayLongPress={500}
     >
-      <Image
-        source={item.cover_image_url ? { uri: item.cover_image_url } : require('../../assets/images/default-cover.jpg')}
-        style={styles.coverImage}
-      />
+      <View style={styles.coverContainer}>
+        <Image
+          source={item.cover_image_url ? { uri: item.cover_image_url } : require('../../assets/images/default-cover.jpg')}
+          style={styles.coverImage}
+        />
+      </View>
       <View style={styles.storyInfo}>
-        <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
-        <Text style={styles.language}>{item.language}</Text>
-        <Text style={styles.pages}>{item.total_pages} pages</Text>
+        <Text style={styles.storyTitle} numberOfLines={2}>{item.title}</Text>
+        <Text style={styles.storyMeta}>{item.language} • {item.total_pages} pages</Text>
       </View>
     </TouchableOpacity>
   );
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={styles.outerContainer}>
         <Text style={styles.loadingText}>Loading stories...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.outerContainer}>
+      <View style={styles.backgroundContainer}>
+        <Animated.View style={[styles.circle, circle1.getLayout(), { backgroundColor: COLORS.accent, opacity: 0.18 }]} />
+        <Animated.View style={[styles.circle, circle2.getLayout(), { backgroundColor: COLORS.bright, opacity: 0.13 }]} />
+        <Animated.View style={[styles.circle, circle3.getLayout(), { backgroundColor: COLORS.bright, opacity: 0.10 }]} />
+      </View>
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>My Stories</Text>
-        <Button
-          title="+ New"
+        <TouchableOpacity
+          style={styles.newButton}
           onPress={() => navigation.navigate('NewStory')}
-          type="clear"
-          titleStyle={styles.newStoryButtonText}
-        />
+        >
+          <Icon name="add" type="ionicon" color={COLORS.card} size={28} containerStyle={{ backgroundColor: COLORS.accent, borderRadius: 24, padding: 8 }} />
+        </TouchableOpacity>
       </View>
       {stories.length === 0 ? (
         <View style={styles.emptyState}>
@@ -336,55 +371,88 @@ export default function BookshelfScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  outerContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+  },
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  circle: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 24,
+    paddingBottom: 8,
+    zIndex: 1,
   },
   headerText: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    padding: 16,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
+  },
+  newButton: {
+    backgroundColor: COLORS.accent,
+    borderRadius: 24,
+    padding: 4,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   grid: {
     padding: GRID_PADDING,
+    zIndex: 1,
   },
-  storyItem: {
+  storyCard: {
     width: ITEM_WIDTH,
     marginBottom: 20,
     marginRight: ITEM_SPACING,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  coverContainer: {
+    width: '100%',
+    height: ITEM_WIDTH * 1.4,
+    backgroundColor: COLORS.bright,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    overflow: 'hidden',
   },
   coverImage: {
     width: '100%',
-    height: ITEM_WIDTH * 1.5,
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
+    height: '100%',
+    resizeMode: 'cover',
   },
   storyInfo: {
-    padding: 10,
+    padding: 12,
   },
-  title: {
+  storyTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  language: {
-    fontSize: 14,
-    color: '#666',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
     marginBottom: 2,
   },
-  pages: {
-    fontSize: 12,
-    color: '#999',
+  storyMeta: {
+    fontSize: 13,
+    color: COLORS.accent,
+    fontFamily: 'Poppins-Regular',
   },
   emptyState: {
     flex: 1,
@@ -394,8 +462,17 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#666',
+    color: COLORS.bright,
     textAlign: 'center',
+    fontFamily: 'Poppins-Regular',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -420,22 +497,6 @@ const styles = StyleSheet.create({
   modalButton: {
     width: '100%',
     marginVertical: 5,
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-  },
-  newStoryButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  loadingText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 20,
   },
   generateButton: {
     flexDirection: 'row',

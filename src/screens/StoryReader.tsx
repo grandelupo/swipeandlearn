@@ -9,8 +9,10 @@ import {
   Modal,
   TextInput,
   Pressable,
+  Animated,
+  Easing,
 } from 'react-native';
-import { Text, Button, Input } from '@rneui/themed';
+import { Text, Button, Input, Chip } from '@rneui/themed';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
@@ -24,6 +26,7 @@ import { VoiceId } from '@/services/elevenlabs';
 import { useStoryCache } from '../contexts/StoryCacheContext';
 import { useCoins as useCoinContext } from '../contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
+import { COLORS } from '@/constants/colors';
 
 interface StoryPage {
   content: string;
@@ -72,11 +75,32 @@ export default function StoryReader() {
   const [definitions, setDefinitions] = useState<Definition[] | null>(null);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
+  const circle2 = useRef(new Animated.ValueXY({ x: 120, y: 200 })).current;
+  const circle3 = useRef(new Animated.ValueXY({ x: 40, y: 600 })).current;
 
   useEffect(() => {
     fetchStoryAndPage();
     fetchTranslationLanguage();
     fetchUserVoicePreference();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle1, { toValue: { x: -60, y: -40 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle1, { toValue: { x: -80, y: -60 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle2, { toValue: { x: 140, y: 220 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle2, { toValue: { x: 120, y: 200 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle3, { toValue: { x: 60, y: 620 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle3, { toValue: { x: 40, y: 600 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
   }, [storyId, pageNumber]);
 
   const fetchTranslationLanguage = async () => {
@@ -508,8 +532,7 @@ export default function StoryReader() {
 
   if (loading || generating) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+      <View style={styles.outerContainer}>
         <Text style={styles.loadingText}>
           {generating ? 'Generating new page...' : 'Loading...'}
         </Text>
@@ -519,8 +542,8 @@ export default function StoryReader() {
 
   if (!story) {
     return (
-      <View style={styles.errorContainer}>
-        <Text>Story not found</Text>
+      <View style={styles.outerContainer}>
+        <Text style={styles.loadingText}>Story not found</Text>
       </View>
     );
   }
@@ -528,20 +551,21 @@ export default function StoryReader() {
   if (!currentPage) {
     if (pageNumber > story.total_pages) {
       return (
-        <View style={styles.errorContainer}>
-          <Text>Page {pageNumber} not found</Text>
+        <View style={styles.outerContainer}>
+          <Text style={styles.loadingText}>Page {pageNumber} not found</Text>
           <Button
             title="Go to last page"
             onPress={() => navigation.setParams({ pageNumber: story.total_pages })}
             type="outline"
             containerStyle={{ marginTop: 16 }}
+            buttonStyle={{ borderColor: COLORS.accent, borderRadius: 16 }}
+            titleStyle={{ color: COLORS.accent, fontFamily: 'Poppins-Bold' }}
           />
         </View>
       );
     }
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
+      <View style={styles.outerContainer}>
         <Text style={styles.loadingText}>Loading page...</Text>
       </View>
     );
@@ -550,40 +574,36 @@ export default function StoryReader() {
   const isLastPage = pageNumber >= story.total_pages;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text h4>{story.title}</Text>
-        <View style={styles.headerInfo}>
-          <Text>Page {pageNumber} of {story.total_pages || 1}</Text>
-          <Text style={styles.difficultyBadge}>CEFR {story.difficulty}</Text>
-          <TouchableOpacity
-            style={styles.audioIconButton}
-            onPress={() => setShowAudioPlayer(!showAudioPlayer)}
-          >
-            <Icon 
-              name={showAudioPlayer ? "cancel" : "headphones"} 
-              size={20} 
-              color="#0066cc"
-            />
-          </TouchableOpacity>
-        </View>
+    <View style={styles.outerContainer}>
+      <View style={styles.backgroundContainer}>
+        <Animated.View style={[styles.circle, circle1.getLayout(), { backgroundColor: COLORS.accent, opacity: 0.18 }]} />
+        <Animated.View style={[styles.circle, circle2.getLayout(), { backgroundColor: COLORS.bright, opacity: 0.13 }]} />
+        <Animated.View style={[styles.circle, circle3.getLayout(), { backgroundColor: COLORS.brighter, opacity: 0.10 }]} />
       </View>
+      
+      <ScrollView ref={scrollViewRef} style={styles.content} contentContainerStyle={{ paddingBottom: 120 }}>
 
-      {showAudioPlayer && (
-        <AudioPlayer
-          audioUrl={audioUrl}
-          isLoading={audioLoading}
-          onVoiceChange={handleVoiceChange}
-          selectedVoice={selectedVoice}
-          onPlay={generatePageAudio}
-        />
-      )}
+        <View style={styles.header}>
+          <Text style={styles.headerText}>{story.title}</Text>
+          <View style={styles.headerInfo}>
+            <Text style={styles.headerMeta}>Page {pageNumber} of {story.total_pages || 1}</Text>
+            <Text style={styles.difficultyBadge}>CEFR {story.difficulty}</Text>
+            <TouchableOpacity
+              style={styles.audioIconButton}
+              onPress={() => setShowAudioPlayer(!showAudioPlayer)}
+            >
+              <Icon 
+                name={showAudioPlayer ? "cancel" : "headphones"} 
+                size={20} 
+                color={COLORS.accent}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      <ScrollView ref={scrollViewRef} style={styles.content}>
-        <View style={styles.textContainer}>
+        <View style={styles.storyBox}>
           {renderContent()}
         </View>
-
         {currentPage.target_words.length > 0 && (
           <View style={styles.targetWordsContainer}>
             <Text style={styles.targetWordsTitle}>Target Words:</Text>
@@ -596,102 +616,97 @@ export default function StoryReader() {
             </View>
           </View>
         )}
+        
       </ScrollView>
-
-      <View style={styles.navigation}>
-        <TouchableOpacity
-          onPress={() => navigateToPage(pageNumber - 1)}
-          disabled={pageNumber <= 1}
-          style={[styles.navButton, pageNumber <= 1 && styles.disabledButton]}
-        >
-          <Icon name="arrow-back" size={24} color={pageNumber <= 1 ? '#ccc' : '#0066cc'} />
-        </TouchableOpacity>
-        {isLastPage ? (
-          <View style={styles.lastPageButtons}>
-            <Button
-              title="Personalize"
-              onPress={() => setShowPersonalizeModal(true)}
-              type="outline"
-              buttonStyle={styles.personalizeButton}
-            />
-            <TouchableOpacity
-              onPress={() => generateNewPage()}
-              style={styles.continueButton}
-            >
-              <Text style={styles.continueButtonText}>
-                Continue Story 
-              </Text>
-              <Text style={styles.continueButtonPrice}>{FUNCTION_COSTS.GENERATE_NEW_PAGE}</Text>
-              <Icon name="monetization-on" size={16} color="#FFD700" style={styles.continueButtonIcon} />
-            </TouchableOpacity>
-          </View>
-        ) : (
+      {/* Floating Action Buttons */}
+      {isLastPage && (
+        <View style={styles.fabContainer} pointerEvents="box-none">
           <TouchableOpacity
-            onPress={() => navigateToPage(pageNumber + 1)}
-            style={[styles.navButton, pageNumber >= story.total_pages && styles.disabledButton]}
+            style={styles.fabWordsButton}
+            onPress={() => setShowPersonalizeModal(true)}
+            activeOpacity={0.85}
           >
-            <Icon name="arrow-forward" size={24} color={pageNumber >= story.total_pages ? '#ccc' : '#0066cc'} />
+            <Text style={styles.fabWordsButtonText}>Words</Text>
+            <Icon name="edit" size={20} color={COLORS.card} style={{ marginLeft: 8 }} />
+            {personalizedTargetWords.length > 0 && (
+              <View style={styles.wordsCountBubble}>
+                <Text style={styles.wordsCountBubbleText}>{personalizedTargetWords.length}</Text>
+              </View>
+            )}
           </TouchableOpacity>
-        )}
-      </View>
-
+          <TouchableOpacity
+            style={styles.fabContinueButton}
+            onPress={() => generateNewPage()}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.fabContinueButtonText}>Continue</Text>
+            <Text style={styles.fabContinueButtonPrice}>{FUNCTION_COSTS.GENERATE_NEW_PAGE}</Text>
+            <Icon name="monetization-on" size={16} color={COLORS.card} style={styles.fabContinueButtonIcon} />
+            <Icon name="arrow-forward" size={24} color={COLORS.card} style={styles.fabArrowIcon} />
+          </TouchableOpacity>
+        </View>
+      )}
+      {/* Navigation arrows (keep floating left/right) */}
+      <TouchableOpacity
+        onPress={() => navigateToPage(pageNumber - 1)}
+        disabled={pageNumber <= 1}
+        style={[styles.fabNavButton, { left: 16, bottom: isLastPage ? 96 : 32 }, pageNumber <= 1 && styles.disabledButton]}
+      >
+        <Icon name="arrow-back" size={24} color={pageNumber <= 1 ? COLORS.bright : COLORS.background} />
+      </TouchableOpacity>
+      {!isLastPage && (
+        <TouchableOpacity
+          onPress={() => navigateToPage(pageNumber + 1)}
+          style={[styles.fabNavButton, { right: 16, bottom: 32 }, pageNumber >= story.total_pages && styles.disabledButton]}
+        >
+          <Icon name="arrow-forward" size={24} color={pageNumber >= story.total_pages ? COLORS.bright : COLORS.background} />
+        </TouchableOpacity>
+      )}
       <Modal
         visible={showPersonalizeModal}
         transparent
         animationType="slide"
         onRequestClose={() => setShowPersonalizeModal(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text h4 style={styles.modalTitle}>Personalize Next Page</Text>
-            <Text style={styles.modalSubtitle}>Add target words for the next page:</Text>
-            
-            <View style={styles.inputContainer}>
+        <View style={styles.targetWordModal}>
+          <View style={styles.targetWordModalBox}>
+            <Text style={styles.targetWordModalTitle}>Add Target Words</Text>
+            <View style={styles.targetWordModalInputRow}>
               <Input
+                inputContainerStyle={styles.inputContainer}
+                inputStyle={styles.input}
+                containerStyle={styles.inputFlex}
+                placeholder="Enter a word"
                 value={newTargetWord}
                 onChangeText={setNewTargetWord}
-                placeholder="Enter a target word"
+                placeholderTextColor={COLORS.accent}
                 onSubmitEditing={addTargetWord}
                 returnKeyType="done"
               />
-              <Button
-                title="Add"
-                onPress={addTargetWord}
-                disabled={!newTargetWord.trim()}
-              />
+              <TouchableOpacity style={styles.targetWordModalAddButton} onPress={addTargetWord} disabled={!newTargetWord.trim()}>
+                <Icon name="add" color={COLORS.card} size={24} style={{ backgroundColor: COLORS.accent, borderRadius: 16, padding: 6 }} />
+              </TouchableOpacity>
             </View>
-
             <View style={styles.targetWordsList}>
               {personalizedTargetWords.map((word, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.targetWordChip}
+                <Chip
+                  key={word}
+                  title={word}
                   onPress={() => removeTargetWord(word)}
-                >
-                  <Text style={styles.targetWordText}>{word} ✕</Text>
-                </TouchableOpacity>
+                  containerStyle={styles.chip}
+                  buttonStyle={{ backgroundColor: COLORS.bright }}
+                  titleStyle={{ color: COLORS.primary, fontFamily: 'Poppins-SemiBold' }}
+                  icon={{ name: 'close', type: 'ionicon', color: COLORS.primary, size: 16 }}
+                  iconRight
+                />
               ))}
             </View>
-
-            <View style={styles.modalButtons}>
-              <Button
-                title="Cancel"
-                onPress={() => {
-                  setShowPersonalizeModal(false);
-                  setPersonalizedTargetWords([]);
-                }}
-                type="outline"
-              />
-              <Button
-                title="Generate"
-                onPress={() => generateNewPage(personalizedTargetWords)}
-                disabled={personalizedTargetWords.length === 0}
-              />
-            </View>
+            <TouchableOpacity style={styles.targetWordModalDoneButton} onPress={() => setShowPersonalizeModal(false)}>
+              <Text style={styles.targetWordModalDoneText}>Done</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
       <Dictionary
         word={selectedWord || ''}
         language={story?.language || 'English'}
@@ -704,35 +719,53 @@ export default function StoryReader() {
         definitions={definitions}
         isLoading={isDictionaryLoading}
       />
+      {/* Audio Player Overlay */}
+      {showAudioPlayer && (
+        <View style={styles.audioPlayerOverlay} pointerEvents="box-none">
+            <TouchableOpacity style={styles.audioPlayerClose} onPress={() => setShowAudioPlayer(false)}>
+              <Icon name="close" size={24} color={COLORS.accent} />
+            </TouchableOpacity>
+            <AudioPlayer
+              audioUrl={audioUrl}
+              isLoading={audioLoading}
+              onVoiceChange={handleVoiceChange}
+              selectedVoice={selectedVoice}
+              onPlay={generatePageAudio}
+            />
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  outerContainer: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  circle: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
   },
   header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e8ed',
+    padding: 24,
+    borderBottomWidth: 0,
     alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  headerText: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
+    marginBottom: 4,
+    textAlign: 'center',
   },
   headerInfo: {
     flexDirection: 'row',
@@ -740,55 +773,62 @@ const styles = StyleSheet.create({
     marginTop: 8,
     gap: 8,
   },
+  headerMeta: {
+    color: COLORS.accent,
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 15,
+    marginRight: 8,
+  },
   difficultyBadge: {
-    backgroundColor: '#e1e8ed',
+    backgroundColor: COLORS.bright,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     fontSize: 12,
     fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
   },
   audioIconButton: {
     padding: 4,
   },
   content: {
     flex: 1,
+    zIndex: 1,
+    backgroundColor: 'transparent',
   },
-  textContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 10,
+  storyBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    padding: 18,
+    margin: 16,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
-  arabicTextContainer: {
-    flexDirection: 'row-reverse',
-  },
-  wordWrapper: {
-    marginRight: 4,
-  },
-  word: {
-    fontSize: 19,
-    lineHeight: 24,
-  },
-  arabicWord: {
-    fontSize: 22,
-    lineHeight: 28,
-  },
-  cjkWord: {
-    fontSize: 20,
-    lineHeight: 26,
-  },
-  highlightedWord: {
-    backgroundColor: '#e1e8ed',
+  loadingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 40,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
   },
   targetWordsContainer: {
     padding: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: COLORS.brighter,
     marginTop: 16,
+    borderRadius: 12,
+    marginHorizontal: 16,
   },
   targetWordsTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
   },
   targetWordsList: {
     flexDirection: 'row',
@@ -796,7 +836,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   targetWordChip: {
-    backgroundColor: '#e1e8ed',
+    backgroundColor: COLORS.accent,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -804,20 +844,50 @@ const styles = StyleSheet.create({
   },
   targetWordText: {
     fontSize: 14,
-    color: '#444',
+    color: COLORS.card,
+    fontFamily: 'Poppins-SemiBold',
   },
   navigation: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#e1e8ed',
+    borderTopWidth: 0,
+    backgroundColor: 'transparent',
+    padding: 16,
   },
   lastPageButtons: {
     flexDirection: 'row',
     padding: 14,
   },
-  personalizeButton: {
-    marginRight: 8,
+  continueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.accent,
+    padding: 12,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  continueButtonText: {
+    color: COLORS.card,
+    fontWeight: 'bold',
+    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+  },
+  continueButtonPrice: {
+    color: COLORS.card,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 4,
+    fontFamily: 'Poppins-Bold',
+  },
+  continueButtonIcon: {},
+  navButton: {
+    borderRadius: 16,
+    padding: 14,
+    backgroundColor: COLORS.bright,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   modalContainer: {
     flex: 1,
@@ -840,18 +910,12 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 16,
   },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
   },
   sentenceWrapper: {
-    marginBottom: 8,
     width: '100%',
   },
   sentenceContainer: {
@@ -861,12 +925,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
+    padding: 6,
   },
   arabicSentenceContainer: {
     flexDirection: 'row-reverse',
   },
   highlightedSentence: {
-    backgroundColor: '#e1e8ed',
+    backgroundColor: COLORS.brighter,
     borderRadius: 4,
   },
   inlineTranslationContainer: {
@@ -874,7 +939,7 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     paddingLeft: 8,
     borderLeftWidth: 2,
-    borderLeftColor: '#0066cc',
+    borderLeftColor: COLORS.accent,
   },
   arabicTranslationContainer: {
     marginLeft: 0,
@@ -883,39 +948,256 @@ const styles = StyleSheet.create({
     paddingRight: 8,
     borderLeftWidth: 0,
     borderRightWidth: 2,
-    borderRightColor: '#0066cc',
+    borderRightColor: COLORS.accent,
   },
   translationText: {
     fontSize: 16,
-    color: '#0066cc',
+    color: COLORS.accent,
   },
-  navButton: {
-    borderRadius: 16,
-    padding: 14,
+  textContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 2,
   },
-  disabledButton: {
-    opacity: 0.5,
+  arabicTextContainer: {
+    flexDirection: 'row-reverse',
   },
-  continueButton: {
+  wordWrapper: {
+    marginRight: 4,
+  },
+  word: {
+    fontSize: 19,
+    lineHeight: 24,
+  },
+  arabicWord: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  cjkWord: {
+    fontSize: 20,
+    lineHeight: 26,
+  },
+  highlightedWord: {
+    backgroundColor: '#e1e8ed',
+  },
+  fabContainer: {
+    position: 'absolute',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    right: 16,
+    bottom: 32,
+    zIndex: 10,
+    left: 16,
+  },
+  fabContinueButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0066cc',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: COLORS.accent,
+    borderRadius: 24,
+    height: 48,
+    paddingHorizontal: 20,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
     marginLeft: 8,
   },
-  continueButtonText: {
-    color: '#fff',
+  fabContinueButtonText: {
+    color: COLORS.card,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
+    marginRight: 8,
+  },
+  fabContinueButtonPrice: {
+    color: COLORS.card,
+    fontSize: 16,
     fontWeight: 'bold',
+    marginRight: 4,
+    fontFamily: 'Poppins-Bold',
+  },
+  fabContinueButtonIcon: {
+    marginRight: 4,
+  },
+  fabArrowIcon: {
+    backgroundColor: 'transparent',
+    borderRadius: 24,
+    padding: 0,
+  },
+  fabWordsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.accent,
+    borderRadius: 24,
+    height: 48,
+    paddingHorizontal: 20,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  fabWordsButtonText: {
+    color: COLORS.card,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
+    marginRight: 8,
+  },
+  fabNavButton: {
+    position: 'absolute',
+    borderRadius: 24,
+    width: 48,
+    height: 48,
+    backgroundColor: COLORS.bright,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  targetWordModal: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 0,
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  targetWordModalBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    padding: 24,
+    width: '90%',
+    alignSelf: 'center',
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  targetWordModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  targetWordModalInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  inputContainer: {
+    borderBottomWidth: 2,
+    borderColor: COLORS.accent,
+    backgroundColor: 'transparent',
+    paddingVertical: 20,
+    color: COLORS.primary,
+    flex: 1,
+  },
+  input: {
+    fontSize: 16,
+    color: COLORS.primary,
+    fontWeight: '500',
+    fontFamily: 'Poppins-Regular',
+    paddingLeft: 0,
+    flex: 1,
+  },
+  inputFlex: {
+    flex: 1,
+    marginLeft: 0,
+    marginRight: 0,
+    paddingRight: 0,
+    paddingLeft: 0,
+  },
+  chip: {
+    margin: 4,
+  },
+  targetWordModalAddButton: {
+    marginLeft: 8,
+    backgroundColor: COLORS.accent,
+    borderRadius: 16,
+    padding: 2,
+  },
+  targetWordModalDoneButton: {
+    marginTop: 18,
+    backgroundColor: COLORS.accent,
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+    alignSelf: 'center',
+  },
+  targetWordModalDoneText: {
+    color: COLORS.card,
+    fontFamily: 'Poppins-Bold',
     fontSize: 16,
   },
-  continueButtonPrice: {
-    color: '#FFD700',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 4,
+  wordsCountBubble: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: COLORS.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 20,
+    borderWidth: 2,
+    borderColor: COLORS.card,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
-  continueButtonIcon: {
+  wordsCountBubbleText: {
+    color: COLORS.card,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 13,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingHorizontal: 4,
+  },
+  audioPlayerOverlay: {
+    position: 'absolute',
+    top: 24,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 100,
+    pointerEvents: 'box-none',
+  },
+  audioPlayerBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    padding: 0,
+    width: '90%',
+    maxWidth: 400,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 0,
+  },
+  audioPlayerClose: {
+    position: 'absolute',
+    top: -15,
+    right: 25,
+    zIndex: 10,
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
+    padding: 4,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
 }); 

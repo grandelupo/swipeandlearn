@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,6 +9,9 @@ import {
   ActivityIndicator,
   Switch,
   TouchableOpacity,
+  Animated,
+  Easing,
+  Text as RNText,
 } from 'react-native';
 import { Input, Button, Text, Chip } from '@rneui/themed';
 import { Icon } from '@rneui/base';
@@ -20,6 +23,8 @@ import { supabase } from '@/services/supabase';
 import { generateStoryContent, generateBookCover } from '@/services/edgeFunctions';
 import { useCoins as useCoinContext } from '../contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
+import { COLORS } from '@/constants/colors';
+import Modal from 'react-native-modal';
 
 type NewStoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -91,9 +96,34 @@ export default function NewStoryScreen() {
   const [generateCover, setGenerateCover] = useState(false);
   const navigation = useNavigation<NewStoryScreenNavigationProp>();
   const { useCoins, showInsufficientCoinsAlert } = useCoinContext();
+  const [targetWordModalVisible, setTargetWordModalVisible] = useState(false);
+  const [newTargetWordInput, setNewTargetWordInput] = useState('');
+
+  // Animated accent circles
+  const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
+  const circle2 = useRef(new Animated.ValueXY({ x: 120, y: 200 })).current;
+  const circle3 = useRef(new Animated.ValueXY({ x: 40, y: 600 })).current;
 
   useEffect(() => {
     fetchUserPreferences();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle1, { toValue: { x: -60, y: -40 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle1, { toValue: { x: -80, y: -60 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle2, { toValue: { x: 140, y: 220 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle2, { toValue: { x: 120, y: 200 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle3, { toValue: { x: 60, y: 620 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle3, { toValue: { x: 40, y: 600 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
   }, []);
 
   const fetchUserPreferences = async () => {
@@ -143,6 +173,17 @@ export default function NewStoryScreen() {
   };
 
   const removeTargetWord = (word: string) => {
+    setTargetWords(targetWords.filter(w => w !== word));
+  };
+
+  const addTargetWordModal = () => {
+    if (newTargetWordInput.trim() && !targetWords.includes(newTargetWordInput.trim())) {
+      setTargetWords([...targetWords, newTargetWordInput.trim()]);
+      setNewTargetWordInput('');
+    }
+  };
+
+  const removeTargetWordModal = (word: string) => {
     setTargetWords(targetWords.filter(w => w !== word));
   };
 
@@ -286,90 +327,95 @@ export default function NewStoryScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={styles.outerContainer}
     >
-      <ScrollView style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.headerText}>Create New Story</Text>
-          
+      <View style={styles.backgroundContainer}>
+        <Animated.View style={[styles.circle, circle1.getLayout(), { backgroundColor: COLORS.accent, opacity: 0.18 }]} />
+        <Animated.View style={[styles.circle, circle2.getLayout(), { backgroundColor: COLORS.bright, opacity: 0.13 }]} />
+        <Animated.View style={[styles.circle, circle3.getLayout(), { backgroundColor: COLORS.brighter, opacity: 0.10 }]} />
+      </View>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }}>
+        <Text style={styles.headerText}>Create New Story</Text>
+        <View style={styles.formBox}>
           <View style={styles.modelSelector}>
             <View style={styles.switchContainer}>
               <Text>Allow inappropriate language</Text>
               <Switch
                 value={useGrok}
                 onValueChange={handleModelToggle}
-                trackColor={{ false: '#767577', true: '#81b0ff' }}
-                thumbColor={useGrok ? '#2196F3' : '#f4f3f4'}
+                trackColor={{ false: COLORS.brighter, true: COLORS.accent }}
+                thumbColor={useGrok ? COLORS.accent : COLORS.card }
               />
             </View>
           </View>
 
-          <Text style={styles.label}>Story Title (Optional)</Text>
-          <Input
-            placeholder="Leave blank for auto-generated title"
-            value={title}
-            onChangeText={setTitle}
-          />
-
-          <Text style={styles.label}>Language</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={language}
-              onValueChange={setLanguage}
-              style={styles.picker}
-            >
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <Picker.Item
-                  key={lang.value}
-                  label={lang.label}
-                  value={lang.value}
-                />
-              ))}
-            </Picker>
+          <View style={styles.inputRow}>
+            <Input
+              inputContainerStyle={styles.inputContainer}
+              inputStyle={styles.input}
+              containerStyle={styles.inputFlex}
+              placeholder="Story title (optional)"
+              value={title}
+              onChangeText={setTitle}
+              placeholderTextColor={COLORS.accent}
+            />
           </View>
 
-          <Text style={styles.label}>Difficulty Level (CEFR)</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={difficulty}
-              onValueChange={setDifficulty}
-              style={styles.picker}
-            >
-              {DIFFICULTY_LEVELS.map((level) => (
-                <Picker.Item
-                  key={level.value}
-                  label={level.label}
-                  value={level.value}
-                />
-              ))}
-            </Picker>
+          <View style={styles.inputRow}>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={language}
+                onValueChange={setLanguage}
+                style={styles.picker}
+              >
+                {SUPPORTED_LANGUAGES.map((lang) => (
+                  <Picker.Item
+                    key={lang.value}
+                    label={lang.label}
+                    value={lang.value}
+                  />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.inputRow}>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={difficulty}
+                onValueChange={setDifficulty}
+                style={styles.picker}
+              >
+                {DIFFICULTY_LEVELS.map((level) => (
+                  <Picker.Item
+                    key={level.value}
+                    label={level.label}
+                    value={level.value}
+                  />
+                ))}
+              </Picker>
+            </View>
           </View>
           <Text style={styles.difficultyDescription}>
             {DIFFICULTY_LEVELS.find(level => level.value === difficulty)?.description}
           </Text>
 
-          <Text style={styles.label}>Theme (Optional)</Text>
-          <Input
-            placeholder="Enter story theme (e.g., Adventure, Mystery) or leave blank for free form"
-            value={theme}
-            onChangeText={setTheme}
-          />
-
-          <Text style={styles.label}>Target Words</Text>
-          <View style={styles.targetWordsInput}>
+          <View style={styles.inputRow}>
             <Input
-              placeholder="Add target words"
-              value={targetWord}
-              onChangeText={setTargetWord}
-              onSubmitEditing={addTargetWord}
-              returnKeyType="done"
-              containerStyle={styles.targetWordInput}
+              inputContainerStyle={styles.inputContainer}
+              inputStyle={styles.input}
+              containerStyle={styles.inputFlex}
+              placeholder="Story theme (optional, e.g. Adventure, Mystery)"
+              value={theme}
+              onChangeText={setTheme}
+              placeholderTextColor={COLORS.accent}
             />
-            <Button
-              title="Add"
-              onPress={addTargetWord}
-              disabled={!targetWord.trim()}
-            />
+          </View>
+
+          <View style={styles.inputRow}>
+            <TouchableOpacity style={styles.addTargetWordsButton} onPress={() => setTargetWordModalVisible(true)}>
+              <Text style={styles.addTargetWordsButtonText}>Add Target Words</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.targetWordsList}>
@@ -377,8 +423,12 @@ export default function NewStoryScreen() {
               <Chip
                 key={word}
                 title={word}
-                onPress={() => removeTargetWord(word)}
+                onPress={() => removeTargetWordModal(word)}
                 containerStyle={styles.chip}
+                buttonStyle={{ backgroundColor: COLORS.bright }}
+                titleStyle={{ color: COLORS.primary, fontFamily: 'Poppins-SemiBold' }}
+                icon={{ name: 'close', type: 'ionicon', color: COLORS.primary, size: 16 }}
+                iconRight
               />
             ))}
           </View>
@@ -394,8 +444,8 @@ export default function NewStoryScreen() {
             <Switch
               value={generateCover}
               onValueChange={setGenerateCover}
-              trackColor={{ false: '#767577', true: '#81b0ff' }}
-              thumbColor={generateCover ? '#2196F3' : '#f4f3f4'}
+              trackColor={{ false: COLORS.brighter, true: COLORS.accent }}
+              thumbColor={generateCover ? COLORS.accent : COLORS.card }
             />
           </View>
 
@@ -414,49 +464,153 @@ export default function NewStoryScreen() {
             <Text style={styles.createButtonText}>
               {loading ? 'Creating Story...' : 'Create Story'}
             </Text>
-            <Text style={styles.createButtonPrice}>
-              {FUNCTION_COSTS.GENERATE_STORY + (generateCover ? FUNCTION_COSTS.GENERATE_COVER : 0)}
-            </Text>
-            <Icon name="monetization-on" size={16} color="#FFD700" style={styles.createButtonIcon} />
+            <View style={styles.coinCostContainer}>
+              <Text style={styles.coinCostTextButton}>
+                {generateCover ? FUNCTION_COSTS.GENERATE_STORY + FUNCTION_COSTS.GENERATE_COVER : FUNCTION_COSTS.GENERATE_STORY}
+              </Text>
+              <Icon name="monetization-on" size={16} color={COLORS.card} style={styles.coinIcon} />
+            </View>
+            <Icon name="arrow-forward" type="ionicon" color={COLORS.card} size={24} containerStyle={styles.arrowIcon} />
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <Modal
+        isVisible={targetWordModalVisible}
+        onBackdropPress={() => setTargetWordModalVisible(false)}
+        style={styles.targetWordModal}
+        backdropColor={COLORS.background}
+        backdropOpacity={0.7}
+      >
+        <View style={styles.targetWordModalBox}>
+          <Text style={styles.targetWordModalTitle}>Add Target Words</Text>
+          <View style={styles.targetWordModalInputRow}>
+            <Input
+              inputContainerStyle={styles.inputContainer}
+              inputStyle={styles.input}
+              containerStyle={styles.inputFlex}
+              placeholder="Enter a word"
+              value={newTargetWordInput}
+              onChangeText={setNewTargetWordInput}
+              placeholderTextColor={COLORS.accent}
+              onSubmitEditing={addTargetWordModal}
+              returnKeyType="done"
+            />
+            <TouchableOpacity style={styles.targetWordModalAddButton} onPress={addTargetWordModal} disabled={!newTargetWordInput.trim()}>
+              <Icon name="add" type="ionicon" color={COLORS.card} size={24} containerStyle={{ backgroundColor: COLORS.accent, borderRadius: 16, padding: 6 }} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.targetWordsList}>
+            {targetWords.map((word) => (
+              <Chip
+                key={word}
+                title={word}
+                onPress={() => removeTargetWordModal(word)}
+                containerStyle={styles.chip}
+                buttonStyle={{ backgroundColor: COLORS.bright }}
+                titleStyle={{ color: COLORS.primary, fontFamily: 'Poppins-SemiBold' }}
+                icon={{ name: 'close', type: 'ionicon', color: COLORS.primary, size: 16 }}
+                iconRight
+              />
+            ))}
+          </View>
+          <TouchableOpacity style={styles.targetWordModalDoneButton} onPress={() => setTargetWordModalVisible(false)}>
+            <Text style={styles.targetWordModalDoneText}>Done</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  circle: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  content: {
-    padding: 20,
+    zIndex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    backgroundColor: 'transparent',
   },
   headerText: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
+    marginBottom: 24,
+  },
+  formBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+    marginBottom: 24,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   label: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    marginLeft: 10,
+    color: COLORS.primary,
+    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
+    width: 80,
+    marginRight: 8,
+    marginBottom: 0,
+  },
+  inputFlex: {
+    flex: 1,
+    marginLeft: 0,
+    marginRight: 0,
+    paddingRight: 0,
+    paddingLeft: 0,
+  },
+  inputContainer: {
+    borderBottomWidth: 2,
+    borderColor: COLORS.accent,
+    backgroundColor: 'transparent',
+    marginBottom: -8,
+  },
+  input: {
+    fontSize: 16,
+    color: COLORS.primary,
+    fontWeight: '500',
+    fontFamily: 'Poppins-Regular',
+    paddingLeft: 0,
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#86939e',
     borderRadius: 4,
     marginBottom: 8,
     marginHorizontal: 10,
+    width: '90%',
+    borderColor: COLORS.accent
   },
   picker: {
     height: 50,
   },
   difficultyDescription: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.bright,
     marginHorizontal: 10,
     marginBottom: 20,
     fontStyle: 'italic',
@@ -464,9 +618,6 @@ const styles = StyleSheet.create({
   targetWordsInput: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  targetWordInput: {
-    flex: 1,
   },
   targetWordsList: {
     flexDirection: 'row',
@@ -490,25 +641,29 @@ const styles = StyleSheet.create({
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0066cc',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 20,
+    alignSelf: 'flex-end',
+    marginTop: 24,
+    backgroundColor: COLORS.accent,
+    borderRadius: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   createButtonText: {
-    color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
-    fontSize: 16,
+    color: COLORS.card,
+    fontFamily: 'Poppins-Bold',
+    marginRight: 12,
   },
-  createButtonPrice: {
-    color: '#FFD700',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 4,
-  },
-  createButtonIcon: {
-    marginLeft: -4,
+  arrowIcon: {
+    backgroundColor: 'transparent',
+    borderRadius: 24,
+    padding: 0,
   },
   modelSelector: {
     marginBottom: 20,
@@ -548,7 +703,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  coinCostTextButton: {
+    color: COLORS.card,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   coinIcon: {
     marginLeft: -4,
+  },
+  addTargetWordsButton: {
+    backgroundColor: COLORS.accent,
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    marginLeft: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addTargetWordsButtonText: {
+    color: COLORS.card,
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 15,
+  },
+  targetWordModal: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 0,
+  },
+  targetWordModalBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    padding: 24,
+    width: '90%',
+    alignSelf: 'center',
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  targetWordModalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  targetWordModalInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  targetWordModalAddButton: {
+    marginLeft: 8,
+    backgroundColor: COLORS.accent,
+    borderRadius: 16,
+    padding: 2,
+  },
+  targetWordModalDoneButton: {
+    marginTop: 18,
+    backgroundColor: COLORS.accent,
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+    alignSelf: 'center',
+  },
+  targetWordModalDoneText: {
+    color: COLORS.card,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
   },
 }); 

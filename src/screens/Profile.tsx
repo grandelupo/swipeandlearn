@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Alert, ScrollView, Animated, Easing } from 'react-native';
 import { Text, Button, ListItem, Input, Switch } from '@rneui/themed';
 import { Picker } from '@react-native-picker/picker';
-import { supabase } from '@/services/supabase';
 import { useNavigation } from '@react-navigation/native';
+import { supabase } from '@/services/supabase';
+import { COLORS } from '@/constants/colors';
 
 const TRANSLATION_LANGUAGES = [
   { label: 'English', value: 'English' },
@@ -29,9 +30,32 @@ export default function ProfileScreen() {
   const [useGrok, setUseGrok] = useState(false);
   const navigation = useNavigation();
 
+  // Animated accent circles
+  const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
+  const circle2 = useRef(new Animated.ValueXY({ x: 120, y: 200 })).current;
+  const circle3 = useRef(new Animated.ValueXY({ x: 40, y: 600 })).current;
+
   useEffect(() => {
     fetchUserData();
     fetchProfile();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle1, { toValue: { x: -60, y: -40 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle1, { toValue: { x: -80, y: -60 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle2, { toValue: { x: 140, y: 220 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle2, { toValue: { x: 120, y: 200 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(circle3, { toValue: { x: 60, y: 620 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
+        Animated.timing(circle3, { toValue: { x: 40, y: 600 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
+      ])
+    ).start();
   }, []);
 
   const fetchUserData = async () => {
@@ -129,146 +153,183 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={styles.outerContainer}>
         <Text style={styles.loadingText}>Loading profile...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Profile settings</Text>
+    <View style={styles.outerContainer}>
+      <View style={styles.backgroundContainer}>
+        <Animated.View style={[styles.circle, circle1.getLayout(), { backgroundColor: COLORS.accent, opacity: 0.18 }]} />
+        <Animated.View style={[styles.circle, circle2.getLayout(), { backgroundColor: COLORS.bright, opacity: 0.13 }]} />
+        <Animated.View style={[styles.circle, circle3.getLayout(), { backgroundColor: COLORS.brighter, opacity: 0.10 }]} />
       </View>
-
-      <View style={styles.content}>
-        <View style={styles.modelPreference}>
-          <Text style={styles.modelPreferenceText}>Allow inappropriate language in story generation</Text>
-          <Switch
-            value={useGrok}
-            onValueChange={updateModelPreference}
-            style={styles.switch}
-            disabled={loading}
-          />
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+        <Text style={styles.headerText}>Profile Settings</Text>
+        <View style={styles.profileBox}>
+          <View style={styles.profileRow}>
+            <Text style={styles.profileLabel}>Email</Text>
+            <Text style={styles.profileValue}>{userEmail}</Text>
+          </View>
+          <View style={styles.profileRow}>
+            <Text style={styles.profileLabel}>Total stories created</Text>
+            <Text style={styles.profileValue}>{totalStories}</Text>
+          </View>
+          <View style={styles.profileRow}>
+            <Text style={styles.profileLabel}>Allow inappropriate language</Text>
+            <Switch
+              value={useGrok}
+              onValueChange={updateModelPreference}
+              trackColor={{ false: COLORS.brighter, true: COLORS.accent }}
+              thumbColor={useGrok ? COLORS.accent : COLORS.card}
+              disabled={loading}
+            />
+          </View>
+          <View style={styles.profileColumn}>
+            <Text style={styles.profileLabel}>Preferred translation language</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={translationLanguage}
+                onValueChange={updateTranslationLanguage}
+                style={styles.picker}
+                enabled={!loading}
+              >
+                {TRANSLATION_LANGUAGES.map((lang) => (
+                  <Picker.Item
+                    key={lang.value}
+                    label={lang.label}
+                    value={lang.value}
+                  />
+                ))}
+              </Picker>
+            </View>
+          </View>
         </View>
-
-        <Text style={styles.label}>Preferred Translation Language</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={translationLanguage}
-            onValueChange={updateTranslationLanguage}
-            style={styles.picker}
-            enabled={!loading}
-          >
-            {TRANSLATION_LANGUAGES.map((lang) => (
-              <Picker.Item
-                key={lang.value}
-                label={lang.label}
-                value={lang.value}
-              />
-            ))}
-          </Picker>
-        </View>
-
-        <ListItem bottomDivider>
-          <ListItem.Content>
-            <ListItem.Title>Email</ListItem.Title>
-            <ListItem.Subtitle>{userEmail}</ListItem.Subtitle>
-          </ListItem.Content>
-        </ListItem>
-
-        <ListItem bottomDivider>
-          <ListItem.Content>
-            <ListItem.Title>Total Stories</ListItem.Title>
-            <ListItem.Subtitle>{totalStories}</ListItem.Subtitle>
-          </ListItem.Content>
-        </ListItem>
-
         <Button
           title="View Archived Stories"
           onPress={() => navigation.navigate('Archive')}
           containerStyle={styles.archiveButton}
-          type="outline"
+          buttonStyle={{ backgroundColor: COLORS.accent, borderRadius: 16 }}
+          titleStyle={{ color: COLORS.card, fontFamily: 'Poppins-Bold' }}
+          type="solid"
         />
-
-        <View style={styles.buttonContainer}>
-          <Button
-            title="Logout"
-            onPress={handleLogout}
-            buttonStyle={styles.logoutButton}
-          />
-        </View>
-      </View>
-    </ScrollView>
+        <Button
+          title="Logout"
+          onPress={handleLogout}
+          buttonStyle={styles.logoutButton}
+          titleStyle={{ fontFamily: 'Poppins-Bold' }}
+          containerStyle={styles.logoutButtonContainer}
+        />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  circle: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 160,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e8ed',
+    zIndex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    backgroundColor: 'transparent',
   },
   headerText: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
+    marginBottom: 24,
   },
-  content: {
-    padding: 20,
+  profileBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+    marginBottom: 24,
   },
-  sectionTitle: {
-    marginBottom: 20,
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+    paddingVertical: 10,
   },
-  label: {
+  profileColumn: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 14,
+    paddingVertical: 10,
+  },
+  profileLabel: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    marginLeft: 10,
+    color: COLORS.primary,
+    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
+    marginRight: 8,
+    marginBottom: 0,
+  },
+  profileValue: {
+    fontSize: 16,
+    color: COLORS.accent,
+    fontFamily: 'Poppins-Regular',
+    flex: 1,
+    textAlign: 'right',
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#86939e',
+    borderColor: COLORS.accent,
     borderRadius: 4,
-    marginBottom: 20,
-    marginHorizontal: 10,
+    marginBottom: 0,
+    marginHorizontal: 0,
+    width: '100%',
+    backgroundColor: COLORS.card,
   },
   picker: {
-    height: 50,
-  },
-  buttonContainer: {
-    padding: 20,
-    marginTop: 20,
-  },
-  logoutButton: {
-    backgroundColor: '#ff6b6b',
-  },
-  modelPreference: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginBottom: 20,
-    marginLeft: 10,
-    marginRight: 50,
-  },
-  switch: {
-    marginHorizontal: 8,
-  },
-  modelPreferenceText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  loadingText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 20,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Regular',
   },
   archiveButton: {
     marginTop: 20,
     marginHorizontal: 10,
+    marginBottom: 10,
+  },
+  logoutButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+  },
+  logoutButtonContainer: {
+    marginTop: 10,
+    marginHorizontal: 10,
+    marginBottom: 40,
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 40,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
   },
 }); 

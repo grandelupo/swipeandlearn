@@ -14,6 +14,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useCoins } from '@/contexts/CoinContext';
 import { getAvailablePackages, PackageDetails, CoinPackage } from '@/services/revenuecat';
 import { Button } from '@rneui/themed';
+import { COLORS } from '@/constants/colors';
 
 const CoinCounter = () => {
   const { coins, isLoading, purchaseCoins } = useCoins();
@@ -66,9 +67,9 @@ const CoinCounter = () => {
         onPressIn={() => setModalVisible(true)}
         disabled={isLoading}
       >
-        <Icon name="monetization-on" size={24} color="#FFD700" />
+        <Icon name="monetization-on" size={24} color={COLORS.card} />
         {isLoading ? (
-          <ActivityIndicator size="small" color="#FFD700" style={styles.coinLoader} />
+          <ActivityIndicator size="small" color={COLORS.card} style={styles.coinLoader} />
         ) : (
           <Text style={styles.coinText}>{coins}</Text>
         )}
@@ -88,20 +89,20 @@ const CoinCounter = () => {
                 style={styles.closeButton}
                 onPress={() => setModalVisible(false)}
               >
-                <Icon name="close" size={24} color="#000" />
+                <Icon name="close" size={24} color={COLORS.accent} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.currentCoinsContainer}>
-              <Icon name="monetization-on" size={32} color="#FFD700" />
               <Text style={styles.currentCoinsText}>
-                Your Balance: {coins} coins
+                Your Balance: {coins}
               </Text>
+              <Icon name="monetization-on" size={18} color={COLORS.primary} />
             </View>
 
             {packagesLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#0066cc" />
+                <ActivityIndicator size="large" color={COLORS.primary} />
                 <Text style={styles.loadingText}>Loading packages...</Text>
               </View>
             ) : availablePackages.length === 0 ? (
@@ -151,16 +152,23 @@ const styles = StyleSheet.create({
   coinContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 215, 0, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
     marginRight: 10,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   coinText: {
-    marginLeft: 4,
+    marginLeft: 6,
     fontWeight: 'bold',
-    color: '#000',
+    color: COLORS.card,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
   },
   coinLoader: {
     marginLeft: 4,
@@ -168,14 +176,22 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    alignItems: 'center',
+    padding: 20,
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    margin: 20,
-    padding: 20,
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    margin: 0,
+    padding: 28,
+    width: '92%',
     maxHeight: '80%',
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -186,81 +202,101 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
   },
   closeButton: {
     padding: 5,
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   currentCoinsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f7f7f7',
+    backgroundColor: COLORS.brighter,
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 20,
   },
   currentCoinsText: {
     marginLeft: 10,
-    fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 17,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Regular',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Regular',
+  },
+  retryButton: {
+    backgroundColor: COLORS.accent,
+    borderRadius: 16,
+    marginTop: 10,
   },
   packageList: {
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   packageItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.brighter,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   packageInfo: {
     flex: 1,
   },
   packageName: {
-    fontSize: 16,
     fontWeight: 'bold',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
   },
   packagePrice: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
+    color: COLORS.accent,
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 15,
+    marginTop: 2,
   },
   buyButton: {
-    paddingHorizontal: 20,
-    backgroundColor: '#0066cc',
+    backgroundColor: COLORS.accent,
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
   },
   disclaimerText: {
+    marginTop: 18,
     fontSize: 12,
-    color: '#999',
-    marginTop: 20,
+    color: COLORS.primary,
+    opacity: 0.6,
     textAlign: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    marginTop: 10,
-    color: '#666',
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  retryButton: {
-    backgroundColor: '#0066cc',
-    paddingHorizontal: 20,
+    fontFamily: 'Poppins-Regular',
   },
 });
 
