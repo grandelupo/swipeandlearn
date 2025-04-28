@@ -3,6 +3,7 @@ import { View, StyleSheet, Alert, ScrollView } from 'react-native';
 import { Text, Button, ListItem, Input, Switch } from '@rneui/themed';
 import { Picker } from '@react-native-picker/picker';
 import { supabase } from '@/services/supabase';
+import { useNavigation } from '@react-navigation/native';
 
 const TRANSLATION_LANGUAGES = [
   { label: 'English', value: 'English' },
@@ -26,6 +27,7 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<any>(null);
   const [translationLanguage, setTranslationLanguage] = useState<string>('English');
   const [useGrok, setUseGrok] = useState(false);
+  const navigation = useNavigation();
 
   useEffect(() => {
     fetchUserData();
@@ -182,6 +184,13 @@ export default function ProfileScreen() {
           </ListItem.Content>
         </ListItem>
 
+        <Button
+          title="View Archived Stories"
+          onPress={() => navigation.navigate('Archive')}
+          containerStyle={styles.archiveButton}
+          type="outline"
+        />
+
         <View style={styles.buttonContainer}>
           <Button
             title="Logout"
@@ -257,5 +266,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 20,
+  },
+  archiveButton: {
+    marginTop: 20,
+    marginHorizontal: 10,
   },
 }); 

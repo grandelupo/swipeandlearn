@@ -9,13 +9,15 @@ export type AuthStackParamList = {
 };
 
 export type MainStackParamList = {
+  Home: undefined;
   Bookshelf: undefined;
   NewStory: undefined;
-  Profile: undefined;
   StoryReader: {
     storyId: string;
     pageNumber?: number;
   };
+  Profile: undefined;
+  Archive: undefined;
 };
 
 export type BookshelfStackParamList = {

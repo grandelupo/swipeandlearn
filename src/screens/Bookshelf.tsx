@@ -29,6 +29,7 @@ interface Story {
   cover_image_url: string;
   total_pages: number;
   theme?: string;
+  last_accessed: string;
 }
 
 const { width } = Dimensions.get('window');
@@ -59,8 +60,9 @@ export default function BookshelfScreen() {
     try {
       const { data: stories, error } = await supabase
         .from('stories')
-        .select('id, title, language, cover_image_url, total_pages, theme')
-        .order('created_at', { ascending: false });
+        .select('id, title, language, cover_image_url, total_pages, theme, last_accessed')
+        .eq('archived', false)
+        .order('last_accessed', { ascending: false });
 
       if (error) throw error;
       setStories(stories || []);
@@ -70,6 +72,26 @@ export default function BookshelfScreen() {
       setLoading(false);
     }
   }
+
+  const handleArchive = async (story: Story) => {
+    try {
+      const { error } = await supabase
+        .from('stories')
+        .update({ archived: true })
+        .eq('id', story.id);
+
+      if (error) throw error;
+      
+      // Update local state
+      setStories(stories.filter(s => s.id !== story.id));
+      setShowModal(false);
+      setSelectedStory(null);
+      
+    } catch (error) {
+      console.error('Error archiving story:', error);
+      Alert.alert('Error', 'Failed to archive story');
+    }
+  };
 
   const handleLongPress = (story: Story) => {
     setSelectedStory(story);
@@ -293,6 +315,14 @@ export default function BookshelfScreen() {
               disabled={uploadingImage || generatingImage}
               containerStyle={styles.modalButton}
               type="outline"
+            />
+            <Button
+              title="Archive Story"
+              onPress={() => handleArchive(selectedStory!)}
+              containerStyle={styles.modalButton}
+              type="outline"
+              buttonStyle={{ borderColor: '#ff6b6b' }}
+              titleStyle={{ color: '#ff6b6b' }}
             />
             <Button
               title="Cancel"

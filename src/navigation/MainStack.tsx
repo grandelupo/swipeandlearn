@@ -8,6 +8,7 @@ import NewStoryScreen from '../screens/NewStory';
 import ProfileScreen from '../screens/Profile';
 import { MainStackParamList } from './types';
 import CoinCounter from '@/components/CoinCounter';
+import ArchiveScreen from '@/screens/Archive';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -56,6 +57,7 @@ export default function MainStack() {
           headerRight: () => <CoinCounter />
         }}
       />
+      <Stack.Screen name="Archive" component={ArchiveScreen} />
     </Stack.Navigator>
   );
 }
