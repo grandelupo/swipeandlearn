@@ -7,7 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { Text } from 'react-native-elements';
+import { Text } from '@rneui/themed';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export interface Definition {

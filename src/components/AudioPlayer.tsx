@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { Text } from 'react-native-elements';
+import { Text } from '@rneui/themed';
 import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
 import Icon from 'react-native-vector-icons/MaterialIcons';

@@ -1,12 +1,12 @@
-import { Platform } from 'react-native';
 import { EXPO_PUBLIC_REVENUECAT_API_KEY } from '@env';
 import { supabase } from './supabase';
 import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
 
 export enum CoinPackage {
-  SMALL = 'small_coin_pack',
-  MEDIUM = 'medium_coin_pack',
-  LARGE = 'large_coin_pack',
+  SMALL = '5_coins',
+  MEDIUM = '15_coins',
+  LARGE = '50_coins',
+  XLARGE = '200_coins',
 }
 
 export interface PackageDetails {
@@ -22,18 +22,23 @@ export interface PackageDetails {
 export const COIN_PACKAGES: Omit<PackageDetails, 'package' | 'price' | 'rawPrice'>[] = [
   {
     id: CoinPackage.SMALL,
-    name: '100 Coins',
-    coins: 100,
+    name: '5 Coins',
+    coins: 5,
   },
   {
     id: CoinPackage.MEDIUM,
-    name: '300 Coins',
-    coins: 300,
+    name: '15 Coins',
+    coins: 15,
   },
   {
     id: CoinPackage.LARGE,
-    name: '1000 Coins',
-    coins: 1000,
+    name: '50 Coins',
+    coins: 50,
+  },
+  {
+    id: CoinPackage.XLARGE,
+    name: '200 Coins',
+    coins: 200,
   },
 ];
 
@@ -95,12 +100,17 @@ export async function purchasePackage(packageId: CoinPackage): Promise<boolean> 
   try {
     const packages = await getAvailablePackages();
     const packageToPurchase = packages.find(p => p.id === packageId);
+
+    console.log('Package to purchase:', packageToPurchase);
     
     if (!packageToPurchase?.package) {
       throw new Error('Package not found');
     }
 
-    const { customerInfo } = await Purchases.purchasePackage(packageToPurchase.package);
+    console.log('Purchasing package:', packageToPurchase.package);
+
+    const purchaseResult = await Purchases.purchasePackage(packageToPurchase.package);
+    console.log('Purchase result:', purchaseResult);
     
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();

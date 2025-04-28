@@ -291,8 +291,6 @@ export default function StoryReader() {
 
       if (error) throw error;
 
-      // Generate new audio with selected voice
-      generatePageAudio(voiceId);
     } catch (error) {
       console.error('Error updating voice preference:', error);
     }
@@ -301,14 +299,33 @@ export default function StoryReader() {
   const generatePageAudio = async (voiceId: VoiceId = selectedVoice) => {
     if (!currentPage || !story) return;
 
-    // Check for existing cached audio first
-    // If we already have audio for this page/voice, we don't charge again
+    // Check if we already have audio for this page and voice
     if (audioUrl && selectedVoice === voiceId) {
       setShowAudioPlayer(true);
       return;
     }
 
-    // Otherwise, check if the user has enough coins
+    // Check if the audio exists in the database
+    try {
+      const { data: existingAudio, error: audioError } = await supabase
+        .from('story_audio')
+        .select('audio_url')
+        .eq('story_id', storyId)
+        .eq('page_number', pageNumber)
+        .eq('voice_id', voiceId)
+        .single();
+
+      if (!audioError && existingAudio?.audio_url) {
+        setAudioUrl(existingAudio.audio_url);
+        setShowAudioPlayer(true);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking for existing audio:', error);
+    }
+
+    // If we get here, we need to generate new audio
+    // Check if the user has enough coins
     const hasCoins = await useCoins('GENERATE_AUDIO');
     if (!hasCoins) {
       showInsufficientCoinsAlert('GENERATE_AUDIO', () => {});
