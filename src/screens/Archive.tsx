@@ -78,7 +78,6 @@ export default function ArchiveScreen() {
       setShowModal(false);
       setSelectedStory(null);
       
-      Alert.alert('Success', 'Story unarchived successfully');
     } catch (error) {
       console.error('Error unarchiving story:', error);
       Alert.alert('Error', 'Failed to unarchive story');

@@ -212,8 +212,6 @@ export default function BookshelfScreen() {
             ? { ...story, cover_image_url: publicUrl }
             : story
         ));
-
-        Alert.alert('Success', 'Cover image uploaded successfully!');
       }
     } catch (error: any) {
       console.error('Error uploading image:', error);

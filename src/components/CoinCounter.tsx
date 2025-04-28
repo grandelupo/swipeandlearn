@@ -47,7 +47,6 @@ const CoinCounter = () => {
       const success = await purchaseCoins(packageId);
       
       if (success) {
-        Alert.alert('Purchase Successful', 'Coins have been added to your account!');
         setModalVisible(false);
       } else {
         Alert.alert('Purchase Failed', 'There was an error processing your purchase. Please try again.');
