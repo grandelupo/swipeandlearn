@@ -10,10 +10,11 @@ import { MainStackParamList } from './types';
 import CoinCounter from '@/components/CoinCounter';
 import ArchiveScreen from '@/screens/Archive';
 import FeedbackButton from '@/components/FeedbackButton';
+import { FeedbackButtonProvider } from '@/contexts/FeedbackButtonContext';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
-export default function MainStack() {
+function MainStackContent() {
   return (
     <Stack.Navigator>
       <Stack.Screen 
@@ -87,6 +88,14 @@ export default function MainStack() {
         }}
       />
     </Stack.Navigator>
+  );
+}
+
+export default function MainStack() {
+  return (
+    <FeedbackButtonProvider>
+      <MainStackContent />
+    </FeedbackButtonProvider>
   );
 }
 

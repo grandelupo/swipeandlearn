@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Text, Button } from '@rneui/themed';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { generateBookCover } from '@/services/edgeFunctions';
@@ -24,6 +24,8 @@ import { useCoins } from '@/contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { Icon } from '@rneui/base';
 import { COLORS } from '@/constants/colors';
+import TutorialOverlay from '@/components/TutorialOverlay';
+import { useFeedbackButton } from '@/contexts/FeedbackButtonContext';
 
 interface Story {
   id: string;
@@ -41,7 +43,9 @@ const GRID_PADDING = 16;
 const ITEM_SPACING = 16;
 const ITEM_WIDTH = (width - (GRID_PADDING * 2) - (ITEM_SPACING * (COLUMN_COUNT - 1))) / COLUMN_COUNT;
 
-type BookshelfScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
+interface BookshelfScreenProps extends NativeStackScreenProps<MainStackParamList, 'Bookshelf'> {
+  feedbackButtonRef: React.RefObject<View>;
+}
 
 export default function BookshelfScreen() {
   const [stories, setStories] = useState<Story[]>([]);
@@ -50,13 +54,17 @@ export default function BookshelfScreen() {
   const [showModal, setShowModal] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const navigation = useNavigation<BookshelfScreenNavigationProp>();
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { useCoins: useCoinContext, showInsufficientCoinsAlert } = useCoins();
+  const { feedbackButtonRef } = useFeedbackButton();
 
   // Animated accent circles
   const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
   const circle2 = useRef(new Animated.ValueXY({ x: width * 0.4, y: width * 0.2 })).current;
   const circle3 = useRef(new Animated.ValueXY({ x: width * 0.1, y: width * 0.9 })).current;
+
+  // Add refs for tutorial targets
+  const addStoryButtonRef = useRef<View>(null);
 
   useEffect(() => {
     Animated.loop(
@@ -277,6 +285,19 @@ export default function BookshelfScreen() {
     </TouchableOpacity>
   );
 
+  const bookshelfTutorialSteps = [
+    {
+      id: 'feedback_button',
+      message: 'You can send feedback to the developer by clicking the button in the top right corner. Thank you!',
+      targetRef: feedbackButtonRef,
+    },
+    {
+      id: 'add_story',
+      message: 'Click the + button to create a new story.',
+      targetRef: addStoryButtonRef,
+    },
+  ];
+
   if (loading) {
     return (
       <View style={styles.outerContainer}>
@@ -295,6 +316,7 @@ export default function BookshelfScreen() {
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>My Stories</Text>
         <TouchableOpacity
+          ref={addStoryButtonRef}
           style={styles.newButton}
           onPress={() => navigation.navigate('NewStory')}
         >
@@ -316,6 +338,10 @@ export default function BookshelfScreen() {
           contentContainerStyle={styles.grid}
         />
       )}
+      <TutorialOverlay
+        screenName="bookshelf"
+        steps={bookshelfTutorialSteps}
+      />
 
       <Modal
         visible={showModal}

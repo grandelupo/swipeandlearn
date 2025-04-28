@@ -27,6 +27,7 @@ import { useStoryCache } from '../contexts/StoryCacheContext';
 import { useCoins as useCoinContext } from '../contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { COLORS } from '@/constants/colors';
+import TutorialOverlay from '@/components/TutorialOverlay';
 
 interface StoryPage {
   content: string;
@@ -53,6 +54,7 @@ export default function StoryReader() {
   const scrollViewRef = useRef<ScrollView>(null);
   const { getCachedPage, getCachedStory, cachePage } = useStoryCache();
   const { useCoins, showInsufficientCoinsAlert } = useCoinContext();
+  const [preferredLanguage, setPreferredLanguage] = useState('en');
 
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -79,6 +81,10 @@ export default function StoryReader() {
   const circle2 = useRef(new Animated.ValueXY({ x: 120, y: 200 })).current;
   const circle3 = useRef(new Animated.ValueXY({ x: 40, y: 600 })).current;
   const [availableVoices, setAvailableVoices] = useState<VoiceId[]>([]);
+
+  // Add refs for tutorial targets
+  const contentRef = useRef<View>(null);
+  const audioButtonRef = useRef<View>(null);
 
   useEffect(() => {
     fetchStoryAndPage();
@@ -363,7 +369,7 @@ export default function StoryReader() {
       } else {
         setAudioUrl(null);
       }
-
+      
       // Update user preference
       const { error } = await supabase
         .from('profiles')
@@ -394,17 +400,17 @@ export default function StoryReader() {
         setAudioUrl(existingRecording.audio_url);
         setShowAudioPlayer(true);
         return;
-      }
+    }
 
-      // If we get here, we need to generate new audio
-      // Check if the user has enough coins
-      const hasCoins = await useCoins('GENERATE_AUDIO');
-      if (!hasCoins) {
-        showInsufficientCoinsAlert('GENERATE_AUDIO', () => {});
-        return;
-      }
+    // If we get here, we need to generate new audio
+    // Check if the user has enough coins
+    const hasCoins = await useCoins('GENERATE_AUDIO');
+    if (!hasCoins) {
+      showInsufficientCoinsAlert('GENERATE_AUDIO', () => {});
+      return;
+    }
 
-      setAudioLoading(true);
+    setAudioLoading(true);
       const audioUrl = await generateSpeech({
         text: currentPage.content,
         voiceId,
@@ -492,7 +498,7 @@ export default function StoryReader() {
           }
           
           return (
-            <View key={index} style={styles.sentenceWrapper}>
+            <View key={index} style={styles.sentenceWrapper} ref={index === 0 ? contentRef : undefined}>
               <View
                 style={[
                   styles.sentenceContainer,
@@ -580,6 +586,41 @@ export default function StoryReader() {
     }
   }, [currentPage, preloadPages]);
 
+  const handleLanguageSelect = async (language: string) => {
+    setPreferredLanguage(language);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          preferred_language: language,
+        });
+    }
+  };
+
+  const storyReaderTutorialSteps = [
+    {
+      id: 'translation',
+      message: 'Click once on any sentence to translate it to your preferred language.',
+      targetRef: contentRef,
+    },
+    {
+      id: 'dictionary',
+      message: 'Long-press on any word to see its dictionary definition.',
+      targetRef: contentRef,
+    },
+    {
+      id: 'language_select',
+      message: 'What is your preferred language for translations?',
+    },
+    {
+      id: 'audiobook',
+      message: 'Click the headphones button to generate an audiobook version of the story.',
+      targetRef: audioButtonRef,
+    },
+  ];
+
   if (loading || generating) {
     return (
       <View style={styles.outerContainer}>
@@ -639,6 +680,7 @@ export default function StoryReader() {
             <Text style={styles.headerMeta}>Page {pageNumber} of {story.total_pages || 1}</Text>
             <Text style={styles.difficultyBadge}>CEFR {story.difficulty}</Text>
             <TouchableOpacity
+              ref={audioButtonRef}
               style={styles.audioIconButton}
               onPress={() => setShowAudioPlayer(!showAudioPlayer)}
             >
@@ -785,6 +827,11 @@ export default function StoryReader() {
             />
         </View>
       )}
+      <TutorialOverlay
+        screenName="story_reader"
+        steps={storyReaderTutorialSteps}
+        onLanguageSelect={handleLanguageSelect}
+      />
     </View>
   );
 }

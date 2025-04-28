@@ -11,6 +11,7 @@ import { Text } from '@rneui/themed';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { supabase } from '@/services/supabase';
 import { COLORS } from '@/constants/colors';
+import { useFeedbackButton } from '@/contexts/FeedbackButtonContext';
 
 interface FeedbackButtonProps {
   isEnabled?: boolean;
@@ -20,6 +21,7 @@ export default function FeedbackButton({ isEnabled = true }: FeedbackButtonProps
   const [isVisible, setIsVisible] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { feedbackButtonRef } = useFeedbackButton();
 
   const handleSubmit = async () => {
     if (!feedback.trim()) {
@@ -57,6 +59,7 @@ export default function FeedbackButton({ isEnabled = true }: FeedbackButtonProps
   return (
     <>
       <TouchableOpacity
+        ref={feedbackButtonRef}
         style={styles.button}
         onPressIn={() => setIsVisible(true)}
       >

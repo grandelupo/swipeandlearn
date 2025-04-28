@@ -25,6 +25,7 @@ import { useCoins as useCoinContext } from '../contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { COLORS } from '@/constants/colors';
 import Modal from 'react-native-modal';
+import TutorialOverlay from '@/components/TutorialOverlay';
 
 type NewStoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -103,6 +104,9 @@ export default function NewStoryScreen() {
   const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
   const circle2 = useRef(new Animated.ValueXY({ x: 120, y: 200 })).current;
   const circle3 = useRef(new Animated.ValueXY({ x: 40, y: 600 })).current;
+
+  // Add refs for tutorial targets
+  const targetWordsButtonRef = useRef<View>(null);
 
   useEffect(() => {
     fetchUserPreferences();
@@ -324,6 +328,14 @@ export default function NewStoryScreen() {
     }
   };
 
+  const newStoryTutorialSteps = [
+    {
+      id: 'target_words',
+      message: 'Click on "Add Target Words" to add words that will be used in the story.',
+      targetRef: targetWordsButtonRef,
+    },
+  ];
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -413,7 +425,11 @@ export default function NewStoryScreen() {
           </View>
 
           <View style={styles.inputRow}>
-            <TouchableOpacity style={styles.addTargetWordsButton} onPress={() => setTargetWordModalVisible(true)}>
+            <TouchableOpacity 
+              ref={targetWordsButtonRef}
+              style={styles.addTargetWordsButton} 
+              onPress={() => setTargetWordModalVisible(true)}
+            >
               <Text style={styles.addTargetWordsButtonText}>Add Target Words</Text>
             </TouchableOpacity>
           </View>
@@ -518,6 +534,10 @@ export default function NewStoryScreen() {
           </TouchableOpacity>
         </View>
       </Modal>
+      <TutorialOverlay
+        screenName="new_story"
+        steps={newStoryTutorialSteps}
+      />
     </KeyboardAvoidingView>
   );
 }

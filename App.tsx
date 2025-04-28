@@ -12,6 +12,7 @@ import RegisterScreen from './src/screens/auth/Register';
 import { StoryCacheProvider } from './src/contexts/StoryCacheContext';
 import { CoinProvider } from './src/contexts/CoinContext';
 import { initializeRevenueCat } from './src/services/revenuecat';
+import { FeedbackButtonProvider } from '@/contexts/FeedbackButtonContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -46,15 +47,17 @@ export default function App() {
     <SafeAreaProvider>
       <StoryCacheProvider>
         <CoinProvider>
-          <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              {session ? (
-                <Stack.Screen name="Main" component={MainStack} />
-              ) : (
-                <Stack.Screen name="Auth" component={AuthNavigator} />
-              )}
-            </Stack.Navigator>
-          </NavigationContainer>
+          <FeedbackButtonProvider>
+            <NavigationContainer>
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                {session ? (
+                  <Stack.Screen name="Main" component={MainStack} />
+                ) : (
+                  <Stack.Screen name="Auth" component={AuthNavigator} />
+                )}
+              </Stack.Navigator>
+            </NavigationContainer>
+          </FeedbackButtonProvider>
         </CoinProvider>
       </StoryCacheProvider>
     </SafeAreaProvider>

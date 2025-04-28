@@ -13,6 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { VoiceId, AVAILABLE_VOICES } from '@/services/elevenlabs';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { COLORS } from '@/constants/colors';
+import TutorialOverlay from '@/components/TutorialOverlay';
 
 interface AudioPlayerProps {
   audioUrl: string | null;
@@ -44,6 +45,9 @@ export default function AudioPlayer({
 
   const isPlayingRef = useRef(isPlaying);
   isPlayingRef.current = isPlaying;
+
+  // Add refs for tutorial targets
+  const voiceSelectorRef = useRef<View>(null);
 
   useEffect(() => {
     return () => {
@@ -167,6 +171,14 @@ export default function AudioPlayer({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const audioPlayerTutorialSteps = [
+    {
+      id: 'voice_change',
+      message: 'You can change the voice by clicking on the voice name.',
+      targetRef: voiceSelectorRef,
+    },
+  ];
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -229,16 +241,14 @@ export default function AudioPlayer({
 
       <View style={styles.settingsContainer}>
         <TouchableOpacity
+          ref={voiceSelectorRef}
           style={styles.voiceButton}
           onPress={() => setShowVoiceSelector(!showVoiceSelector)}
         >
-          <Icon name="record-voice-over" size={24} color="#000" />
           <Text style={styles.voiceButtonText}>
-            {AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.name}
+            {AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.name || 'Select Voice'}
           </Text>
-          {availableVoices.includes(selectedVoice) && (
-            <Icon name="check-circle" size={16} color={COLORS.accent} style={{ marginLeft: 4 }} />
-          )}
+          <Icon name={showVoiceSelector ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={24} color={COLORS.accent} />
         </TouchableOpacity>
 
         <View style={styles.speedControls}>
@@ -274,7 +284,7 @@ export default function AudioPlayer({
                 }}
               >
                 <View style={styles.voiceHeader}>
-                  <Text style={styles.voiceName}>{voice.name}</Text>
+                <Text style={styles.voiceName}>{voice.name}</Text>
                   {availableVoices.includes(voice.id) && (
                     <Icon name="check-circle" size={16} color={COLORS.accent} />
                   )}
@@ -285,6 +295,11 @@ export default function AudioPlayer({
           </ScrollView>
         </View>
       )}
+
+      <TutorialOverlay
+        screenName="audio_player"
+        steps={audioPlayerTutorialSteps}
+      />
     </View>
   );
 }
