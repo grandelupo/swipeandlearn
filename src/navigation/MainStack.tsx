@@ -9,6 +9,7 @@ import ProfileScreen from '../screens/Profile';
 import { MainStackParamList } from './types';
 import CoinCounter from '@/components/CoinCounter';
 import ArchiveScreen from '@/screens/Archive';
+import FeedbackButton from '@/components/FeedbackButton';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
@@ -22,6 +23,7 @@ export default function MainStack() {
           headerRight: () => (
             <View style={styles.headerRightContainer}>
               <CoinCounter />
+              <FeedbackButton />
               <TouchableOpacity
                 style={styles.profileButton}
                 onPressIn={() => navigation.navigate('Profile')}
@@ -37,14 +39,24 @@ export default function MainStack() {
         component={NewStoryScreen}
         options={{ 
           title: 'Create Story',
-          headerRight: () => <CoinCounter />
+          headerRight: () => (
+            <View style={styles.headerRightContainer}>
+              <CoinCounter />
+              <FeedbackButton />
+            </View>
+          )
         }}
       />
       <Stack.Screen 
         name="Profile" 
         component={ProfileScreen}
         options={{
-          headerRight: () => <CoinCounter />
+          headerRight: () => (
+            <View style={styles.headerRightContainer}>
+              <CoinCounter />
+              <FeedbackButton />
+            </View>
+          )
         }}
       />
       <Stack.Screen 
@@ -54,10 +66,26 @@ export default function MainStack() {
           headerShown: true,
           headerBackTitle: "Back",
           title: "Story",
-          headerRight: () => <CoinCounter />
+          headerRight: () => (
+            <View style={styles.headerRightContainer}>
+              <CoinCounter />
+              <FeedbackButton />
+            </View>
+          )
         }}
       />
-      <Stack.Screen name="Archive" component={ArchiveScreen} />
+      <Stack.Screen 
+        name="Archive" 
+        component={ArchiveScreen}
+        options={{
+          headerRight: () => (
+            <View style={styles.headerRightContainer}>
+              <CoinCounter />
+              <FeedbackButton />
+            </View>
+          )
+        }}
+      />
     </Stack.Navigator>
   );
 }

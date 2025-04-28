@@ -1,7 +1,7 @@
 -- Grant necessary permissions to auth role
-grant usage on schema public to auth;
-grant all on public.profiles to auth;
-grant usage, select on all sequences in schema public to auth;
+grant usage on schema public to authenticated;
+grant all on public.profiles to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
 
 -- Drop the existing trigger and function
 drop trigger if exists on_auth_user_created on auth.users;
