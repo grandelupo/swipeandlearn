@@ -237,14 +237,12 @@ export default function StoryReader() {
           const recording = recordings.find(r => r.voice_id === voices[0]);
           if (recording) {
             setAudioUrl(recording.audio_url);
-            setShowAudioPlayer(true);
           }
         } else if (voices.includes(selectedVoice)) {
           // If current voice is available, load its audio
           const recording = recordings.find(r => r.voice_id === selectedVoice);
           if (recording) {
             setAudioUrl(recording.audio_url);
-            setShowAudioPlayer(true);
           }
         }
       } else {
