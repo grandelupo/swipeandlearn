@@ -11,12 +11,15 @@ export interface Voice {
 }
 
 export const AVAILABLE_VOICES: Voice[] = [
-  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', description: 'Warm and neutral voice' },
-  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam', description: 'Deep and authoritative voice' },
-  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni', description: 'Well-rounded and balanced voice' },
-  { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh', description: 'Young and friendly voice' },
-  { id: 'MF3mGyEYCl7XYWbV9V6O', name: 'Elli', description: 'Emotional and expressive voice' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella', description: 'Soft and soothing voice' },
+  { id: 'KoVIHoyLDrQyd4pGalbs', name: 'Autumn', description: 'Soft, clear narrative female' },
+  { id: 'j05EIz3iI3JmBTWC3CsA', name: 'Laura', description: 'ASMR soothing female' },
+  { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger', description: 'Deep and authoritative' },
+  { id: 'KStQ5J0QpMyuoKkTnbDO', name: 'Bill', description: 'Calm and soothing male' },
+  { id: 'NFG5qt843uXKj4pFvR7C', name: 'Adam', description: 'Deep British male' },
+  { id: 'xctasy8XvGp2cVO9HL9k', name: 'Allisson', description: 'Emotional and expressive millennial female' },
+  { id: 'P7x743VjyZEOihNNygQ9', name: 'Dakota', description: 'Middle-aged African-American female' },
+  { id: 'c51VqUTljshmftbhJEGm', name: 'Emily', description: 'Young friendly female' },
+  { id: 'EiNlNiXeDU1pqqOPrYMO', name: 'John', description: 'Narrative middle-aged male' },
 ];
 
 export async function generateSpeech(text: string, voiceId: VoiceId): Promise<string> {

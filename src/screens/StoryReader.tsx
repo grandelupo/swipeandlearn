@@ -78,11 +78,13 @@ export default function StoryReader() {
   const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
   const circle2 = useRef(new Animated.ValueXY({ x: 120, y: 200 })).current;
   const circle3 = useRef(new Animated.ValueXY({ x: 40, y: 600 })).current;
+  const [availableVoices, setAvailableVoices] = useState<VoiceId[]>([]);
 
   useEffect(() => {
     fetchStoryAndPage();
     fetchTranslationLanguage();
     fetchUserVoicePreference();
+    checkAvailableAudioRecordings();
     Animated.loop(
       Animated.sequence([
         Animated.timing(circle1, { toValue: { x: -60, y: -40 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
@@ -212,6 +214,48 @@ export default function StoryReader() {
     }
   }, [storyId, pageNumber, getCachedStory, getCachedPage, cachePage]);
 
+  const checkAvailableAudioRecordings = async () => {
+    if (!storyId || !pageNumber) return;
+
+    try {
+      const { data: recordings, error } = await supabase
+        .from('audio_recordings')
+        .select('voice_id, audio_url')
+        .eq('story_id', storyId)
+        .eq('page_number', pageNumber);
+
+      if (error) throw error;
+
+      if (recordings && recordings.length > 0) {
+        // Set available voices
+        const voices = recordings.map(r => r.voice_id as VoiceId);
+        setAvailableVoices(voices);
+
+        // If current voice is not available but there are recordings, use the first available voice
+        if (!voices.includes(selectedVoice) && voices.length > 0) {
+          setSelectedVoice(voices[0]);
+          const recording = recordings.find(r => r.voice_id === voices[0]);
+          if (recording) {
+            setAudioUrl(recording.audio_url);
+            setShowAudioPlayer(true);
+          }
+        } else if (voices.includes(selectedVoice)) {
+          // If current voice is available, load its audio
+          const recording = recordings.find(r => r.voice_id === selectedVoice);
+          if (recording) {
+            setAudioUrl(recording.audio_url);
+            setShowAudioPlayer(true);
+          }
+        }
+      } else {
+        setAvailableVoices([]);
+        setAudioUrl(null);
+      }
+    } catch (error) {
+      console.error('Error checking available audio recordings:', error);
+    }
+  };
+
   const handleSentencePress = async (sentence: string) => {
     setSelectedSentence(sentence);
     setTranslationLoading(true);
@@ -305,8 +349,23 @@ export default function StoryReader() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Check if we have a recording for this voice
+      const { data: existingRecording } = await supabase
+        .from('audio_recordings')
+        .select('audio_url')
+        .eq('story_id', storyId)
+        .eq('page_number', pageNumber)
+        .eq('voice_id', voiceId)
+        .single();
+
       setSelectedVoice(voiceId);
       
+      if (existingRecording?.audio_url) {
+        setAudioUrl(existingRecording.audio_url);
+      } else {
+        setAudioUrl(null);
+      }
+
       // Update user preference
       const { error } = await supabase
         .from('profiles')
@@ -323,41 +382,31 @@ export default function StoryReader() {
   const generatePageAudio = async (voiceId: VoiceId = selectedVoice) => {
     if (!currentPage || !story) return;
 
-    // Check if we already have audio for this page and voice
-    if (audioUrl && selectedVoice === voiceId) {
-      setShowAudioPlayer(true);
-      return;
-    }
-
-    // Check if the audio exists in the database
+    // Check if we already have audio for this voice
     try {
-      const { data: existingAudio, error: audioError } = await supabase
-        .from('story_audio')
+      const { data: existingRecording } = await supabase
+        .from('audio_recordings')
         .select('audio_url')
         .eq('story_id', storyId)
         .eq('page_number', pageNumber)
         .eq('voice_id', voiceId)
         .single();
 
-      if (!audioError && existingAudio?.audio_url) {
-        setAudioUrl(existingAudio.audio_url);
+      if (existingRecording?.audio_url) {
+        setAudioUrl(existingRecording.audio_url);
         setShowAudioPlayer(true);
         return;
       }
-    } catch (error) {
-      console.error('Error checking for existing audio:', error);
-    }
 
-    // If we get here, we need to generate new audio
-    // Check if the user has enough coins
-    const hasCoins = await useCoins('GENERATE_AUDIO');
-    if (!hasCoins) {
-      showInsufficientCoinsAlert('GENERATE_AUDIO', () => {});
-      return;
-    }
+      // If we get here, we need to generate new audio
+      // Check if the user has enough coins
+      const hasCoins = await useCoins('GENERATE_AUDIO');
+      if (!hasCoins) {
+        showInsufficientCoinsAlert('GENERATE_AUDIO', () => {});
+        return;
+      }
 
-    setAudioLoading(true);
-    try {
+      setAudioLoading(true);
       const audioUrl = await generateSpeech({
         text: currentPage.content,
         voiceId,
@@ -367,6 +416,9 @@ export default function StoryReader() {
 
       setAudioUrl(audioUrl);
       setShowAudioPlayer(true);
+      
+      // Update available voices after generating new audio
+      await checkAvailableAudioRecordings();
     } catch (error) {
       console.error('Error generating audio:', error);
       Alert.alert('Error', 'Failed to generate audio');
@@ -731,6 +783,7 @@ export default function StoryReader() {
               onVoiceChange={handleVoiceChange}
               selectedVoice={selectedVoice}
               onPlay={generatePageAudio}
+              availableVoices={availableVoices}
             />
         </View>
       )}
@@ -1164,7 +1217,7 @@ const styles = StyleSheet.create({
   },
   audioPlayerOverlay: {
     position: 'absolute',
-    top: 24,
+    top: 0,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -1188,8 +1241,8 @@ const styles = StyleSheet.create({
   },
   audioPlayerClose: {
     position: 'absolute',
-    top: -15,
-    right: 25,
+    top: 10,
+    right: 15,
     zIndex: 10,
     backgroundColor: COLORS.card,
     borderRadius: 16,

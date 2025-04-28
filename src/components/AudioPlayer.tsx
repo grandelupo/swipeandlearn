@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { Text } from '@rneui/themed';
 import Slider from '@react-native-community/slider';
@@ -19,6 +20,7 @@ interface AudioPlayerProps {
   onVoiceChange: (voiceId: VoiceId) => void;
   selectedVoice: VoiceId;
   onPlay: (voiceId: VoiceId) => void;
+  availableVoices?: VoiceId[];
 }
 
 export default function AudioPlayer({
@@ -27,6 +29,7 @@ export default function AudioPlayer({
   onVoiceChange,
   selectedVoice,
   onPlay,
+  availableVoices = [],
 }: AudioPlayerProps) {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -182,7 +185,7 @@ export default function AudioPlayer({
         >
           <Icon name="volume-up" size={24} color="#fff" />
           <Text style={styles.generateButtonText}>
-            Generate audio for this page
+            Generate audio
           </Text>
           <Text style={styles.generateButtonPrice}>{FUNCTION_COSTS.GENERATE_AUDIO}</Text>
           <Icon name="monetization-on" size={16} color={COLORS.card} style={styles.generateButtonIcon} />
@@ -214,9 +217,9 @@ export default function AudioPlayer({
           value={position}
           minimumValue={0}
           maximumValue={duration}
-          minimumTrackTintColor="#0066cc"
-          maximumTrackTintColor="#e1e8ed"
-          thumbTintColor="#0066cc"
+          minimumTrackTintColor={COLORS.accent}
+          maximumTrackTintColor={COLORS.brighter}
+          thumbTintColor={COLORS.accent}
           onSlidingStart={handleSeekStart}
           onSlidingComplete={handleSeekComplete}
           disabled={!sound || isLoading}
@@ -233,6 +236,9 @@ export default function AudioPlayer({
           <Text style={styles.voiceButtonText}>
             {AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.name}
           </Text>
+          {availableVoices.includes(selectedVoice) && (
+            <Icon name="check-circle" size={16} color={COLORS.accent} style={{ marginLeft: 4 }} />
+          )}
         </TouchableOpacity>
 
         <View style={styles.speedControls}>
@@ -254,22 +260,29 @@ export default function AudioPlayer({
 
       {showVoiceSelector && (
         <View style={styles.voiceSelector}>
-          {AVAILABLE_VOICES.map((voice) => (
-            <TouchableOpacity
-              key={voice.id}
-              style={[
-                styles.voiceOption,
-                selectedVoice === voice.id && styles.selectedVoice,
-              ]}
-              onPress={() => {
-                onVoiceChange(voice.id);
-                setShowVoiceSelector(false);
-              }}
-            >
-              <Text style={styles.voiceName}>{voice.name}</Text>
-              <Text style={styles.voiceDescription}>{voice.description}</Text>
-            </TouchableOpacity>
-          ))}
+          <ScrollView style={styles.voiceScroll} contentContainerStyle={{ paddingBottom: 8 }}>
+            {AVAILABLE_VOICES.map((voice) => (
+              <TouchableOpacity
+                key={voice.id}
+                style={[
+                  styles.voiceOption,
+                  selectedVoice === voice.id && styles.selectedVoice,
+                ]}
+                onPress={() => {
+                  onVoiceChange(voice.id);
+                  setShowVoiceSelector(false);
+                }}
+              >
+                <View style={styles.voiceHeader}>
+                  <Text style={styles.voiceName}>{voice.name}</Text>
+                  {availableVoices.includes(voice.id) && (
+                    <Icon name="check-circle" size={16} color={COLORS.accent} />
+                  )}
+                </View>
+                <Text style={styles.voiceDescription}>{voice.description}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       )}
     </View>
@@ -278,21 +291,22 @@ export default function AudioPlayer({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    padding: 10,
     backgroundColor: COLORS.card,
-    borderRadius: 18,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
     shadowColor: COLORS.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 4,
-    marginBottom: 12,
+    width: '100%',
   },
   controls: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 4,
   },
   button: {
     padding: 10,
@@ -318,7 +332,7 @@ const styles = StyleSheet.create({
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 4,
   },
   time: {
     fontSize: 13,
@@ -390,11 +404,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
+  voiceScroll: {
+    maxHeight: 220,
+  },
   voiceOption: {
     padding: 12,
     borderRadius: 10,
     marginBottom: 8,
-    backgroundColor: COLORS.bright,
+    backgroundColor: COLORS.brighter,
   },
   selectedVoice: {
     backgroundColor: COLORS.accent,
@@ -424,6 +441,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
     marginBottom: 8,
+    width: 200,
+    alignSelf: 'center',
   },
   generateButtonText: {
     color: COLORS.card,
@@ -446,5 +465,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.primary,
     fontFamily: 'Poppins-Bold',
+    textAlign: 'center',
+    width: '100%',
+  },
+  voiceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
 }); 
