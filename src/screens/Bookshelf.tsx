@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -47,6 +47,113 @@ interface BookshelfScreenProps extends NativeStackScreenProps<MainStackParamList
   feedbackButtonRef: React.RefObject<View>;
 }
 
+const AnimatedBackground = React.memo(() => {
+  const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
+  const circle2 = useRef(new Animated.ValueXY({ x: width * 0.4, y: width * 0.2 })).current;
+  const circle3 = useRef(new Animated.ValueXY({ x: width * 0.1, y: width * 0.9 })).current;
+
+  const createAnimation = useCallback((
+    animatedValue: Animated.ValueXY,
+    start: { x: number; y: number },
+    end: { x: number; y: number },
+    duration: number
+  ) => {
+    return Animated.sequence([
+      Animated.timing(animatedValue, {
+        toValue: end,
+        duration,
+        useNativeDriver: true,
+        easing: Easing.inOut(Easing.quad)
+      }),
+      Animated.timing(animatedValue, {
+        toValue: start,
+        duration,
+        useNativeDriver: true,
+        easing: Easing.inOut(Easing.quad)
+      })
+    ]);
+  }, []);
+
+  useEffect(() => {
+    const animations = [
+      Animated.loop(
+        createAnimation(
+          circle1,
+          { x: -80, y: -60 },
+          { x: -60, y: -40 },
+          12000
+        )
+      ),
+      Animated.loop(
+        createAnimation(
+          circle2,
+          { x: width * 0.4, y: width * 0.2 },
+          { x: width * 0.45, y: width * 0.25 },
+          15000
+        )
+      ),
+      Animated.loop(
+        createAnimation(
+          circle3,
+          { x: width * 0.1, y: width * 0.9 },
+          { x: width * 0.12, y: width * 0.92 },
+          18000
+        )
+      )
+    ];
+
+    animations.forEach(animation => animation.start());
+
+    return () => {
+      animations.forEach(animation => animation.stop());
+    };
+  }, [createAnimation]);
+
+  return (
+    <View style={styles.backgroundContainer}>
+      <Animated.View
+        style={[
+          styles.circle,
+          {
+            transform: [
+              { translateX: circle1.x },
+              { translateY: circle1.y }
+            ],
+            backgroundColor: COLORS.accent,
+            opacity: 0.18
+          }
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.circle,
+          {
+            transform: [
+              { translateX: circle2.x },
+              { translateY: circle2.y }
+            ],
+            backgroundColor: COLORS.bright,
+            opacity: 0.13
+          }
+        ]}
+      />
+      <Animated.View
+        style={[
+          styles.circle,
+          {
+            transform: [
+              { translateX: circle3.x },
+              { translateY: circle3.y }
+            ],
+            backgroundColor: COLORS.bright,
+            opacity: 0.10
+          }
+        ]}
+      />
+    </View>
+  );
+});
+
 export default function BookshelfScreen() {
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,34 +165,8 @@ export default function BookshelfScreen() {
   const { useCoins: useCoinContext, showInsufficientCoinsAlert } = useCoins();
   const { feedbackButtonRef } = useFeedbackButton();
 
-  // Animated accent circles
-  const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
-  const circle2 = useRef(new Animated.ValueXY({ x: width * 0.4, y: width * 0.2 })).current;
-  const circle3 = useRef(new Animated.ValueXY({ x: width * 0.1, y: width * 0.9 })).current;
-
   // Add refs for tutorial targets
   const addStoryButtonRef = useRef<View>(null);
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(circle1, { toValue: { x: -60, y: -40 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
-        Animated.timing(circle1, { toValue: { x: -80, y: -60 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(circle2, { toValue: { x: width * 0.45, y: width * 0.25 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
-        Animated.timing(circle2, { toValue: { x: width * 0.4, y: width * 0.2 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(circle3, { toValue: { x: width * 0.12, y: width * 0.92 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
-        Animated.timing(circle3, { toValue: { x: width * 0.1, y: width * 0.9 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
-      ])
-    ).start();
-  }, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -308,11 +389,7 @@ export default function BookshelfScreen() {
 
   return (
     <View style={styles.outerContainer}>
-      <View style={styles.backgroundContainer}>
-        <Animated.View style={[styles.circle, circle1.getLayout(), { backgroundColor: COLORS.accent, opacity: 0.18 }]} />
-        <Animated.View style={[styles.circle, circle2.getLayout(), { backgroundColor: COLORS.bright, opacity: 0.13 }]} />
-        <Animated.View style={[styles.circle, circle3.getLayout(), { backgroundColor: COLORS.bright, opacity: 0.10 }]} />
-      </View>
+      <AnimatedBackground />
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>My Stories</Text>
         <TouchableOpacity

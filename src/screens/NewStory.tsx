@@ -9,8 +9,6 @@ import {
   ActivityIndicator,
   Switch,
   TouchableOpacity,
-  Animated,
-  Easing,
   Text as RNText,
 } from 'react-native';
 import { Input, Button, Text, Chip } from '@rneui/themed';
@@ -26,6 +24,7 @@ import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { COLORS } from '@/constants/colors';
 import Modal from 'react-native-modal';
 import TutorialOverlay from '@/components/TutorialOverlay';
+import AnimatedBackground from '@/components/AnimatedBackground';
 
 type NewStoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -100,34 +99,11 @@ export default function NewStoryScreen() {
   const [targetWordModalVisible, setTargetWordModalVisible] = useState(false);
   const [newTargetWordInput, setNewTargetWordInput] = useState('');
 
-  // Animated accent circles
-  const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
-  const circle2 = useRef(new Animated.ValueXY({ x: 120, y: 200 })).current;
-  const circle3 = useRef(new Animated.ValueXY({ x: 40, y: 600 })).current;
-
-  // Add refs for tutorial targets
-  const targetWordsButtonRef = useRef<View>(null);
+  // Remove circle refs and animations
+  const addStoryButtonRef = useRef<View>(null);
 
   useEffect(() => {
     fetchUserPreferences();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(circle1, { toValue: { x: -60, y: -40 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
-        Animated.timing(circle1, { toValue: { x: -80, y: -60 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(circle2, { toValue: { x: 140, y: 220 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
-        Animated.timing(circle2, { toValue: { x: 120, y: 200 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(circle3, { toValue: { x: 60, y: 620 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
-        Animated.timing(circle3, { toValue: { x: 40, y: 600 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
-      ])
-    ).start();
   }, []);
 
   const fetchUserPreferences = async () => {
@@ -332,7 +308,7 @@ export default function NewStoryScreen() {
     {
       id: 'target_words',
       message: 'Click on "Add Target Words" to add words that will be used in the story.',
-      targetRef: targetWordsButtonRef,
+      targetRef: addStoryButtonRef,
     },
   ];
 
@@ -341,11 +317,7 @@ export default function NewStoryScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.outerContainer}
     >
-      <View style={styles.backgroundContainer}>
-        <Animated.View style={[styles.circle, circle1.getLayout(), { backgroundColor: COLORS.accent, opacity: 0.18 }]} />
-        <Animated.View style={[styles.circle, circle2.getLayout(), { backgroundColor: COLORS.bright, opacity: 0.13 }]} />
-        <Animated.View style={[styles.circle, circle3.getLayout(), { backgroundColor: COLORS.brighter, opacity: 0.10 }]} />
-      </View>
+      <AnimatedBackground />
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }}>
         <Text style={styles.headerText}>Create New Story</Text>
         <View style={styles.formBox}>
@@ -426,7 +398,7 @@ export default function NewStoryScreen() {
 
           <View style={styles.inputRow}>
             <TouchableOpacity 
-              ref={targetWordsButtonRef}
+              ref={addStoryButtonRef}
               style={styles.addTargetWordsButton} 
               onPress={() => setTargetWordModalVisible(true)}
             >
@@ -546,16 +518,6 @@ const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
     backgroundColor: COLORS.background,
-  },
-  backgroundContainer: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 0,
-  },
-  circle: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
   },
   container: {
     flex: 1,

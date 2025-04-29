@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,8 +7,6 @@ import {
   Platform,
   TouchableOpacity,
   Text as RNText,
-  Animated,
-  Easing,
 } from 'react-native';
 import { Input, Text } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
@@ -17,6 +15,7 @@ import { AuthStackParamList } from '../../navigation/types';
 import { supabase } from '@/services/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
+import AnimatedBackground from '@/components/AnimatedBackground';
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
@@ -26,44 +25,6 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation<RegisterScreenNavigationProp>();
-
-  // Animated bubble positions
-  const bubble1 = useRef(new Animated.ValueXY({ x: -60, y: -80 })).current;
-  const bubble2 = useRef(new Animated.ValueXY({ x: 180, y: 0 })).current;
-  const bubble3 = useRef(new Animated.ValueXY({ x: 120, y: 600 })).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(bubble1, {
-          toValue: { x: -40, y: -60 }, duration: 8000, useNativeDriver: false, easing: Easing.inOut(Easing.quad)
-        }),
-        Animated.timing(bubble1, {
-          toValue: { x: -60, y: -80 }, duration: 8000, useNativeDriver: false, easing: Easing.inOut(Easing.quad)
-        })
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(bubble2, {
-          toValue: { x: 200, y: 20 }, duration: 10000, useNativeDriver: false, easing: Easing.inOut(Easing.quad)
-        }),
-        Animated.timing(bubble2, {
-          toValue: { x: 180, y: 0 }, duration: 10000, useNativeDriver: false, easing: Easing.inOut(Easing.quad)
-        })
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(bubble3, {
-          toValue: { x: 140, y: 620 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad)
-        }),
-        Animated.timing(bubble3, {
-          toValue: { x: 120, y: 600 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad)
-        })
-      ])
-    ).start();
-  }, []);
 
   async function handleRegister() {
     if (loading) return;
@@ -98,11 +59,7 @@ export default function RegisterScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.outerContainer}
     >
-      <View style={styles.backgroundContainer}>
-        <Animated.View style={[styles.bgShape1, bubble1.getLayout(), { backgroundColor: COLORS.accent }]} />
-        <Animated.View style={[styles.bgShape2, bubble2.getLayout(), { backgroundColor: COLORS.bright }]} />
-        <Animated.View style={[styles.bgShape3, bubble3.getLayout(), { backgroundColor: COLORS.brighter }]} />
-      </View>
+      <AnimatedBackground variant="auth" />
       <View style={styles.container}>
         <Text style={styles.title} h3>Sign Up</Text>
         <View style={{ height: 32 }} />
@@ -178,34 +135,6 @@ const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
     backgroundColor: COLORS.background,
-  },
-  backgroundContainer: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 0,
-  },
-  bgShape1: {
-    position: 'absolute',
-    width: 260,
-    height: 180,
-    borderBottomRightRadius: 180,
-    borderBottomLeftRadius: 120,
-    borderTopLeftRadius: 120,
-    borderTopRightRadius: 80,
-    opacity: 0.9,
-  },
-  bgShape2: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 120,
-    opacity: 0.9,
-  },
-  bgShape3: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    opacity: 0.9,
   },
   container: {
     flex: 1,

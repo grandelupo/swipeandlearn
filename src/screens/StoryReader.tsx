@@ -28,6 +28,7 @@ import { useCoins as useCoinContext } from '../contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { COLORS } from '@/constants/colors';
 import TutorialOverlay from '@/components/TutorialOverlay';
+import AnimatedBackground from '@/components/AnimatedBackground';
 
 interface StoryPage {
   content: string;
@@ -77,9 +78,6 @@ export default function StoryReader() {
   const [definitions, setDefinitions] = useState<Definition[] | null>(null);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
-  const circle2 = useRef(new Animated.ValueXY({ x: 120, y: 200 })).current;
-  const circle3 = useRef(new Animated.ValueXY({ x: 40, y: 600 })).current;
   const [availableVoices, setAvailableVoices] = useState<VoiceId[]>([]);
 
   // Add refs for tutorial targets
@@ -91,24 +89,6 @@ export default function StoryReader() {
     fetchTranslationLanguage();
     fetchUserVoicePreference();
     checkAvailableAudioRecordings();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(circle1, { toValue: { x: -60, y: -40 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
-        Animated.timing(circle1, { toValue: { x: -80, y: -60 }, duration: 12000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(circle2, { toValue: { x: 140, y: 220 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
-        Animated.timing(circle2, { toValue: { x: 120, y: 200 }, duration: 15000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
-      ])
-    ).start();
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(circle3, { toValue: { x: 60, y: 620 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) }),
-        Animated.timing(circle3, { toValue: { x: 40, y: 600 }, duration: 18000, useNativeDriver: false, easing: Easing.inOut(Easing.quad) })
-      ])
-    ).start();
   }, [storyId, pageNumber]);
 
   const fetchTranslationLanguage = async () => {
@@ -666,12 +646,7 @@ export default function StoryReader() {
 
   return (
     <View style={styles.outerContainer}>
-      <View style={styles.backgroundContainer}>
-        <Animated.View style={[styles.circle, circle1.getLayout(), { backgroundColor: COLORS.accent, opacity: 0.18 }]} />
-        <Animated.View style={[styles.circle, circle2.getLayout(), { backgroundColor: COLORS.bright, opacity: 0.13 }]} />
-        <Animated.View style={[styles.circle, circle3.getLayout(), { backgroundColor: COLORS.brighter, opacity: 0.10 }]} />
-      </View>
-      
+      <AnimatedBackground />
       <ScrollView ref={scrollViewRef} style={styles.content} contentContainerStyle={{ paddingBottom: 120 }}>
 
         <View style={styles.header}>
@@ -840,16 +815,6 @@ const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
     backgroundColor: COLORS.background,
-  },
-  backgroundContainer: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 0,
-  },
-  circle: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
   },
   header: {
     padding: 24,
