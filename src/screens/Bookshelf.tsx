@@ -426,11 +426,7 @@ export default function BookshelfScreen() {
         animationType="fade"
         onRequestClose={() => setShowModal(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowModal(false)}
-        >
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{selectedStory?.title}</Text>
             <TouchableOpacity
@@ -441,33 +437,34 @@ export default function BookshelfScreen() {
               <Text style={styles.generateButtonText}>
                 {generatingImage ? "Generating..." : "Generate new cover image"}
               </Text>
-              <Text style={styles.generateButtonPrice}>{FUNCTION_COSTS.GENERATE_COVER}</Text>
-              <Icon name="monetization-on" size={16} color="#FFD700" style={styles.generateButtonIcon} />
+              <View style={styles.coinCostContainer}>
+                <Text style={styles.generateButtonPrice}>{FUNCTION_COSTS.GENERATE_COVER}</Text>
+                <Icon name="monetization-on" size={16} color={COLORS.card} style={styles.generateButtonIcon} />
+              </View>
             </TouchableOpacity>
-            <Button
-              title={uploadingImage ? "Uploading..." : "Upload custom cover"}
+            <TouchableOpacity
               onPress={handleUploadImage}
-              loading={uploadingImage}
+              style={[styles.modalButton, styles.uploadButton]}
               disabled={uploadingImage || generatingImage}
-              containerStyle={styles.modalButton}
-              type="outline"
-            />
-            <Button
-              title="Archive Story"
+            >
+              <Text style={styles.uploadButtonText}>
+                {uploadingImage ? "Uploading..." : "Upload custom cover"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() => handleArchive(selectedStory!)}
-              containerStyle={styles.modalButton}
-              type="outline"
-              buttonStyle={{ borderColor: '#ff6b6b' }}
-              titleStyle={{ color: '#ff6b6b' }}
-            />
-            <Button
-              title="Cancel"
-              type="clear"
+              style={[styles.modalButton, styles.archiveButton]}
+            >
+              <Text style={styles.archiveButtonText}>Archive Story</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={() => setShowModal(false)}
-              containerStyle={styles.modalButton}
-            />
+              style={[styles.modalButton, styles.cancelButton]}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     </View>
   );
@@ -579,49 +576,114 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 20,
-    width: '80%',
+    backgroundColor: COLORS.card,
+    borderRadius: 18,
+    padding: 24,
+    width: '90%',
     maxWidth: 400,
     alignItems: 'center',
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: COLORS.primary,
+    marginBottom: 24,
     textAlign: 'center',
-  },
-  modalButton: {
-    width: '100%',
-    marginVertical: 5,
+    fontFamily: 'Poppins-Bold',
   },
   generateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0066cc',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
+    backgroundColor: COLORS.accent,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    width: '100%',
+    marginBottom: 16,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   generateButtonText: {
-    color: '#fff',
+    color: COLORS.card,
     fontWeight: 'bold',
     fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    marginRight: 8,
   },
   generateButtonPrice: {
-    color: '#FFD700',
+    color: COLORS.card,
     fontSize: 16,
     fontWeight: 'bold',
-    marginLeft: 4,
+    marginRight: 4,
+    fontFamily: 'Poppins-Bold',
   },
   generateButtonIcon: {
     marginLeft: -4,
+  },
+  modalButton: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    marginBottom: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadButton: {
+    backgroundColor: COLORS.bright,
+    shadowColor: COLORS.bright,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  uploadButtonText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
+  },
+  archiveButton: {
+    backgroundColor: COLORS.bright,
+    shadowColor: COLORS.bright,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  archiveButtonText: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: COLORS.accent,
+  },
+  cancelButtonText: {
+    color: COLORS.accent,
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
+  },
+  coinCostContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 }); 
