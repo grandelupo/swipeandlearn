@@ -18,18 +18,18 @@ import { supabase } from '@/services/supabase';
 import { t } from '@/i18n/translations';
 
 const SUPPORTED_LANGUAGES = [
-  { label: 'English', value: 'English' },
-  { label: 'Spanish', value: 'Spanish' },
-  { label: 'French', value: 'French' },
-  { label: 'German', value: 'German' },
-  { label: 'Italian', value: 'Italian' },
-  { label: 'Portuguese', value: 'Portuguese' },
-  { label: 'Chinese', value: 'Chinese' },
-  { label: 'Japanese', value: 'Japanese' },
-  { label: 'Korean', value: 'Korean' },
-  { label: 'Russian', value: 'Russian' },
-  { label: 'Arabic', value: 'Arabic' },
-  { label: 'Polish', value: 'Polish' },
+  { label: t('english'), value: 'English' },
+  { label: t('spanish'), value: 'Spanish' },
+  { label: t('french'), value: 'French' },
+  { label: t('german'), value: 'German' },
+  { label: t('italian'), value: 'Italian' },
+  { label: t('portuguese'), value: 'Portuguese' },
+  { label: t('chinese'), value: 'Chinese' },
+  { label: t('japanese'), value: 'Japanese' },
+  { label: t('korean'), value: 'Korean' },
+  { label: t('russian'), value: 'Russian' },
+  { label: t('arabic'), value: 'Arabic' },
+  { label: t('polish'), value: 'Polish' },
 ];
 
 interface TutorialStep {

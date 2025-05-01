@@ -368,7 +368,7 @@ export default function BookshelfScreen() {
       </View>
       <View style={styles.storyInfo}>
         <Text style={styles.storyTitle} numberOfLines={2}>{item.title}</Text>
-        <Text style={styles.storyMeta}>{item.language} • {item.total_pages} pages</Text>
+        <Text style={styles.storyMeta}>{t(item.language.toLowerCase())} • {item.total_pages} {t('pages')}</Text>
       </View>
     </TouchableOpacity>
   );

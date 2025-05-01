@@ -226,6 +226,21 @@ const translations: Translations = {
     storyReaderTutorialDictionary: 'Long-press on any word to see its dictionary definition.',
     storyReaderTutorialLanguageSelect: 'What is your preferred language for translations?',
     storyReaderTutorialAudiobook: 'Click the headphones button to generate an audiobook version of the story.',
+
+    // languages
+    english: 'English',
+    spanish: 'Spanish',
+    french: 'French',
+    german: 'German',
+    italian: 'Italian',
+    portuguese: 'Portuguese',
+    chinese: 'Chinese',
+    japanese: 'Japanese',
+    korean: 'Korean',
+    russian: 'Russian',
+    arabic: 'Arabic',
+    polish: 'Polish',
+    
   },
   pl: {
     // NewStory screen
@@ -446,6 +461,21 @@ const translations: Translations = {
     storyReaderTutorialDictionary: 'Przytrzymaj słowo, aby zobaczyć jego definicję w słowniku.',
     storyReaderTutorialLanguageSelect: 'Jaki jest Twój preferowany język tłumaczenia?',
     storyReaderTutorialAudiobook: 'Kliknij przycisk słuchawek, aby wygenerować wersję audio historii.',
+
+    // languages
+    english: 'Angielski',
+    spanish: 'Hiszpański',
+    french: 'Francuski',
+    german: 'Niemiecki',
+    italian: 'Włoski',
+    portuguese: 'Portugalski',
+    chinese: 'Chiński',
+    japanese: 'Japoński',
+    korean: 'Koreański',
+    russian: 'Rosyjski',
+    arabic: 'Arabski',
+    polish: 'Polski',
+
   }
 };
 

@@ -33,18 +33,18 @@ type NewStoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList
 type Difficulty = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'Divine';
 
 const SUPPORTED_LANGUAGES = [
-  { label: 'English', value: 'English' },
-  { label: 'Spanish', value: 'Spanish' },
-  { label: 'French', value: 'French' },
-  { label: 'German', value: 'German' },
-  { label: 'Italian', value: 'Italian' },
-  { label: 'Portuguese', value: 'Portuguese' },
-  { label: 'Chinese', value: 'Chinese' },
-  { label: 'Japanese', value: 'Japanese' },
-  { label: 'Korean', value: 'Korean' },
-  { label: 'Russian', value: 'Russian' },
-  { label: 'Arabic', value: 'Arabic' },
-  { label: 'Polish', value: 'Polish' },
+  { label: t('english'), value: 'English' },
+  { label: t('spanish'), value: 'Spanish' },
+  { label: t('french'), value: 'French' },
+  { label: t('german'), value: 'German' },
+  { label: t('italian'), value: 'Italian' },
+  { label: t('portuguese'), value: 'Portuguese' },
+  { label: t('chinese'), value: 'Chinese' },
+  { label: t('japanese'), value: 'Japanese' },
+  { label: t('korean'), value: 'Korean' },
+  { label: t('russian'), value: 'Russian' },
+  { label: t('arabic'), value: 'Arabic' },
+  { label: t('polish'), value: 'Polish' },
 ];
 
 const DIFFICULTY_LEVELS: Array<{ label: string; value: Difficulty; description: string }> = [
