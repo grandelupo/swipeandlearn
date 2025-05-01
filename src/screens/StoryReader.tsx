@@ -21,7 +21,7 @@ import { generateStoryContent, generateSpeech, translateText } from '@/services/
 import AudioPlayer from '@/components/AudioPlayer';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Dictionary, { Definition } from '@/components/Dictionary';
-import { fetchDefinitions } from '@/services/dictionary';
+import { fetchDefinitions, DictionaryType } from '@/services/dictionary';
 import { VoiceId } from '@/services/elevenlabs';
 import { useStoryCache } from '../contexts/StoryCacheContext';
 import { useCoins as useCoinContext } from '../contexts/CoinContext';
@@ -79,6 +79,7 @@ export default function StoryReader() {
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableVoices, setAvailableVoices] = useState<VoiceId[]>([]);
+  const [selectedDictionaryType, setSelectedDictionaryType] = useState<DictionaryType>('default');
 
   // Add refs for tutorial targets
   const contentRef = useRef<View>(null);
@@ -417,13 +418,29 @@ export default function StoryReader() {
     setIsDictionaryLoading(true);
 
     try {
-      const defs = await fetchDefinitions(word, story?.language || 'English');
+      const defs = await fetchDefinitions(word, story?.language || 'English', selectedDictionaryType);
       setDefinitions(defs);
     } catch (error) {
       console.error('Error fetching definitions:', error);
       Alert.alert('Error', 'Failed to fetch word definition');
     } finally {
       setIsDictionaryLoading(false);
+    }
+  };
+
+  const handleDictionaryTypeChange = async (type: DictionaryType) => {
+    setSelectedDictionaryType(type);
+    if (selectedWord) {
+      setIsDictionaryLoading(true);
+      try {
+        const defs = await fetchDefinitions(selectedWord, story?.language || 'English', type);
+        setDefinitions(defs);
+      } catch (error) {
+        console.error('Error fetching definitions:', error);
+        Alert.alert('Error', 'Failed to fetch word definition');
+      } finally {
+        setIsDictionaryLoading(false);
+      }
     }
   };
 
@@ -785,6 +802,7 @@ export default function StoryReader() {
         }}
         definitions={definitions}
         isLoading={isDictionaryLoading}
+        onDictionaryTypeChange={handleDictionaryTypeChange}
       />
       {/* Audio Player Overlay */}
       {showAudioPlayer && (

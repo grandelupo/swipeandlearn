@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Modal,
@@ -7,14 +7,21 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { Text } from '@rneui/themed';
+import { Text, Button } from '@rneui/themed';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { COLORS } from '@/constants/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DictionaryType, getAvailableDictionaryTypes } from '@/services/dictionary';
+import { Picker } from '@react-native-picker/picker';
 
 export interface Definition {
   partOfSpeech: string;
-  definitions: string[];
-  examples: string[];
+  definitions: Array<{
+    text: string;
+    example?: string;
+  }>;
+  examples?: string[]; // Keep this for backward compatibility
+  relatedWord?: string;
 }
 
 interface DictionaryProps {
@@ -24,6 +31,7 @@ interface DictionaryProps {
   onClose: () => void;
   definitions: Definition[] | null;
   isLoading: boolean;
+  onDictionaryTypeChange?: (type: DictionaryType) => void;
 }
 
 export default function Dictionary({
@@ -33,7 +41,55 @@ export default function Dictionary({
   onClose,
   definitions,
   isLoading,
+  onDictionaryTypeChange,
 }: DictionaryProps) {
+  const [selectedDictionaryType, setSelectedDictionaryType] = useState<DictionaryType>('default');
+  const availableDictionaries = getAvailableDictionaryTypes(language);
+
+  useEffect(() => {
+    // Load the last used dictionary type from storage
+    const loadSavedDictionaryType = async () => {
+      try {
+        const savedType = await AsyncStorage.getItem(`dictionary_type_${language}`);
+        if (savedType && availableDictionaries.includes(savedType as DictionaryType)) {
+          setSelectedDictionaryType(savedType as DictionaryType);
+          onDictionaryTypeChange?.(savedType as DictionaryType);
+        }
+      } catch (error) {
+        console.error('Error loading dictionary type:', error);
+      }
+    };
+
+    loadSavedDictionaryType();
+  }, [language]);
+
+  const handleDictionaryTypeChange = async (type: DictionaryType) => {
+    setSelectedDictionaryType(type);
+    try {
+      await AsyncStorage.setItem(`dictionary_type_${language}`, type);
+      onDictionaryTypeChange?.(type);
+    } catch (error) {
+      console.error('Error saving dictionary type:', error);
+    }
+  };
+
+  // Group definitions by relatedWord
+  const groupedDefinitions = React.useMemo(() => {
+    if (!definitions) return null;
+    
+    const groups: Record<string, Definition[]> = {};
+    
+    definitions.forEach(def => {
+      const key = def.relatedWord || word;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(def);
+    });
+    
+    return Object.entries(groups);
+  }, [definitions, word]);
+
   return (
     <Modal
       visible={isVisible}
@@ -53,35 +109,67 @@ export default function Dictionary({
             </TouchableOpacity>
           </View>
 
+          {availableDictionaries.length > 1 && (
+            <View style={styles.dictionarySelector}>
+              <Text style={styles.selectorLabel}>Dictionary:</Text>
+              <Picker
+                selectedValue={selectedDictionaryType}
+                onValueChange={handleDictionaryTypeChange}
+                style={styles.picker}
+              >
+                {availableDictionaries.map((type) => (
+                  <Picker.Item
+                    key={type}
+                    label={type.charAt(0).toUpperCase() + type.slice(1)}
+                    value={type}
+                  />
+                ))}
+              </Picker>
+            </View>
+          )}
+
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#0066cc" />
               <Text style={styles.loadingText}>Loading definition...</Text>
             </View>
-          ) : definitions && definitions.length > 0 ? (
+          ) : groupedDefinitions ? (
             <ScrollView style={styles.definitionsContainer}>
-              {definitions.map((def, index) => (
-                <View key={index} style={styles.definitionGroup}>
-                  {def.partOfSpeech !== 'error' && (
-                    <Text style={styles.partOfSpeech}>{def.partOfSpeech}</Text>
+              {groupedDefinitions.map(([relatedWord, defs], groupIndex) => (
+                <View key={groupIndex} style={styles.wordGroup}>
+                  {relatedWord !== word && (
+                    <Text style={styles.relatedWordHeader}>{relatedWord}</Text>
                   )}
-                  {def.definitions.map((definition, defIndex) => (
-                    <View key={defIndex} style={styles.definition}>
+                  
+                  {defs.map((def, index) => (
+                    <View key={index} style={styles.definitionGroup}>
                       {def.partOfSpeech !== 'error' && (
-                        <Text style={styles.definitionNumber}>{defIndex + 1}.</Text>
+                        <Text style={styles.partOfSpeech}>{def.partOfSpeech}</Text>
                       )}
-                      <Text style={styles.definitionText}>{definition}</Text>
+                      {def.definitions.map((definition, defIndex) => (
+                        <View key={defIndex} style={styles.definition}>
+                          {def.partOfSpeech !== 'error' && (
+                            <Text style={styles.definitionNumber}>{defIndex + 1}.</Text>
+                          )}
+                          <View style={styles.definitionContent}>
+                            <Text style={styles.definitionText}>{definition.text}</Text>
+                            {definition.example && (
+                              <Text style={styles.definitionExample}>"{definition.example}"</Text>
+                            )}
+                          </View>
+                        </View>
+                      ))}
+                      {def.examples && def.examples.length > 0 && (
+                        <View style={styles.examples}>
+                          {def.examples.map((example, exIndex) => (
+                            <Text key={exIndex} style={styles.example}>
+                              "{example}"
+                            </Text>
+                          ))}
+                        </View>
+                      )}
                     </View>
                   ))}
-                  {def.examples && def.examples.length > 0 && (
-                    <View style={styles.examples}>
-                      {def.examples.map((example, exIndex) => (
-                        <Text key={exIndex} style={styles.example}>
-                          "{example}"
-                        </Text>
-                      ))}
-                    </View>
-                  )}
                 </View>
               ))}
             </ScrollView>
@@ -142,6 +230,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
   },
+  dictionarySelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+    backgroundColor: COLORS.bright,
+    borderRadius: 12,
+  },
+  selectorLabel: {
+    marginRight: 8,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  picker: {
+    flex: 1,
+  },
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
@@ -153,6 +257,18 @@ const styles = StyleSheet.create({
   },
   definitionsContainer: {
     maxHeight: '90%',
+  },
+  wordGroup: {
+    marginBottom: 24,
+  },
+  relatedWordHeader: {
+    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
+    color: COLORS.primary,
+    marginBottom: 8,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.accent + '40',
   },
   definitionGroup: {
     marginBottom: 20,
@@ -194,5 +310,17 @@ const styles = StyleSheet.create({
   noDefinitions: {
     padding: 20,
     alignItems: 'center',
+  },
+  definitionContent: {
+    flex: 1,
+  },
+  definitionExample: {
+    color: COLORS.accent,
+    fontStyle: 'italic',
+    marginTop: 4,
+    marginLeft: 8,
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    opacity: 0.8,
   },
 }); 
