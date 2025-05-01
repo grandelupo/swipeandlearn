@@ -1,6 +1,7 @@
 import { EXPO_PUBLIC_REVENUECAT_API_KEY } from '@env';
 import { supabase } from './supabase';
 import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
+import { t } from '@/i18n/translations';
 
 export enum CoinPackage {
   SMALL = '5_coins',
@@ -22,22 +23,22 @@ export interface PackageDetails {
 export const COIN_PACKAGES: Omit<PackageDetails, 'package' | 'price' | 'rawPrice'>[] = [
   {
     id: CoinPackage.SMALL,
-    name: '5 Coins',
+    name: '5 ' + t('coins'),
     coins: 5,
   },
   {
     id: CoinPackage.MEDIUM,
-    name: '15 Coins',
+    name: '15 ' + t('coins'),
     coins: 15,
   },
   {
     id: CoinPackage.LARGE,
-    name: '50 Coins',
+    name: '50 ' + t('coins'),
     coins: 50,
   },
   {
     id: CoinPackage.XLARGE,
-    name: '200 Coins',
+    name: '200 ' + t('coins'),
     coins: 200,
   },
 ];

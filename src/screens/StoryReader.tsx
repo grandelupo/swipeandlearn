@@ -29,6 +29,7 @@ import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { COLORS } from '@/constants/colors';
 import TutorialOverlay from '@/components/TutorialOverlay';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import { t } from '@/i18n/translations';
 
 interface StoryPage {
   content: string;
@@ -47,6 +48,31 @@ interface Story {
 
 type StoryReaderScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'StoryReader'>;
 type StoryReaderScreenRouteProp = RouteProp<MainStackParamList, 'StoryReader'>;
+
+interface StoryGenerationParams {
+  language: string;
+  difficulty: string;
+  theme: string;
+  userId: string;
+  storyId: string;
+  pageNumber: number;
+  previousPages: string[];
+  targetWords: string[];
+}
+
+interface TranslationParams {
+  text: string;
+  targetLanguage: string;
+  userId: string;
+  storyId: string;
+  isWord?: boolean;
+  context?: string;
+  wordIndex?: number;
+}
+
+interface StoryGenerationResponse {
+  content: string;
+}
 
 export default function StoryReader() {
   const route = useRoute<StoryReaderScreenRouteProp>();
@@ -199,7 +225,8 @@ export default function StoryReader() {
         .eq('id', storyId);
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error(t('errorLoadingStory'), err);
+      setError(err instanceof Error ? err.message : t('errorUnknown'));
     } finally {
       setLoading(false);
     }
@@ -269,47 +296,49 @@ export default function StoryReader() {
   };
 
   const generateNewPage = async (customTargetWords?: string[]) => {
-    if (!story) return;
-    
-    // Check if the user has enough coins
-    const hasCoins = await useCoins('GENERATE_NEW_PAGE');
-    if (!hasCoins) {
-      showInsufficientCoinsAlert('GENERATE_NEW_PAGE', () => 
-        setShowPersonalizeModal(false) // Close the personalize modal if open
-      );
-      return;
-    }
-    
-    setGenerating(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      setGenerating(true);
+      setError(null);
 
-      const { content: newContent } = await generateStoryContent({
-        language: story.language,
-        difficulty: story.difficulty,
-        theme: story.theme || 'free form',
-        targetWords: customTargetWords || [],
-        pageNumber: (story.total_pages || 0) + 1,
-        previousPages,
-        storyId,
+      // Check if user has enough coins
+      const hasCoins = await useCoins('GENERATE_NEW_PAGE');
+      if (!hasCoins) {
+        showInsufficientCoinsAlert('GENERATE_NEW_PAGE', () => {});
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error(t('notAuthenticated'));
+
+      // Generate the page content
+      const response = await generateStoryContent({
+        language: story?.language || 'English',
+        difficulty: story?.difficulty || 'A1',
+        theme: story?.theme || 'general',
         userId: user.id,
+        storyId,
+        pageNumber,
+        previousPages,
+        targetWords: customTargetWords || currentPage?.target_words || [],
       });
 
-      // Navigate to the new page
-      navigation.setParams({ pageNumber: (story.total_pages || 0) + 1 });
-      
-      // Reset personalization state
+      // Update the page in Supabase
+      const { error: updateError } = await supabase
+        .from('story_pages')
+        .update({ content: response.content })
+        .eq('story_id', storyId)
+        .eq('page_number', pageNumber);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setCurrentPage(prev => prev ? { ...prev, content: response.content } : null);
       setPersonalizedTargetWords([]);
       setShowPersonalizeModal(false);
 
-    } catch (error) {
-      console.error('Error generating new page:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      Alert.alert(
-        'Error',
-        `Failed to generate new page: ${errorMessage}. Please try again.`
-      );
+    } catch (err) {
+      console.error(t('errorGeneratingPage'), err);
+      setError(err instanceof Error ? err.message : t('errorUnknown'));
     } finally {
       setGenerating(false);
     }
@@ -369,121 +398,73 @@ export default function StoryReader() {
   };
 
   const generatePageAudio = async (voiceId: VoiceId = selectedVoice) => {
-    if (!currentPage || !story) return;
-
-    // Check if we already have audio for this voice
     try {
-      const { data: existingRecording } = await supabase
-        .from('audio_recordings')
-        .select('audio_url')
-        .eq('story_id', storyId)
-        .eq('page_number', pageNumber)
-        .eq('voice_id', voiceId)
-        .single();
+      setAudioLoading(true);
+      setError(null);
 
-      if (existingRecording?.audio_url) {
-        setAudioUrl(existingRecording.audio_url);
-        setShowAudioPlayer(true);
+      // Check if user has enough coins
+      const hasCoins = await useCoins('GENERATE_AUDIO');
+      if (!hasCoins) {
+        showInsufficientCoinsAlert('GENERATE_AUDIO', () => {});
         return;
-    }
+      }
 
-    // If we get here, we need to generate new audio
-    // Check if the user has enough coins
-    const hasCoins = await useCoins('GENERATE_AUDIO');
-    if (!hasCoins) {
-      showInsufficientCoinsAlert('GENERATE_AUDIO', () => {});
-      return;
-    }
-
-    setAudioLoading(true);
+      // Generate audio
       const audioUrl = await generateSpeech({
-        text: currentPage.content,
+        text: currentPage?.content || '',
         voiceId,
         storyId,
-        pageNumber: pageNumber,
+        pageNumber,
       });
 
       setAudioUrl(audioUrl);
       setShowAudioPlayer(true);
-      
-      // Update available voices after generating new audio
-      await checkAvailableAudioRecordings();
-    } catch (error) {
-      console.error('Error generating audio:', error);
-      Alert.alert('Error', 'Failed to generate audio');
+
+    } catch (err) {
+      console.error(t('errorGeneratingAudio'), err);
+      setError(err instanceof Error ? err.message : t('errorUnknown'));
     } finally {
       setAudioLoading(false);
     }
   };
 
   const handleWordPress = async (word: string, sentence: string, sentenceIndex: number, wordIndex: number) => {
-    const now = Date.now();
-    const DOUBLE_TAP_DELAY = 300;
+    try {
+      setWordTranslationLoading(true);
+      setSelectedWord({ text: word, sentenceIndex, wordIndex });
 
-    if (lastTapRef.current && (now - lastTapRef.current) < DOUBLE_TAP_DELAY) {
-      // Double tap detected - translate sentence
-      if (tapTimeoutRef.current) {
-        clearTimeout(tapTimeoutRef.current);
-        tapTimeoutRef.current = null;
-      }
-      setSelectedWord(null);
-      setSelectedWordTranslation(null);
-      handleSentencePress(sentence);
-    } else {
-      // Single tap - wait to see if it's a double tap
-      lastTapRef.current = now;
-      
-      if (tapTimeoutRef.current) {
-        clearTimeout(tapTimeoutRef.current);
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error(t('notAuthenticated'));
 
-      tapTimeoutRef.current = setTimeout(async () => {
-        // Single tap confirmed - translate word
-        setSelectedWord({ text: word, sentenceIndex, wordIndex });
-        setWordTranslationLoading(true);
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) throw new Error('Not authenticated');
+      const translation = await translateText({
+        text: word,
+        targetLanguage: translationLanguage,
+        userId: user.id,
+        storyId,
+        isWord: true,
+        context: sentence,
+        wordIndex,
+      });
 
-          // Calculate the actual word index in the sentence
-          const sentenceWords = sentence.trim().split(/\s+/);
-          const actualWordIndex = sentenceWords.findIndex((w, idx) => {
-            const cleanW = w.replace(/[.,!?。！？]$/, '');
-            return cleanW === word && idx === wordIndex;
-          });
-
-          const response = await translateText({
-            text: word,
-            targetLanguage: translationLanguage,
-            userId: user.id,
-            storyId,
-            isWord: true,
-            context: sentence,
-            wordIndex: actualWordIndex
-          });
-
-          setSelectedWordTranslation(response);
-        } catch (error) {
-          console.error('Error translating word:', error);
-          Alert.alert('Error', 'Failed to translate word');
-        } finally {
-          setWordTranslationLoading(false);
-        }
-      }, DOUBLE_TAP_DELAY);
+      setSelectedWordTranslation(translation);
+    } catch (error) {
+      console.error(t('errorUnknown'), error);
+    } finally {
+      setWordTranslationLoading(false);
     }
   };
 
   const handleWordLongPress = async (word: string, sentenceIndex: number, wordIndex: number) => {
-    setSelectedWord({ text: word, sentenceIndex, wordIndex });
-    setShowDictionary(true);
-    setIsDictionaryLoading(true);
-
     try {
-      const defs = await fetchDefinitions(word, story?.language || 'English', selectedDictionaryType);
+      setIsDictionaryLoading(true);
+      setSelectedWord({ text: word, sentenceIndex, wordIndex });
+      setShowDictionary(true);
+
+      const defs = await fetchDefinitions(word, selectedDictionaryType);
       setDefinitions(defs);
     } catch (error) {
-      console.error('Error fetching definitions:', error);
-      Alert.alert('Error', 'Failed to fetch word definition');
+      console.error(t('errorFetchingDefinitions'), error);
+      setDefinitions(null);
     } finally {
       setIsDictionaryLoading(false);
     }
@@ -585,7 +566,7 @@ export default function StoryReader() {
                       {isSelected && selectedWordTranslation && (
                         <View style={styles.wordTranslationContainer}>
                           {wordTranslationLoading ? (
-                            <ActivityIndicator size="small" color="#0066cc" />
+                            <ActivityIndicator size="small" color={COLORS.accent} />
                           ) : (
                             <Text style={styles.wordTranslationText}>{selectedWordTranslation}</Text>
                           )}
@@ -601,7 +582,7 @@ export default function StoryReader() {
                   isArabic && styles.arabicTranslationContainer
                 ]}>
                   {translationLoading ? (
-                    <ActivityIndicator size="small" color="#0066cc" />
+                    <ActivityIndicator size="small" color={COLORS.accent} />
                   ) : (
                     translation && <Text style={styles.translationText}>{translation}</Text>
                   )}
@@ -786,7 +767,7 @@ export default function StoryReader() {
             onPress={() => setShowPersonalizeModal(true)}
             activeOpacity={0.85}
           >
-            <Text style={styles.fabWordsButtonText}>Words</Text>
+            <Text style={styles.fabWordsButtonText}>{t('words')}</Text>
             <Icon name="edit" size={20} color={COLORS.card} style={{ marginLeft: 8 }} />
             {personalizedTargetWords.length > 0 && (
               <View style={styles.wordsCountBubble}>
@@ -799,7 +780,7 @@ export default function StoryReader() {
             onPress={() => generateNewPage()}
             activeOpacity={0.85}
           >
-            <Text style={styles.fabContinueButtonText}>Continue</Text>
+            <Text style={styles.fabContinueButtonText}>{t('continueReading')}</Text>
             <Text style={styles.fabContinueButtonPrice}>{FUNCTION_COSTS.GENERATE_NEW_PAGE}</Text>
             <Icon name="monetization-on" size={16} color={COLORS.card} style={styles.fabContinueButtonIcon} />
             <Icon name="arrow-forward" size={24} color={COLORS.card} style={styles.fabArrowIcon} />
@@ -830,13 +811,14 @@ export default function StoryReader() {
       >
         <View style={styles.targetWordModal}>
           <View style={styles.targetWordModalBox}>
-            <Text style={styles.targetWordModalTitle}>Add Target Words</Text>
+            <Text style={styles.targetWordModalTitle}>{t('addTargetWordsTitle')}</Text>
+            <Text style={styles.targetWordModalDescription}>{t('addTargetWordsDescription')}</Text>
             <View style={styles.targetWordModalInputRow}>
               <Input
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.input}
                 containerStyle={styles.inputFlex}
-                placeholder="Enter a word"
+                placeholder={t('wordInputPlaceholder')}
                 value={newTargetWord}
                 onChangeText={setNewTargetWord}
                 placeholderTextColor={COLORS.accent}
@@ -1240,6 +1222,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: COLORS.primary,
     fontFamily: 'Poppins-Bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  targetWordModalDescription: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-Regular',
     marginBottom: 16,
     textAlign: 'center',
   },

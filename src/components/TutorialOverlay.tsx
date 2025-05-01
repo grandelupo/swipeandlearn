@@ -15,6 +15,7 @@ import { Icon } from '@rneui/base';
 import { COLORS } from '@/constants/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/services/supabase';
+import { t } from '@/i18n/translations';
 
 const SUPPORTED_LANGUAGES = [
   { label: 'English', value: 'English' },
@@ -208,6 +209,58 @@ export default function TutorialOverlay({
     }
   };
 
+  const renderLanguageSelector = () => {
+    return (
+      <View style={styles.languageSelectorContainer}>
+        <Text style={styles.languageSelectorTitle}>{t('selectLanguage')}</Text>
+        <View style={styles.languageButtonsContainer}>
+          {SUPPORTED_LANGUAGES.map((lang) => (
+            <TouchableOpacity
+              key={lang.value}
+              style={styles.languageButton}
+              onPress={() => {
+                onLanguageSelect?.(lang.value);
+                handleNext();
+              }}
+            >
+              <Text style={styles.languageButtonText}>{lang.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  const renderNavigationButtons = () => {
+    return (
+      <View style={styles.navigationButtons}>
+        {currentStep < steps.length - 1 ? (
+          <>
+            <TouchableOpacity
+              style={styles.skipButton}
+              onPress={handleSkip}
+            >
+              <Text style={styles.skipButtonText}>{t('skip')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={handleNext}
+            >
+              <Text style={styles.nextButtonText}>{t('next')}</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity
+            style={styles.finishButton}
+            onPress={handleFinish}
+          >
+            <Text style={styles.finishButtonText}>{t('finish')}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    );
+  };
+
   if (!isVisible) return null;
 
   const isLastStep = currentStep === steps.length - 1;
@@ -270,26 +323,9 @@ export default function TutorialOverlay({
           <Text style={styles.message}>{currentStepData.message}</Text>
           
           {currentStepData.id === 'language_select' ? (
-            <View style={styles.languageButtons}>
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <TouchableOpacity
-                  key={lang.value}
-                  style={styles.languageButton}
-                  onPress={() => handleLanguageSelect(lang.value)}
-                >
-                  <Text style={styles.languageButtonText}>{lang.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            renderLanguageSelector()
           ) : (
-            <TouchableOpacity
-              style={styles.nextButton}
-              onPress={handleNext}
-            >
-              <Text style={styles.nextButtonText}>
-                {isLastStep ? 'Got it!' : 'Next'}
-              </Text>
-            </TouchableOpacity>
+            renderNavigationButtons()
           )}
         </View>
       </Animated.View>
@@ -335,7 +371,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
   },
-  languageButtons: {
+  languageSelectorContainer: {
+    marginBottom: 20,
+  },
+  languageSelectorTitle: {
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+    marginBottom: 10,
+  },
+  languageButtonsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
@@ -353,6 +397,33 @@ const styles = StyleSheet.create({
   languageButtonText: {
     color: COLORS.card,
     fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  navigationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  skipButton: {
+    backgroundColor: COLORS.accent,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  skipButtonText: {
+    color: COLORS.card,
+    fontSize: 16,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  finishButton: {
+    backgroundColor: COLORS.accent,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  finishButtonText: {
+    color: COLORS.card,
+    fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
   },
 }); 

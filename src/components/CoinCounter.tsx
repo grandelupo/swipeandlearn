@@ -15,6 +15,7 @@ import { useCoins } from '@/contexts/CoinContext';
 import { getAvailablePackages, PackageDetails, CoinPackage } from '@/services/revenuecat';
 import { Button } from '@rneui/themed';
 import { COLORS } from '@/constants/colors';
+import { t } from '@/i18n/translations';
 
 const CoinCounter = () => {
   const { coins, isLoading, purchaseCoins } = useCoins();
@@ -36,7 +37,7 @@ const CoinCounter = () => {
       setAvailablePackages(packages);
     } catch (error) {
       console.error('Error loading packages:', error);
-      Alert.alert('Error', 'Failed to load available packages. Please try again.');
+      Alert.alert('Error', t('noPackagesAvailable'));
     } finally {
       setPackagesLoading(false);
     }
@@ -50,11 +51,11 @@ const CoinCounter = () => {
       if (success) {
         setModalVisible(false);
       } else {
-        Alert.alert('Purchase Failed', 'There was an error processing your purchase. Please try again.');
+        Alert.alert('Error', t('purchaseError'));
       }
     } catch (error) {
       console.error('Purchase error:', error);
-      Alert.alert('Error', 'An unexpected error occurred during purchase.');
+      Alert.alert('Error', t('purchaseError'));
     } finally {
       setPurchaseInProgress(false);
     }
@@ -84,7 +85,7 @@ const CoinCounter = () => {
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Buy Coins</Text>
+              <Text style={styles.modalTitle}>{t('buyCoins')}</Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setModalVisible(false)}
@@ -95,7 +96,7 @@ const CoinCounter = () => {
 
             <View style={styles.currentCoinsContainer}>
               <Text style={styles.currentCoinsText}>
-                Your Balance: {coins}
+                {t('yourBalance')}: {coins}
               </Text>
               <Icon name="monetization-on" size={18} color={COLORS.primary} />
             </View>
@@ -103,13 +104,13 @@ const CoinCounter = () => {
             {packagesLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={COLORS.primary} />
-                <Text style={styles.loadingText}>Loading packages...</Text>
+                <Text style={styles.loadingText}>{t('loadingPackages')}</Text>
               </View>
             ) : availablePackages.length === 0 ? (
               <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>No packages available at the moment.</Text>
+                <Text style={styles.errorText}>{t('noPackagesAvailable')}</Text>
                 <Button
-                  title="Retry"
+                  title={t('retry')}
                   onPress={loadPackages}
                   buttonStyle={styles.retryButton}
                 />
@@ -125,7 +126,7 @@ const CoinCounter = () => {
                       <Text style={styles.packagePrice}>{item.price}</Text>
                     </View>
                     <Button
-                      title="Buy"
+                      title={t('buy')}
                       disabled={purchaseInProgress}
                       loading={purchaseInProgress}
                       onPress={() => handlePurchase(item.id as CoinPackage)}
@@ -138,8 +139,7 @@ const CoinCounter = () => {
             )}
 
             <Text style={styles.disclaimerText}>
-              Purchases will be charged to your App Store or Google Play account.
-              All purchases are subject to our Terms of Service and Privacy Policy.
+              {t('purchaseDisclaimer')}
             </Text>
           </View>
         </SafeAreaView>

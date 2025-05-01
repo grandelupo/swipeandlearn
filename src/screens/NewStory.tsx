@@ -10,6 +10,7 @@ import {
   Switch,
   TouchableOpacity,
   Text as RNText,
+  NativeModules,
 } from 'react-native';
 import { Input, Button, Text, Chip } from '@rneui/themed';
 import { Icon } from '@rneui/base';
@@ -25,6 +26,7 @@ import { COLORS } from '@/constants/colors';
 import Modal from 'react-native-modal';
 import TutorialOverlay from '@/components/TutorialOverlay';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import { t } from '@/i18n/translations';
 
 type NewStoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -47,46 +49,46 @@ const SUPPORTED_LANGUAGES = [
 
 const DIFFICULTY_LEVELS: Array<{ label: string; value: Difficulty; description: string }> = [
   { 
-    label: 'A1 - Beginner',
+    label: `A1 - ${t('beginner')}`,
     value: 'A1',
-    description: 'Basic phrases and everyday expressions. Can introduce themselves and interact in a simple way.'
+    description: t('beginnerDesc')
   },
   { 
-    label: 'A2 - Elementary',
+    label: `A2 - ${t('elementary')}`,
     value: 'A2',
-    description: 'Familiar topics and routine matters. Can describe aspects of their background and immediate environment.'
+    description: t('elementaryDesc')
   },
   { 
-    label: 'B1 - Intermediate',
+    label: `B1 - ${t('intermediate')}`,
     value: 'B1',
-    description: 'Main points on familiar matters. Can deal with most situations likely to arise while traveling.'
+    description: t('intermediateDesc')
   },
   { 
-    label: 'B2 - Upper Intermediate',
+    label: `B2 - ${t('upperIntermediate')}`,
     value: 'B2',
-    description: 'Complex texts and technical discussions. Can interact with fluency and spontaneity.'
+    description: t('upperIntermediateDesc')
   },
   { 
-    label: 'C1 - Advanced',
+    label: `C1 - ${t('advanced')}`,
     value: 'C1',
-    description: 'Complex and demanding texts. Can use language flexibly for social, academic and professional purposes.'
+    description: t('advancedDesc')
   },
   { 
-    label: 'C2 - Mastery',
+    label: `C2 - ${t('mastery')}`,
     value: 'C2',
-    description: 'Virtually everything heard or read. Can express themselves spontaneously, very fluently and precisely.'
+    description: t('masteryDesc')
   },
   {
-    label: 'Divine - Beyond Mortal Understanding',
+    label: t('divine'),
     value: 'Divine',
-    description: 'Transcends conventional language mastery. Features archaic forms, complex metaphysical concepts, and intricate literary devices beyond classical epics. Challenges even educated native speakers.'
+    description: t('divineDesc')
   }
 ];
 
 const TARGET_WORD_PACKAGES = [
   {
     id: 'administration',
-    name: 'Administration & Taxes',
+    name: t('administrationPackage'),
     words: [
       'invoice', 'audit', 'taxation', 'deadline', 'budget',
       'compliance', 'regulation', 'payroll', 'revenue', 'expenditure',
@@ -292,28 +294,24 @@ export default function NewStoryScreen() {
   };
 
   const handleCreateStory = async () => {
-    // Check if user has enough coins for the story
     const hasStoryCoins = await useCoins('GENERATE_STORY');
     if (!hasStoryCoins) {
       showInsufficientCoinsAlert('GENERATE_STORY', () => {});
       return;
     }
 
-    // If generating cover, check if user has enough coins for that too
     if (generateCover) {
       const hasCoverCoins = await useCoins('GENERATE_COVER');
       if (!hasCoverCoins) {
-        // If they don't have enough coins for the cover, ask if they want to continue without it
         Alert.alert(
-          'Insufficient Coins for Cover',
-          `You don't have enough coins (${FUNCTION_COSTS.GENERATE_COVER}) to generate a cover image. Would you like to continue without a cover?`,
+          t('insufficientCoinsTitle'),
+          t('insufficientCoinsForCover', FUNCTION_COSTS.GENERATE_COVER),
           [
-            { text: 'Cancel', style: 'cancel' },
+            { text: t('cancel'), style: 'cancel' },
             { 
-              text: 'Continue without cover', 
+              text: t('continueWithoutCover'), 
               onPress: () => {
                 setGenerateCover(false);
-                // Re-attempt creation without cover
                 setTimeout(() => handleCreateStory(), 500);
               }
             }
@@ -325,7 +323,6 @@ export default function NewStoryScreen() {
 
     setLoading(true);
     try {
-      // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
       if (!user) throw new Error('User not authenticated');
@@ -334,8 +331,7 @@ export default function NewStoryScreen() {
       let storyTitle: string;
 
       if (!title.trim()) {
-        setProgress('Generating title...');
-        // Generate title only if not provided
+        setProgress(t('generatingTitle'));
         const result = await generateStoryContent({
           language,
           theme: theme.trim() || 'free form',
@@ -348,7 +344,6 @@ export default function NewStoryScreen() {
         storyTitle = result.content;
         storyId = result.storyId!;
       } else {
-        // If title is provided, create story entry directly
         const { data: storyData, error: storyError } = await supabase
           .from('stories')
           .insert({
@@ -367,9 +362,8 @@ export default function NewStoryScreen() {
         storyTitle = title.trim();
       }
 
-      // Generate a cover image if requested
       if (generateCover) {
-        setProgress('Generating cover image...');
+        setProgress(t('generatingCover'));
         try {
           const coverUrl = await generateBookCover({
             theme: theme.trim() || 'fantasy story',
@@ -377,21 +371,18 @@ export default function NewStoryScreen() {
             storyId,
           });
 
-          // Update the story with the cover URL
           await supabase
             .from('stories')
             .update({ cover_image_url: coverUrl })
             .eq('id', storyId);
         } catch (coverError) {
           console.error('Error generating cover:', coverError);
-          // Continue without stopping the whole process
         }
       }
 
-      // Generate and insert pages one by one
       let previousPages: string[] = [];
       for (let pageNumber = 1; pageNumber <= 4; pageNumber++) {
-        setProgress(`Generating page ${pageNumber} of 4...`);
+        setProgress(t('generatingPage', pageNumber));
         
         const result = await generateStoryContent({
           language,
@@ -404,23 +395,20 @@ export default function NewStoryScreen() {
           userId: user.id,
         });
 
-        // Update previous pages for context
         previousPages.push(result.content);
       }
 
-      // Reset form and navigate to the story
       setTitle('');
       setTheme('');
       setTargetWords([]);
       setLanguage(SUPPORTED_LANGUAGES[0].value);
       setDifficulty(DIFFICULTY_LEVELS[0].value);
-      // navigate to the story
       navigation.navigate('StoryReader', { storyId, pageNumber: 1 });
     } catch (error: any) {
       console.error('Full error object:', error);
       Alert.alert(
-        'Error',
-        `Failed to create story: ${error.message || 'Unknown error'}\n\nPlease check console for details.`
+        t('errorCreatingStory'),
+        `${t('errorUnknown')}: ${error.message || t('errorCheckConsole')}`
       );
     } finally {
       setLoading(false);
@@ -443,11 +431,11 @@ export default function NewStoryScreen() {
     >
       <AnimatedBackground />
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }}>
-        <Text style={styles.headerText}>Create New Story</Text>
+        <Text style={styles.headerText}>{t('createNewStory')}</Text>
         <View style={styles.formBox}>
           <View style={styles.modelSelector}>
             <View style={styles.switchContainer}>
-              <Text>Allow inappropriate language</Text>
+              <Text>{t('allowInappropriateLanguage')}</Text>
               <Switch
                 value={useGrok}
                 onValueChange={handleModelToggle}
@@ -462,7 +450,7 @@ export default function NewStoryScreen() {
               inputContainerStyle={styles.inputContainer}
               inputStyle={styles.input}
               containerStyle={styles.inputFlex}
-              placeholder="Story title (optional)"
+              placeholder={t('storyTitlePlaceholder')}
               value={title}
               onChangeText={setTitle}
               placeholderTextColor={COLORS.accent}
@@ -513,7 +501,7 @@ export default function NewStoryScreen() {
               inputContainerStyle={styles.inputContainer}
               inputStyle={styles.input}
               containerStyle={styles.inputFlex}
-              placeholder="Story theme (optional, e.g. Adventure, Mystery)"
+              placeholder={t('storyThemePlaceholder')}
               value={theme}
               onChangeText={setTheme}
               placeholderTextColor={COLORS.accent}
@@ -526,7 +514,7 @@ export default function NewStoryScreen() {
               style={styles.addTargetWordsButton} 
               onPress={() => setTargetWordModalVisible(true)}
             >
-              <Text style={styles.addTargetWordsButtonText}>Add Target Words</Text>
+              <Text style={styles.addTargetWordsButtonText}>{t('addTargetWords')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -547,7 +535,7 @@ export default function NewStoryScreen() {
 
           <View style={styles.coverSwitchContainer}>
             <View style={styles.coverSwitchLabelContainer}>
-              <Text style={styles.coverSwitchLabel}>Generate cover image</Text>
+              <Text style={styles.coverSwitchLabel}>{t('generateCoverImage')}</Text>
               <View style={styles.coinCostContainer}>
                 <Text style={styles.coinCostText}>{FUNCTION_COSTS.GENERATE_COVER}</Text>
                 <Icon name="monetization-on" size={16} color="#FFD700" style={styles.coinIcon} />
@@ -574,7 +562,7 @@ export default function NewStoryScreen() {
             disabled={loading}
           >
             <Text style={styles.createButtonText}>
-              {loading ? 'Creating Story...' : 'Create Story'}
+              {loading ? t('creatingStory') : t('createStory')}
             </Text>
             <View style={styles.coinCostContainer}>
               <Text style={styles.coinCostTextButton}>
@@ -594,10 +582,10 @@ export default function NewStoryScreen() {
         backdropOpacity={0.7}
       >
         <View style={styles.targetWordModalBox}>
-          <Text style={styles.targetWordModalTitle}>Add Target Words</Text>
+          <Text style={styles.targetWordModalTitle}>{t('addTargetWords')}</Text>
           
           <View style={styles.packageSelector}>
-            <Text style={styles.packageSelectorTitle}>Choose a Word Package:</Text>
+            <Text style={styles.packageSelectorTitle}>{t('chooseWordPackage')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.packageScrollView}>
               <TouchableOpacity
                 style={[
@@ -609,7 +597,7 @@ export default function NewStoryScreen() {
                 <Text style={[
                   styles.packageChipText,
                   selectedPackage === null && styles.packageChipTextSelected
-                ]}>Custom Words</Text>
+                ]}>{t('customWords')}</Text>
               </TouchableOpacity>
               {TARGET_WORD_PACKAGES.map((pkg) => (
                 <TouchableOpacity
@@ -635,7 +623,7 @@ export default function NewStoryScreen() {
                 inputContainerStyle={styles.inputContainer}
                 inputStyle={styles.input}
                 containerStyle={styles.inputFlex}
-                placeholder="Enter a word"
+                placeholder={t('enterWord')}
                 value={newTargetWordInput}
                 onChangeText={setNewTargetWordInput}
                 placeholderTextColor={COLORS.accent}
@@ -670,7 +658,7 @@ export default function NewStoryScreen() {
           </ScrollView>
 
           <TouchableOpacity style={styles.targetWordModalDoneButton} onPress={() => setTargetWordModalVisible(false)}>
-            <Text style={styles.targetWordModalDoneText}>Done</Text>
+            <Text style={styles.targetWordModalDoneText}>{t('done')}</Text>
           </TouchableOpacity>
         </View>
       </Modal>

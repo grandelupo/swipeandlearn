@@ -15,6 +15,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { Icon } from '@rneui/base';
+import { t } from '@/i18n/translations';
+import { COLORS } from '@/constants/colors';
 
 interface Story {
   id: string;
@@ -58,7 +60,7 @@ export default function ArchiveScreen() {
       if (error) throw error;
       setStories(stories || []);
     } catch (error) {
-      console.error('Error fetching archived stories:', error);
+      console.error(t('errorFetchingArchivedStories'), error);
     } finally {
       setLoading(false);
     }
@@ -79,8 +81,8 @@ export default function ArchiveScreen() {
       setSelectedStory(null);
       
     } catch (error) {
-      console.error('Error unarchiving story:', error);
-      Alert.alert('Error', 'Failed to unarchive story');
+      console.error(t('errorUnarchivingStory'), error);
+      Alert.alert(t('errorUnknown'), t('errorUnarchivingStory'));
     }
   };
 
@@ -116,7 +118,7 @@ export default function ArchiveScreen() {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loadingText}>Loading archived stories...</Text>
+        <Text style={styles.loadingText}>{t('loadingArchivedStories')}</Text>
       </View>
     );
   }
@@ -124,12 +126,12 @@ export default function ArchiveScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>Archived Stories</Text>
+        <Text style={styles.headerText}>{t('archivedStories')}</Text>
       </View>
       {stories.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>
-            You haven't archived any stories yet.
+            {t('noArchivedStories')}
           </Text>
         </View>
       ) : (
@@ -156,15 +158,15 @@ export default function ArchiveScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>{selectedStory?.title}</Text>
             <Button
-              title="Unarchive Story"
+              title={t('unarchiveStory')}
               onPress={() => handleUnarchive(selectedStory!)}
               containerStyle={styles.modalButton}
               type="outline"
-              buttonStyle={{ borderColor: '#0066cc' }}
-              titleStyle={{ color: '#0066cc' }}
+              buttonStyle={{ borderColor: COLORS.accent }}
+              titleStyle={{ color: COLORS.accent }}
             />
             <Button
-              title="Cancel"
+              title={t('cancel')}
               type="clear"
               onPress={() => setShowModal(false)}
               containerStyle={styles.modalButton}

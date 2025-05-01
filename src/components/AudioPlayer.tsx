@@ -14,6 +14,7 @@ import { VoiceId, AVAILABLE_VOICES } from '@/services/elevenlabs';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { COLORS } from '@/constants/colors';
 import TutorialOverlay from '@/components/TutorialOverlay';
+import { t } from '@/i18n/translations';
 
 interface AudioPlayerProps {
   audioUrl: string | null;
@@ -197,8 +198,8 @@ export default function AudioPlayer({
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0066cc" />
-        <Text style={styles.loadingText}>Generating audio...</Text>
+        <ActivityIndicator size="large" color={COLORS.accent} />
+        <Text style={styles.loadingText}>{t('generatingAudio')}</Text>
       </View>
     );
   }
@@ -212,7 +213,7 @@ export default function AudioPlayer({
         >
           <Icon name="volume-up" size={24} color="#fff" />
           <Text style={styles.generateButtonText}>
-            Generate audio
+            {t('generateAudio')}
           </Text>
           <Text style={styles.generateButtonPrice}>{FUNCTION_COSTS.GENERATE_AUDIO}</Text>
           <Icon name="monetization-on" size={16} color={COLORS.card} style={styles.generateButtonIcon} />
@@ -261,7 +262,7 @@ export default function AudioPlayer({
           onPress={() => setShowVoiceSelector(!showVoiceSelector)}
         >
           <Text style={styles.voiceButtonText}>
-            {AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.name || 'Select Voice'}{' '}
+            {AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.name || t('selectVoice')}{' '}
             {getCountryFlag(AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.country || 'US')}
           </Text>
           <Icon name={showVoiceSelector ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={24} color={COLORS.accent} />
@@ -308,7 +309,7 @@ export default function AudioPlayer({
                     <Icon name="check-circle" size={16} color={COLORS.accent} />
                   )}
                 </View>
-                <Text style={styles.voiceDescription}>{voice.description}</Text>
+                <Text style={styles.voiceDescription}>{t(`voice${voice.name}`)}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>

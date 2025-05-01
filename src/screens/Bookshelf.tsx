@@ -26,6 +26,7 @@ import { Icon } from '@rneui/base';
 import { COLORS } from '@/constants/colors';
 import TutorialOverlay from '@/components/TutorialOverlay';
 import { useFeedbackButton } from '@/contexts/FeedbackButtonContext';
+import { t } from '@/i18n/translations';
 
 interface Story {
   id: string;
@@ -185,7 +186,7 @@ export default function BookshelfScreen() {
       if (error) throw error;
       setStories(stories || []);
     } catch (error) {
-      console.error('Error fetching stories:', error);
+      console.error(t('errorFetchingStories'), error);
     } finally {
       setLoading(false);
     }
@@ -206,8 +207,8 @@ export default function BookshelfScreen() {
       setSelectedStory(null);
       
     } catch (error) {
-      console.error('Error archiving story:', error);
-      Alert.alert('Error', 'Failed to archive story');
+      console.error(t('errorArchivingStory'), error);
+      Alert.alert(t('errorUnknown'), t('errorArchivingStory'));
     }
   };
 
@@ -233,7 +234,7 @@ export default function BookshelfScreen() {
       // Check authentication
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(t('notAuthenticated'));
 
       // Generate image using Edge Function
       const imageUrl = await generateBookCover({
@@ -249,33 +250,39 @@ export default function BookshelfScreen() {
           : story
       ));
 
-      Alert.alert('Success', 'New cover image generated successfully!');
-    } catch (error: any) {
-      console.error('Error generating new image:', {
-        error,
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
-      Alert.alert(
-        'Error',
-        `Check if the content of the story is appropriate. If it is, please try again.`
-      );
-    } finally {
-      setGeneratingImage(false);
       setShowModal(false);
       setSelectedStory(null);
+    } catch (error) {
+      console.error('Error generating cover:', error);
+      Alert.alert(t('errorUnknown'), t('errorTryAgain'));
+    } finally {
+      setGeneratingImage(false);
     }
   };
 
   const handleUploadImage = async () => {
     if (!selectedStory) return;
 
+    const options = {
+      title: t('selectImage'),
+      takePhotoButtonTitle: t('takePhoto'),
+      chooseFromLibraryButtonTitle: t('chooseFromLibrary'),
+      cancelButtonTitle: t('cancel'),
+      mediaType: 'photo',
+      quality: 1,
+    };
+
     try {
       // Request permissions
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow access to your photo library to upload images.');
+      const { status: libraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (libraryStatus !== 'granted') {
+        Alert.alert(t('permissionDenied'), t('imagePermissionRequired'));
+        return;
+      }
+
+      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+      if (cameraStatus !== 'granted') {
+        Alert.alert(t('permissionDenied'), t('cameraPermissionRequired'));
         return;
       }
 
@@ -333,7 +340,7 @@ export default function BookshelfScreen() {
       }
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Failed to upload image. Please try again.');
+      Alert.alert(t('errorUnknown'), t('errorUploadingImage'));
     } finally {
       setUploadingImage(false);
       setShowModal(false);
@@ -382,7 +389,7 @@ export default function BookshelfScreen() {
   if (loading) {
     return (
       <View style={styles.outerContainer}>
-        <Text style={styles.loadingText}>Loading stories...</Text>
+        <Text style={styles.loadingText}>{t('loading')}</Text>
       </View>
     );
   }
@@ -391,7 +398,7 @@ export default function BookshelfScreen() {
     <View style={styles.outerContainer}>
       <AnimatedBackground />
       <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>My Stories</Text>
+        <Text style={styles.headerText}>{t('myStories')}</Text>
         <TouchableOpacity
           ref={addStoryButtonRef}
           style={styles.newButton}
@@ -402,9 +409,7 @@ export default function BookshelfScreen() {
       </View>
       {stories.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>
-            You haven't created any stories yet.
-          </Text>
+          <Text style={styles.emptyStateText}>{t('noStoriesMessage')}</Text>
         </View>
       ) : (
         <FlatList

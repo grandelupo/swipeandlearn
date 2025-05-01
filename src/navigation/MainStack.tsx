@@ -11,16 +11,18 @@ import CoinCounter from '@/components/CoinCounter';
 import ArchiveScreen from '@/screens/Archive';
 import FeedbackButton from '@/components/FeedbackButton';
 import { FeedbackButtonProvider } from '@/contexts/FeedbackButtonContext';
+import { t } from '@/i18n/translations';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
 function MainStackContent() {
   return (
     <Stack.Navigator>
-      <Stack.Screen 
-        name="Bookshelf" 
+      <Stack.Screen
+        name="Bookshelf"
         component={BookshelfScreen}
         options={({ navigation }) => ({
+          title: t('bookshelf'),
           headerRight: () => (
             <View style={styles.headerRightContainer}>
               <CoinCounter />
@@ -35,11 +37,11 @@ function MainStackContent() {
           ),
         })}
       />
-      <Stack.Screen 
-        name="NewStory" 
+      <Stack.Screen
+        name="NewStory"
         component={NewStoryScreen}
         options={{ 
-          title: 'Create Story',
+          title: t('createStory'),
           headerRight: () => (
             <View style={styles.headerRightContainer}>
               <CoinCounter />
@@ -48,8 +50,8 @@ function MainStackContent() {
           )
         }}
       />
-      <Stack.Screen 
-        name="Profile" 
+      <Stack.Screen
+        name="Profile"
         component={ProfileScreen}
         options={{
           headerRight: () => (
@@ -57,16 +59,17 @@ function MainStackContent() {
               <CoinCounter />
               <FeedbackButton />
             </View>
-          )
+          ),
+          title: t('profile'),
         }}
       />
-      <Stack.Screen 
-        name="StoryReader" 
+      <Stack.Screen
+        name="StoryReader"
         component={StoryReader}
         options={{ 
           headerShown: true,
-          headerBackTitle: "Back",
-          title: "Story",
+          headerBackTitle: t('back'),
+          title: t('story'),
           headerRight: () => (
             <View style={styles.headerRightContainer}>
               <CoinCounter />
@@ -75,8 +78,8 @@ function MainStackContent() {
           )
         }}
       />
-      <Stack.Screen 
-        name="Archive" 
+      <Stack.Screen
+        name="Archive"
         component={ArchiveScreen}
         options={{
           headerRight: () => (
@@ -84,7 +87,8 @@ function MainStackContent() {
               <CoinCounter />
               <FeedbackButton />
             </View>
-          )
+          ),
+          title: t('archive'),
         }}
       />
     </Stack.Navigator>

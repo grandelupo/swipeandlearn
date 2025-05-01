@@ -16,6 +16,7 @@ import { supabase } from '@/services/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import { t } from '@/i18n/translations';
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
@@ -29,7 +30,7 @@ export default function RegisterScreen() {
   async function handleRegister() {
     if (loading) return;
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert(t('error'), t('passwordsDontMatch'));
       return;
     }
     setLoading(true);
@@ -43,12 +44,12 @@ export default function RegisterScreen() {
         return;
       }
       Alert.alert(
-        'Registration Successful',
-        'Please check your email for verification.',
+        t('register'),
+        t('registrationSuccess'),
         [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
       );
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'An error occurred during registration');
+      Alert.alert(t('error'), error.message || t('errorUnknown'));
     } finally {
       setLoading(false);
     }
@@ -61,12 +62,12 @@ export default function RegisterScreen() {
     >
       <AnimatedBackground variant="auth" />
       <View style={styles.container}>
-        <Text style={styles.title} h3>Sign Up</Text>
+        <Text style={styles.title} h3>{t('register')}</Text>
         <View style={{ height: 32 }} />
         <View style={styles.inputBox}>
           {/* Email Row */}
           <View style={styles.inputRow}>
-            <RNText style={styles.label}>Email</RNText>
+            <RNText style={styles.label}>{t('email')}</RNText>
             <Input
               inputContainerStyle={styles.inputContainer}
               inputStyle={styles.input}
@@ -81,12 +82,12 @@ export default function RegisterScreen() {
           </View>
           {/* Password Row */}
           <View style={styles.inputRow}>
-            <RNText style={styles.label}>Password</RNText>
+            <RNText style={styles.label}>{t('password')}</RNText>
             <Input
               inputContainerStyle={styles.inputContainer}
               inputStyle={styles.input}
               containerStyle={styles.inputFlex}
-              placeholder="Password"
+              placeholder={t('password')}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -96,12 +97,12 @@ export default function RegisterScreen() {
           </View>
           {/* Confirm Password Row */}
           <View style={styles.inputRow}>
-            <RNText style={styles.label}>Confirm</RNText>
+            <RNText style={styles.label}>{t('confirmPassword')}</RNText>
             <Input
               inputContainerStyle={styles.inputContainer}
               inputStyle={styles.input}
               containerStyle={styles.inputFlex}
-              placeholder="Confirm Password"
+              placeholder={t('confirmPassword')}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
@@ -116,14 +117,14 @@ export default function RegisterScreen() {
           onPress={handleRegister}
           disabled={loading}
         >
-          <Text style={styles.signUpText}>Sign up</Text>
+          <Text style={styles.signUpText}>{t('signUp')}</Text>
           <View style={styles.arrowCircle}>
             <Ionicons name="arrow-forward" size={24} color={COLORS.background} />
           </View>
         </TouchableOpacity>
         <View style={styles.bottomLinksContainer}>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <RNText style={styles.linkText}>Already have an account?</RNText>
+            <RNText style={styles.linkText}>{t('alreadyHaveAccount')}</RNText>
           </TouchableOpacity>
         </View>
       </View>

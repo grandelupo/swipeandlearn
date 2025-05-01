@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { supabase } from '@/services/supabase';
 import { COLORS } from '@/constants/colors';
 import { useFeedbackButton } from '@/contexts/FeedbackButtonContext';
+import { t } from '@/i18n/translations';
 
 interface FeedbackButtonProps {
   isEnabled?: boolean;
@@ -25,7 +26,7 @@ export default function FeedbackButton({ isEnabled = true }: FeedbackButtonProps
 
   const handleSubmit = async () => {
     if (!feedback.trim()) {
-      Alert.alert('Error', 'Please enter your feedback');
+      Alert.alert('Error', t('enterFeedback'));
       return;
     }
 
@@ -43,12 +44,12 @@ export default function FeedbackButton({ isEnabled = true }: FeedbackButtonProps
 
       if (error) throw error;
 
-      Alert.alert('Success', 'Thank you for your feedback!');
+      Alert.alert('Success', t('feedbackSuccess'));
       setFeedback('');
       setIsVisible(false);
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      Alert.alert('Error', 'Failed to submit feedback. Please try again.');
+      Alert.alert('Error', t('feedbackError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -75,21 +76,21 @@ export default function FeedbackButton({ isEnabled = true }: FeedbackButtonProps
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Send Feedback</Text>
+              <Text style={styles.modalTitle}>{t('sendFeedback')}</Text>
               <TouchableOpacity onPress={() => setIsVisible(false)}>
                 <Icon name="close" size={24} color={COLORS.primary} />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.modalDescription}>
-              We'd love to hear your thoughts! Please share any feedback, suggestions, or issues you've encountered.
+              {t('feedbackDescription')}
             </Text>
 
             <TextInput
               style={styles.input}
               multiline
               numberOfLines={6}
-              placeholder="Type your feedback here..."
+              placeholder={t('feedbackPlaceholder')}
               value={feedback}
               onChangeText={setFeedback}
               placeholderTextColor={COLORS.brighter}
@@ -102,7 +103,7 @@ export default function FeedbackButton({ isEnabled = true }: FeedbackButtonProps
                 disabled={isSubmitting}
               >
                 <Text style={styles.submitButtonText}>
-                  {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+                  {isSubmitting ? t('submitting') : t('submitFeedback')}
                 </Text>
               </TouchableOpacity>
             </View>

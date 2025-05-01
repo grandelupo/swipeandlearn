@@ -16,6 +16,7 @@ import { supabase } from '@/services/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import { t } from '@/i18n/translations';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -35,7 +36,7 @@ export default function LoginScreen() {
       });
       if (error) throw error;
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Login failed');
+      Alert.alert(t('error'), t('invalidCredentials'));
     } finally {
       setLoading(false);
     }
@@ -48,12 +49,12 @@ export default function LoginScreen() {
     >
       <AnimatedBackground variant="auth" />
       <View style={styles.container}>
-        <Text style={styles.title} h3>Let's learn with stories!</Text>
+        <Text style={styles.title} h3>{t('login')}</Text>
         <View style={{ height: 32 }} />
         <View style={styles.inputBox}>
           {/* Email Row */}
           <View style={styles.inputRow}>
-            <RNText style={styles.label}>Email</RNText>
+            <RNText style={styles.label}>{t('email')}</RNText>
             <Input
               inputContainerStyle={styles.inputContainer}
               inputStyle={styles.input}
@@ -68,12 +69,12 @@ export default function LoginScreen() {
           </View>
           {/* Password Row */}
           <View style={styles.inputRow}>
-            <RNText style={styles.label}>Password</RNText>
+            <RNText style={styles.label}>{t('password')}</RNText>
             <Input
               inputContainerStyle={styles.inputContainer}
               inputStyle={styles.input}
               containerStyle={styles.inputFlex}
-              placeholder="Password"
+              placeholder={t('password')}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -88,14 +89,14 @@ export default function LoginScreen() {
           onPress={handleLogin}
           disabled={loading}
         >
-          <Text style={styles.signInText}>Sign in</Text>
+          <Text style={styles.signInText}>{t('signIn')}</Text>
           <View style={styles.arrowCircle}>
             <Ionicons name="arrow-forward" size={24} color={COLORS.background} />
           </View>
         </TouchableOpacity>
         <View style={styles.bottomLinksContainer}>
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <RNText style={styles.linkText}>Sign up instead</RNText>
+            <RNText style={styles.linkText}>{t('dontHaveAccount')}</RNText>
           </TouchableOpacity>
         </View>
       </View>

@@ -5,6 +5,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '@/services/supabase';
 import { COLORS } from '@/constants/colors';
+import { t } from '@/i18n/translations';
 
 const TRANSLATION_LANGUAGES = [
   { label: 'English', value: 'English' },
@@ -70,7 +71,7 @@ export default function ProfileScreen() {
       if (error) throw error;
       setTotalStories(count || 0);
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error(t('errorUnknown'), error);
     } finally {
       setLoading(false);
     }
@@ -79,7 +80,7 @@ export default function ProfileScreen() {
   const fetchProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(t('notAuthenticated'));
 
       const { data, error } = await supabase
         .from('profiles')
@@ -94,8 +95,8 @@ export default function ProfileScreen() {
       }
       setUseGrok(data?.preferred_model === 'grok');
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      Alert.alert('Error', 'Failed to load profile');
+      console.error(t('errorLoadingProfile'), error);
+      Alert.alert(t('errorUnknown'), t('errorLoadingProfile'));
     }
   };
 
@@ -104,8 +105,8 @@ export default function ProfileScreen() {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {
-      console.error('Error signing out:', error);
-      Alert.alert('Error', 'Failed to sign out');
+      console.error(t('errorSigningOut'), error);
+      Alert.alert(t('errorUnknown'), t('errorSigningOut'));
     }
   };
 
@@ -113,7 +114,7 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(t('notAuthenticated'));
 
       const { error } = await supabase
         .from('profiles')
@@ -123,8 +124,8 @@ export default function ProfileScreen() {
       if (error) throw error;
       setTranslationLanguage(language);
     } catch (error) {
-      console.error('Error updating translation language:', error);
-      Alert.alert('Error', 'Failed to update translation language');
+      console.error(t('errorUpdatingTranslationLanguage'), error);
+      Alert.alert(t('errorUnknown'), t('errorUpdatingTranslationLanguage'));
     } finally {
       setLoading(false);
     }
@@ -134,7 +135,7 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      if (!user) throw new Error(t('notAuthenticated'));
 
       const { error } = await supabase
         .from('profiles')
@@ -144,8 +145,8 @@ export default function ProfileScreen() {
       if (error) throw error;
       setUseGrok(useGrok);
     } catch (error) {
-      console.error('Error updating AI model preference:', error);
-      Alert.alert('Error', 'Failed to update AI model preference');
+      console.error(t('errorUpdatingModelPreference'), error);
+      Alert.alert(t('errorUnknown'), t('errorUpdatingModelPreference'));
     } finally {
       setLoading(false);
     }
@@ -154,7 +155,7 @@ export default function ProfileScreen() {
   if (loading) {
     return (
       <View style={styles.outerContainer}>
-        <Text style={styles.loadingText}>Loading profile...</Text>
+        <Text style={styles.loadingText}>{t('loadingProfile')}</Text>
       </View>
     );
   }
@@ -167,18 +168,18 @@ export default function ProfileScreen() {
         <Animated.View style={[styles.circle, circle3.getLayout(), { backgroundColor: COLORS.brighter, opacity: 0.10 }]} />
       </View>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-        <Text style={styles.headerText}>Profile Settings</Text>
+        <Text style={styles.headerText}>{t('profileSettings')}</Text>
         <View style={styles.profileBox}>
           <View style={styles.profileRow}>
-            <Text style={styles.profileLabel}>Email</Text>
+            <Text style={styles.profileLabel}>{t('email')}</Text>
             <Text style={styles.profileValue}>{userEmail}</Text>
           </View>
           <View style={styles.profileRow}>
-            <Text style={styles.profileLabel}>Total stories created</Text>
+            <Text style={styles.profileLabel}>{t('totalStoriesCreated')}</Text>
             <Text style={styles.profileValue}>{totalStories}</Text>
           </View>
           <View style={styles.profileRow}>
-            <Text style={styles.profileLabel}>Allow inappropriate language</Text>
+            <Text style={styles.profileLabel}>{t('allowInappropriateLanguage')}</Text>
             <Switch
               value={useGrok}
               onValueChange={updateModelPreference}
@@ -188,7 +189,7 @@ export default function ProfileScreen() {
             />
           </View>
           <View style={styles.profileColumn}>
-            <Text style={styles.profileLabel}>Preferred translation language</Text>
+            <Text style={styles.profileLabel}>{t('preferredTranslationLanguage')}</Text>
             <View style={styles.pickerContainer}>
               <Picker
                 selectedValue={translationLanguage}
@@ -208,7 +209,7 @@ export default function ProfileScreen() {
           </View>
         </View>
         <Button
-          title="View Archived Stories"
+          title={t('viewArchivedStories')}
           onPress={() => navigation.navigate('Archive')}
           containerStyle={styles.archiveButton}
           buttonStyle={{ backgroundColor: COLORS.accent, borderRadius: 16 }}
@@ -216,7 +217,7 @@ export default function ProfileScreen() {
           type="solid"
         />
         <Button
-          title="Logout"
+          title={t('logout')}
           onPress={handleLogout}
           buttonStyle={styles.logoutButton}
           titleStyle={{ fontFamily: 'Poppins-Bold' }}
