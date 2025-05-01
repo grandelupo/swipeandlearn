@@ -83,6 +83,116 @@ const DIFFICULTY_LEVELS: Array<{ label: string; value: Difficulty; description: 
   }
 ];
 
+const TARGET_WORD_PACKAGES = [
+  {
+    id: 'administration',
+    name: 'Administration & Taxes',
+    words: [
+      'invoice', 'audit', 'taxation', 'deadline', 'budget',
+      'compliance', 'regulation', 'payroll', 'revenue', 'expenditure',
+      'fiscal', 'bureaucracy', 'documentation', 'protocol', 'amendment',
+      'deduction', 'assessment', 'liability', 'exemption', 'declaration',
+      'withholding', 'reconciliation', 'disbursement', 'procurement', 'allocation'
+    ]
+  },
+  {
+    id: 'medicine',
+    name: 'Medicine & Healthcare',
+    words: [
+      'diagnosis', 'treatment', 'prescription', 'symptoms', 'prognosis',
+      'antibiotics', 'vaccination', 'immunity', 'infection', 'surgery',
+      'anesthesia', 'recovery', 'therapy', 'medication', 'consultation',
+      'pathology', 'oncology', 'cardiology', 'neurology', 'pediatrics',
+      'radiology', 'orthopedics', 'immunology', 'endocrinology', 'physiology',
+      'anatomy', 'biopsy', 'remission', 'rehabilitation', 'epidemiology'
+    ]
+  },
+  {
+    id: 'chemistry',
+    name: 'Chemistry',
+    words: [
+      'reaction', 'molecule', 'compound', 'solution', 'catalyst',
+      'element', 'acid', 'base', 'oxidation', 'reduction',
+      'precipitation', 'titration', 'solvent', 'isotope', 'equilibrium',
+      'polymer', 'electron', 'proton', 'neutron', 'valence',
+      'hydrolysis', 'synthesis', 'distillation', 'crystallization', 'sublimation',
+      'entropy', 'molarity', 'concentration', 'stoichiometry', 'spectroscopy'
+    ]
+  },
+  {
+    id: 'business',
+    name: 'Business & Finance',
+    words: [
+      'investment', 'portfolio', 'dividend', 'equity', 'assets',
+      'liability', 'merger', 'acquisition', 'stakeholder', 'profit',
+      'revenue', 'margin', 'strategy', 'marketing', 'operations',
+      'depreciation', 'amortization', 'liquidity', 'solvency', 'collateral',
+      'diversification', 'valuation', 'leverage', 'capitalization', 'derivatives',
+      'hedge', 'arbitrage', 'volatility', 'benchmark', 'yield'
+    ]
+  },
+  {
+    id: 'technology',
+    name: 'Technology & IT',
+    words: [
+      'algorithm', 'database', 'encryption', 'interface', 'protocol',
+      'bandwidth', 'server', 'network', 'software', 'hardware',
+      'cloud', 'security', 'backup', 'deployment', 'integration',
+      'virtualization', 'middleware', 'framework', 'repository', 'authentication',
+      'microservices', 'scalability', 'containerization', 'orchestration', 'latency',
+      'throughput', 'redundancy', 'optimization', 'debugging', 'refactoring'
+    ]
+  },
+  {
+    id: 'law',
+    name: 'Law & Legal',
+    words: [
+      'jurisdiction', 'litigation', 'statute', 'precedent', 'testimony',
+      'deposition', 'plaintiff', 'defendant', 'verdict', 'injunction',
+      'subpoena', 'affidavit', 'arbitration', 'mediation', 'prosecution',
+      'indictment', 'tort', 'negligence', 'liability', 'contract',
+      'covenant', 'stipulation', 'damages', 'settlement', 'appeal',
+      'jurisprudence', 'legislation', 'regulation', 'compliance', 'enforcement'
+    ]
+  },
+  {
+    id: 'engineering',
+    name: 'Engineering',
+    words: [
+      'mechanics', 'dynamics', 'statics', 'thermodynamics', 'kinematics',
+      'stress', 'strain', 'torque', 'friction', 'momentum',
+      'velocity', 'acceleration', 'force', 'pressure', 'elasticity',
+      'conductivity', 'resistance', 'inductance', 'capacitance', 'resonance',
+      'amplitude', 'frequency', 'wavelength', 'voltage', 'current',
+      'efficiency', 'tolerance', 'calibration', 'optimization', 'simulation'
+    ]
+  },
+  {
+    id: 'psychology',
+    name: 'Psychology',
+    words: [
+      'behavior', 'perception', 'emotion', 'motivation',
+      'personality', 'consciousness', 'anxiety', 'depression', 'therapy',
+      'trauma', 'resilience', 'attachment', 'development', 'conditioning',
+      'reinforcement', 'stimulus', 'response', 'memory', 'learning',
+      'neurotransmitter', 'psychotherapy', 'diagnosis', 'assessment', 'intervention',
+      'mindfulness', 'empathy', 'attribution', 'cognition', 'schema'
+    ]
+  },
+  {
+    id: 'economics',
+    name: 'Economics',
+    words: [
+      'supply', 'demand', 'inflation', 'deflation', 'recession',
+      'GDP', 'monetary', 'fiscal', 'equilibrium', 'elasticity',
+      'microeconomics', 'macroeconomics', 'scarcity', 'utility', 'externality',
+      'competition', 'monopoly', 'oligopoly', 'subsidy', 'tariff',
+      'exchange', 'interest', 'depreciation', 'appreciation', 'commodity',
+      'liquidity', 'productivity', 'consumption', 'investment', 'trade'
+    ]
+  }
+];
+
 export default function NewStoryScreen() {
   const [title, setTitle] = useState('');
   const [language, setLanguage] = useState(SUPPORTED_LANGUAGES[0].value);
@@ -94,6 +204,7 @@ export default function NewStoryScreen() {
   const [progress, setProgress] = useState('');
   const [useGrok, setUseGrok] = useState(false);
   const [generateCover, setGenerateCover] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const navigation = useNavigation<NewStoryScreenNavigationProp>();
   const { useCoins, showInsufficientCoinsAlert } = useCoinContext();
   const [targetWordModalVisible, setTargetWordModalVisible] = useState(false);
@@ -165,6 +276,19 @@ export default function NewStoryScreen() {
 
   const removeTargetWordModal = (word: string) => {
     setTargetWords(targetWords.filter(w => w !== word));
+  };
+
+  const handlePackageSelect = (packageId: string) => {
+    const wordPackage = TARGET_WORD_PACKAGES.find(p => p.id === packageId);
+    if (wordPackage) {
+      setTargetWords(wordPackage.words);
+      setSelectedPackage(packageId);
+    }
+  };
+
+  const clearPackageSelection = () => {
+    setSelectedPackage(null);
+    setTargetWords([]);
   };
 
   const handleCreateStory = async () => {
@@ -471,36 +595,80 @@ export default function NewStoryScreen() {
       >
         <View style={styles.targetWordModalBox}>
           <Text style={styles.targetWordModalTitle}>Add Target Words</Text>
-          <View style={styles.targetWordModalInputRow}>
-            <Input
-              inputContainerStyle={styles.inputContainer}
-              inputStyle={styles.input}
-              containerStyle={styles.inputFlex}
-              placeholder="Enter a word"
-              value={newTargetWordInput}
-              onChangeText={setNewTargetWordInput}
-              placeholderTextColor={COLORS.accent}
-              onSubmitEditing={addTargetWordModal}
-              returnKeyType="done"
-            />
-            <TouchableOpacity style={styles.targetWordModalAddButton} onPress={addTargetWordModal} disabled={!newTargetWordInput.trim()}>
-              <Icon name="add" type="ionicon" color={COLORS.card} size={24} containerStyle={{ backgroundColor: COLORS.accent, borderRadius: 16, padding: 6 }} />
-            </TouchableOpacity>
+          
+          <View style={styles.packageSelector}>
+            <Text style={styles.packageSelectorTitle}>Choose a Word Package:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.packageScrollView}>
+              <TouchableOpacity
+                style={[
+                  styles.packageChip,
+                  selectedPackage === null && styles.packageChipSelected
+                ]}
+                onPress={clearPackageSelection}
+              >
+                <Text style={[
+                  styles.packageChipText,
+                  selectedPackage === null && styles.packageChipTextSelected
+                ]}>Custom Words</Text>
+              </TouchableOpacity>
+              {TARGET_WORD_PACKAGES.map((pkg) => (
+                <TouchableOpacity
+                  key={pkg.id}
+                  style={[
+                    styles.packageChip,
+                    selectedPackage === pkg.id && styles.packageChipSelected
+                  ]}
+                  onPress={() => handlePackageSelect(pkg.id)}
+                >
+                  <Text style={[
+                    styles.packageChipText,
+                    selectedPackage === pkg.id && styles.packageChipTextSelected
+                  ]}>{pkg.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
-          <View style={styles.targetWordsList}>
-            {targetWords.map((word) => (
-              <Chip
-                key={word}
-                title={word}
-                onPress={() => removeTargetWordModal(word)}
-                containerStyle={styles.chip}
-                buttonStyle={{ backgroundColor: COLORS.bright }}
-                titleStyle={{ color: COLORS.primary, fontFamily: 'Poppins-SemiBold' }}
-                icon={{ name: 'close', type: 'ionicon', color: COLORS.primary, size: 16 }}
-                iconRight
+
+          {selectedPackage === null && (
+            <View style={styles.targetWordModalInputRow}>
+              <Input
+                inputContainerStyle={styles.inputContainer}
+                inputStyle={styles.input}
+                containerStyle={styles.inputFlex}
+                placeholder="Enter a word"
+                value={newTargetWordInput}
+                onChangeText={setNewTargetWordInput}
+                placeholderTextColor={COLORS.accent}
+                onSubmitEditing={addTargetWordModal}
+                returnKeyType="done"
               />
-            ))}
-          </View>
+              <TouchableOpacity 
+                style={styles.targetWordModalAddButton} 
+                onPress={addTargetWordModal} 
+                disabled={!newTargetWordInput.trim()}
+              >
+                <Icon name="add" type="ionicon" color={COLORS.card} size={24} containerStyle={{ backgroundColor: COLORS.accent, borderRadius: 16, padding: 6 }} />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <ScrollView style={styles.targetWordsScrollView}>
+            <View style={styles.targetWordsList}>
+              {targetWords.map((word) => (
+                <Chip
+                  key={word}
+                  title={word}
+                  onPress={() => selectedPackage === null && removeTargetWordModal(word)}
+                  containerStyle={styles.chip}
+                  buttonStyle={{ backgroundColor: COLORS.bright }}
+                  titleStyle={{ color: COLORS.primary, fontFamily: 'Poppins-SemiBold' }}
+                  icon={selectedPackage === null ? { name: 'close', type: 'ionicon', color: COLORS.primary, size: 16 } : undefined}
+                  iconRight
+                />
+              ))}
+            </View>
+          </ScrollView>
+
           <TouchableOpacity style={styles.targetWordModalDoneButton} onPress={() => setTargetWordModalVisible(false)}>
             <Text style={styles.targetWordModalDoneText}>Done</Text>
           </TouchableOpacity>
@@ -604,8 +772,7 @@ const styles = StyleSheet.create({
   targetWordsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 10,
-    marginBottom: 20,
+    paddingHorizontal: 4,
   },
   chip: {
     margin: 4,
@@ -717,6 +884,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 24,
     width: '90%',
+    maxHeight: '80%',
     alignSelf: 'center',
     shadowColor: COLORS.accent,
     shadowOpacity: 0.12,
@@ -736,6 +904,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  targetWordsScrollView: {
+    maxHeight: '60%',
+    marginBottom: 16,
   },
   targetWordModalAddButton: {
     marginLeft: 8,
@@ -755,5 +928,40 @@ const styles = StyleSheet.create({
     color: COLORS.card,
     fontFamily: 'Poppins-Bold',
     fontSize: 16,
+  },
+  packageSelector: {
+    marginBottom: 20,
+  },
+  packageSelectorTitle: {
+    fontSize: 16,
+    color: COLORS.primary,
+    fontFamily: 'Poppins-SemiBold',
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  packageScrollView: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  packageChip: {
+    backgroundColor: COLORS.bright,
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  packageChipSelected: {
+    backgroundColor: COLORS.accent,
+    borderColor: COLORS.accent,
+  },
+  packageChipText: {
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
+    color: COLORS.primary,
+  },
+  packageChipTextSelected: {
+    color: COLORS.card,
   },
 }); 
