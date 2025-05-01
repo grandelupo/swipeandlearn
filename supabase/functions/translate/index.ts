@@ -40,11 +40,10 @@ serve(async (req) => {
     const useGrok = story.generation_model === 'grok'
 
     
-    // Check if translation exists in cache
-    let cachedTranslation: string | null = null;
-    let cacheError: Error | null = null;
 
     if (!isWord) {
+      console.log('checking cache');
+
       const { data: cachedTranslation, error: cacheError } = await supabaseAdmin
         .from('translations')
         .select('translated_text')
@@ -52,20 +51,20 @@ serve(async (req) => {
         .eq('original_text', text)
         .eq('target_language', targetLanguage)
       .single()
-    }
 
-    console.log('cachedTranslation', cachedTranslation);
+      console.log('cachedTranslation', cachedTranslation);
 
-    if (!cacheError && cachedTranslation) {
-      console.log('cachedTranslation found');
+      if (!cacheError && cachedTranslation) {
+        console.log('cachedTranslation found');
 
-      return new Response(
-        JSON.stringify({ translation: cachedTranslation.translated_text }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
+        return new Response(
+          JSON.stringify({ translation: cachedTranslation.translated_text }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          },
+        )
+      }
     }
 
     // Generate translation using the same model as the story
