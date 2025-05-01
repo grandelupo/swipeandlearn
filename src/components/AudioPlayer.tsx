@@ -24,6 +24,21 @@ interface AudioPlayerProps {
   availableVoices?: VoiceId[];
 }
 
+const getCountryFlag = (country: 'US' | 'GB' | 'US-African-American' | 'AU') => {
+  switch (country) {
+    case 'US':
+      return '🇺🇸';
+    case 'AU':
+      return '🇦🇺';
+    case 'US-African-American':
+      return '🇺🇸 🇿🇦';
+    case 'GB':
+      return '🇬🇧';
+    default:
+      return '';
+  }
+};
+
 export default function AudioPlayer({
   audioUrl,
   isLoading,
@@ -246,7 +261,8 @@ export default function AudioPlayer({
           onPress={() => setShowVoiceSelector(!showVoiceSelector)}
         >
           <Text style={styles.voiceButtonText}>
-            {AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.name || 'Select Voice'}
+            {AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.name || 'Select Voice'}{' '}
+            {getCountryFlag(AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.country || 'US')}
           </Text>
           <Icon name={showVoiceSelector ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={24} color={COLORS.accent} />
         </TouchableOpacity>
@@ -284,7 +300,10 @@ export default function AudioPlayer({
                 }}
               >
                 <View style={styles.voiceHeader}>
-                <Text style={styles.voiceName}>{voice.name}</Text>
+                  <View style={styles.voiceNameContainer}>
+                    <Text style={styles.voiceName}>{voice.name}</Text>
+                    <Text style={styles.countryFlag}>{getCountryFlag(voice.country)}</Text>
+                  </View>
                   {availableVoices.includes(voice.id) && (
                     <Icon name="check-circle" size={16} color={COLORS.accent} />
                   )}
@@ -420,7 +439,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   voiceScroll: {
-    maxHeight: 220,
+    maxHeight: 400,
   },
   voiceOption: {
     padding: 12,
@@ -488,5 +507,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 4,
+  },
+  voiceNameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  countryFlag: {
+    fontSize: 16,
   },
 }); 
