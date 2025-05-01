@@ -419,7 +419,7 @@ export default function NewStoryScreen() {
   const newStoryTutorialSteps = [
     {
       id: 'target_words',
-      message: 'Click on "Add Target Words" to add words that will be used in the story.',
+      message: t('newStoryTutorialTargetWords'),
       targetRef: addStoryButtonRef,
     },
   ];

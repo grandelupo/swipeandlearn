@@ -93,7 +93,7 @@ export default function FeedbackButton({ isEnabled = true }: FeedbackButtonProps
               placeholder={t('feedbackPlaceholder')}
               value={feedback}
               onChangeText={setFeedback}
-              placeholderTextColor={COLORS.brighter}
+              placeholderTextColor={COLORS.primary}
             />
 
             <View style={styles.buttonContainer}>

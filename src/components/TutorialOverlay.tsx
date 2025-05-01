@@ -209,6 +209,23 @@ export default function TutorialOverlay({
     }
   };
 
+  const handleSkip = async () => {
+    try {
+      const tutorialKey = `tutorial_${screenName}`;
+      await AsyncStorage.setItem(tutorialKey, 'true');
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setIsVisible(false);
+        onComplete?.();
+      });
+    } catch (error) {
+      console.error('Error saving tutorial status:', error);
+    }
+  };
+
   const renderLanguageSelector = () => {
     return (
       <View style={styles.languageSelectorContainer}>
@@ -252,7 +269,7 @@ export default function TutorialOverlay({
         ) : (
           <TouchableOpacity
             style={styles.finishButton}
-            onPress={handleFinish}
+            onPress={handleNext}
           >
             <Text style={styles.finishButtonText}>{t('finish')}</Text>
           </TouchableOpacity>
@@ -323,6 +340,7 @@ export default function TutorialOverlay({
           <Text style={styles.message}>{currentStepData.message}</Text>
           
           {currentStepData.id === 'language_select' ? (
+            
             renderLanguageSelector()
           ) : (
             renderNavigationButtons()
@@ -403,15 +421,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
   },
   skipButton: {
-    backgroundColor: COLORS.accent,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
   },
   skipButtonText: {
-    color: COLORS.card,
+    color: COLORS.accent,
     fontSize: 16,
     fontFamily: 'Poppins-SemiBold',
   },

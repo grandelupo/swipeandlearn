@@ -376,12 +376,12 @@ export default function BookshelfScreen() {
   const bookshelfTutorialSteps = [
     {
       id: 'feedback_button',
-      message: 'You can send feedback to the developer by clicking the button in the top right corner. Thank you!',
+      message: t('bookshelfTutorialFeedback'),
       targetRef: feedbackButtonRef,
     },
     {
       id: 'add_story',
-      message: 'Click the + button to create a new story.',
+      message: t('bookshelfTutorialAddStory'),
       targetRef: addStoryButtonRef,
     },
   ];

@@ -108,6 +108,8 @@ export default function StoryReader() {
   const [error, setError] = useState<string | null>(null);
   const [availableVoices, setAvailableVoices] = useState<VoiceId[]>([]);
   const [selectedDictionaryType, setSelectedDictionaryType] = useState<DictionaryType>('default');
+  const [lastTapTimestamp, setLastTapTimestamp] = useState(0);
+  const DOUBLE_TAP_DELAY = 300; // milliseconds
 
   // Add refs for tutorial targets
   const contentRef = useRef<View>(null);
@@ -273,26 +275,34 @@ export default function StoryReader() {
   };
 
   const handleSentencePress = async (sentence: string) => {
-    setSelectedSentence(sentence);
-    setTranslationLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+    const currentTime = Date.now();
+    const timeDiff = currentTime - lastTapTimestamp;
 
-      const translation = await translateText({
-        text: sentence,
-        targetLanguage: translationLanguage,
-        userId: user.id,
-        storyId,
-      });
+    if (timeDiff < DOUBLE_TAP_DELAY) {
+      // Double tap detected
+      setSelectedSentence(sentence);
+      setTranslationLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
-      setTranslation(translation);
-    } catch (error) {
-      console.error('Error translating sentence:', error);
-      Alert.alert('Error', 'Failed to translate sentence');
-    } finally {
-      setTranslationLoading(false);
+        const translation = await translateText({
+          text: sentence,
+          targetLanguage: translationLanguage,
+          userId: user.id,
+          storyId,
+        });
+
+        setTranslation(translation);
+      } catch (error) {
+        console.error('Error translating sentence:', error);
+        Alert.alert('Error', 'Failed to translate sentence');
+      } finally {
+        setTranslationLoading(false);
+      }
     }
+
+    setLastTapTimestamp(currentTime);
   };
 
   const generateNewPage = async (customTargetWords?: string[]) => {
@@ -429,28 +439,70 @@ export default function StoryReader() {
   };
 
   const handleWordPress = async (word: string, sentence: string, sentenceIndex: number, wordIndex: number) => {
-    try {
-      setWordTranslationLoading(true);
-      setSelectedWord({ text: word, sentenceIndex, wordIndex });
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error(t('notAuthenticated'));
+    if (lastTapRef.current && (now - lastTapRef.current) < DOUBLE_TAP_DELAY) {
+      // Double tap detected - translate sentence
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+      }
+      setSelectedWord(null);
+      setSelectedWordTranslation(null);
+      setSelectedSentence(sentence);
+      setTranslationLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error(t('notAuthenticated'));
 
-      const translation = await translateText({
-        text: word,
-        targetLanguage: translationLanguage,
-        userId: user.id,
-        storyId,
-        isWord: true,
-        context: sentence,
-        wordIndex,
-      });
+        const translation = await translateText({
+          text: sentence,
+          targetLanguage: translationLanguage,
+          userId: user.id,
+          storyId,
+        });
 
-      setSelectedWordTranslation(translation);
-    } catch (error) {
-      console.error(t('errorUnknown'), error);
-    } finally {
-      setWordTranslationLoading(false);
+        setTranslation(translation);
+      } catch (error) {
+        console.error('Error translating sentence:', error);
+        Alert.alert(t('error'), t('errorTranslatingSentence'));
+      } finally {
+        setTranslationLoading(false);
+      }
+    } else {
+      // Single tap - wait to see if it's a double tap
+      lastTapRef.current = now;
+      
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+      }
+
+      tapTimeoutRef.current = setTimeout(async () => {
+        // Single tap confirmed - translate word
+        setSelectedWord({ text: word, sentenceIndex, wordIndex });
+        setWordTranslationLoading(true);
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error(t('notAuthenticated'));
+
+          const translation = await translateText({
+            text: word,
+            targetLanguage: translationLanguage,
+            userId: user.id,
+            storyId,
+            isWord: true,
+            context: sentence,
+            wordIndex,
+          });
+
+          setSelectedWordTranslation(translation);
+        } catch (error) {
+          console.error(t('errorUnknown'), error);
+        } finally {
+          setWordTranslationLoading(false);
+        }
+      }, DOUBLE_TAP_DELAY);
     }
   };
 
@@ -460,7 +512,7 @@ export default function StoryReader() {
       setSelectedWord({ text: word, sentenceIndex, wordIndex });
       setShowDictionary(true);
 
-      const defs = await fetchDefinitions(word, selectedDictionaryType);
+      const defs = await fetchDefinitions(word, story?.language || 'English', selectedDictionaryType);
       setDefinitions(defs);
     } catch (error) {
       console.error(t('errorFetchingDefinitions'), error);
@@ -547,8 +599,8 @@ export default function StoryReader() {
                 {words.map((word, wordIndex) => {
                   const cleanWord = word.replace(/[.,!?。！？]$/, '');
                   const isSelected = selectedWord?.text === cleanWord && 
-                                   selectedWord?.sentenceIndex === index && 
-                                   selectedWord?.wordIndex === wordIndex;
+                                 selectedWord?.sentenceIndex === index && 
+                                 selectedWord?.wordIndex === wordIndex;
                   return (
                     <Pressable
                       key={wordIndex}
@@ -566,7 +618,7 @@ export default function StoryReader() {
                       {isSelected && selectedWordTranslation && (
                         <View style={styles.wordTranslationContainer}>
                           {wordTranslationLoading ? (
-                            <ActivityIndicator size="small" color={COLORS.accent} />
+                            <ActivityIndicator size="small" color={COLORS.card} />
                           ) : (
                             <Text style={styles.wordTranslationText}>{selectedWordTranslation}</Text>
                           )}
@@ -656,21 +708,21 @@ export default function StoryReader() {
   const storyReaderTutorialSteps = [
     {
       id: 'translation',
-      message: 'Click once on any word to translate it to your preferred language. Double-tap for a sentence translation.',
+      message: t('storyReaderTutorialTranslation'),
       targetRef: contentRef,
     },
     {
       id: 'dictionary',
-      message: 'Long-press on any word to see its dictionary definition.',
+      message: t('storyReaderTutorialDictionary'),
       targetRef: contentRef,
     },
     {
       id: 'language_select',
-      message: 'What is your preferred language for translations?',
+      message: t('storyReaderTutorialLanguageSelect'),
     },
     {
       id: 'audiobook',
-      message: 'Click the headphones button to generate an audiobook version of the story.',
+      message: t('storyReaderTutorialAudiobook'),
       targetRef: audioButtonRef,
     },
   ];
@@ -1363,5 +1415,11 @@ const styles = StyleSheet.create({
     color: COLORS.card,
     fontSize: 14,
     fontFamily: 'Poppins-SemiBold',
+  },
+  sentenceTouchable: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
   },
 }); 

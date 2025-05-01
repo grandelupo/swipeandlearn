@@ -134,9 +134,7 @@ const translations: Translations = {
     nextPage: 'Next Page',
     page: 'Page',
     of: 'of',
-    defaultDictionary: 'Default Dictionary',
-    learnerDictionary: 'Learner Dictionary',
-    thesaurus: 'Thesaurus',
+    dictionary: 'Dictionary',
 
     // Components - AudioPlayer
     generatingAudio: 'Generating audio...',
@@ -212,6 +210,22 @@ const translations: Translations = {
     invalidCredentials: 'Invalid email or password',
     termsAndConditions: 'By signing up, you agree to our Terms and Conditions',
     privacyPolicy: 'Privacy Policy',
+
+    // Tutorial steps - AudioPlayer
+    audioPlayerTutorialVoiceChange: 'You can change the voice by clicking on the voice name.',
+
+    // Tutorial steps - Bookshelf
+    bookshelfTutorialFeedback: 'You can send feedback to the developer by clicking the button in the top right corner. Thank you!',
+    bookshelfTutorialAddStory: 'Click the + button to create a new story.',
+
+    // Tutorial steps - NewStory
+    newStoryTutorialTargetWords: 'Click on "Add Target Words" to add words that will be used in the story.',
+
+    // Tutorial steps - StoryReader
+    storyReaderTutorialTranslation: 'Click once on any word to translate it to your preferred language. Double-tap for a sentence translation.',
+    storyReaderTutorialDictionary: 'Long-press on any word to see its dictionary definition.',
+    storyReaderTutorialLanguageSelect: 'What is your preferred language for translations?',
+    storyReaderTutorialAudiobook: 'Click the headphones button to generate an audiobook version of the story.',
   },
   pl: {
     // NewStory screen
@@ -338,9 +352,7 @@ const translations: Translations = {
     nextPage: 'Następna strona',
     page: 'Strona',
     of: 'z',
-    defaultDictionary: 'Domyślny słownik',
-    learnerDictionary: 'Słownik dla uczących się',
-    thesaurus: 'Tezaurus',
+    dictionary: 'Słownik',
 
     // Components - AudioPlayer
     generatingAudio: 'Generowanie audio...',
@@ -418,6 +430,22 @@ const translations: Translations = {
     invalidCredentials: 'Nieprawidłowy email lub hasło',
     termsAndConditions: 'Rejestrując się, zgadzasz się z naszym Regulaminem',
     privacyPolicy: 'Polityką Prywatności',
+
+    // Tutorial steps - AudioPlayer
+    audioPlayerTutorialVoiceChange: 'Możesz zmienić głos klikając na nazwę głosu.',
+
+    // Tutorial steps - Bookshelf
+    bookshelfTutorialFeedback: 'Możesz wysłać opinię do dewelopera klikając przycisk w prawym górnym rogu. Dziękujemy!',
+    bookshelfTutorialAddStory: 'Kliknij przycisk + aby stworzyć nową historię.',
+
+    // Tutorial steps - NewStory
+    newStoryTutorialTargetWords: 'Kliknij "Dodaj słowa docelowe" aby dodać słowa, które zostaną użyte w historii.',
+
+    // Tutorial steps - StoryReader
+    storyReaderTutorialTranslation: 'Kliknij raz na dowolne słowo, aby zobaczyć jego tłumaczenie. Kliknij dwa razy, aby przetłumaczyć całe zdanie.',
+    storyReaderTutorialDictionary: 'Przytrzymaj słowo, aby zobaczyć jego definicję w słowniku.',
+    storyReaderTutorialLanguageSelect: 'Jaki jest Twój preferowany język tłumaczenia?',
+    storyReaderTutorialAudiobook: 'Kliknij przycisk słuchawek, aby wygenerować wersję audio historii.',
   }
 };
 

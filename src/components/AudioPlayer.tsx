@@ -190,7 +190,7 @@ export default function AudioPlayer({
   const audioPlayerTutorialSteps = [
     {
       id: 'voice_change',
-      message: 'You can change the voice by clicking on the voice name.',
+      message: t('audioPlayerTutorialVoiceChange'),
       targetRef: voiceSelectorRef,
     },
   ];
