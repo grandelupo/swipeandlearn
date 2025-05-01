@@ -473,8 +473,8 @@ export default function StoryReader() {
     }
   };
 
-  const handleWordLongPress = async (word: string) => {
-    setSelectedWord(null);
+  const handleWordLongPress = async (word: string, sentenceIndex: number, wordIndex: number) => {
+    setSelectedWord({ text: word, sentenceIndex, wordIndex });
     setShowDictionary(true);
     setIsDictionaryLoading(true);
 
@@ -572,7 +572,7 @@ export default function StoryReader() {
                     <Pressable
                       key={wordIndex}
                       onPress={() => handleWordPress(cleanWord, sentence.trim(), index, wordIndex)}
-                      onLongPress={() => handleWordLongPress(cleanWord)}
+                      onLongPress={() => handleWordLongPress(cleanWord, index, wordIndex)}
                       delayLongPress={500}
                       style={styles.wordWrapper}
                     >

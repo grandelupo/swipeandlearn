@@ -29,7 +29,7 @@ async function fetchDikiDefinitions(word: string): Promise<Definition[]> {
     const definitions: Definition[] = [];
     
     // Find dictionary entity sections - these contain groups of definitions
-    const entitySections = html.match(/<div class="dictionaryEntity"[\s\S]*?class="hws"[\s\S]*?<\/(?:ol|div)>\s*?<\/div>/g);
+    const entitySections = html.match(/<div class="dictionaryEntity"[\s\S]*?class="hws"[\s\S]*?(?:<\/li>\s*?<\/ol>\s*?<\/div>|<\/a>\s*?<\/div>\s*?<\/div>)/g);
 
     console.log('entitySections', entitySections?.length);
 
