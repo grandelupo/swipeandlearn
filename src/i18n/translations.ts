@@ -108,6 +108,7 @@ const translations: Translations = {
 
     // Bookshelf screen
     myStories: 'My Stories',
+    pages: 'Pages',
 
     // Archive screen
     archivedStories: 'Archived Stories',
@@ -347,6 +348,7 @@ const translations: Translations = {
 
     // Bookshelf screen
     myStories: 'Moje historie',
+    pages: 'strony',
 
     // StoryReader screen
     loadingStory: 'Ładowanie historii...',
@@ -381,7 +383,7 @@ const translations: Translations = {
     retry: 'Spróbuj ponownie',
     buy: 'Kup',
     purchaseDisclaimer: 'Zakupy zostaną pobrane z Twojego konta App Store lub Google Play. Wszystkie zakupy podlegają naszemu Regulaminowi i Polityce Prywatności.',
-    coins: 'Monety',
+    coins: 'monety',
 
     // Components - Dictionary
     examples: 'Przykłady',

@@ -36,6 +36,7 @@ interface Story {
   total_pages: number;
   theme?: string;
   last_accessed: string;
+  difficulty?: string;
 }
 
 const { width } = Dimensions.get('window');
@@ -179,7 +180,7 @@ export default function BookshelfScreen() {
     try {
       const { data: stories, error } = await supabase
         .from('stories')
-        .select('id, title, language, cover_image_url, total_pages, theme, last_accessed')
+        .select('id, title, language, cover_image_url, total_pages, theme, last_accessed, difficulty')
         .eq('archived', false)
         .order('last_accessed', { ascending: false });
 
@@ -368,7 +369,13 @@ export default function BookshelfScreen() {
       </View>
       <View style={styles.storyInfo}>
         <Text style={styles.storyTitle} numberOfLines={2}>{item.title}</Text>
-        <Text style={styles.storyMeta}>{t(item.language.toLowerCase())} • {item.total_pages} {t('pages')}</Text>
+        <View style={styles.metaContainer}>
+          <Text style={styles.storyMeta}>{t(item.language.toLowerCase())}</Text>
+          <View style={styles.cefrBadge}>
+            <Text style={styles.cefrText}>{item.difficulty || '?'}</Text>
+          </View>
+        </View>
+        <Text style={styles.pageCount}>{item.total_pages} {t('pages')}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -690,5 +697,27 @@ const styles = StyleSheet.create({
   coinCostContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  cefrBadge: {
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  cefrText: {
+    color: COLORS.card,
+    fontSize: 12,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  pageCount: {
+    fontSize: 13,
+    color: COLORS.accent,
+    fontFamily: 'Poppins-Regular',
   },
 }); 
