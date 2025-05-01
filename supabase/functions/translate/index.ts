@@ -7,6 +7,9 @@ interface TranslationParams {
   targetLanguage: string
   userId: string
   storyId: string
+  isWord?: boolean
+  context?: string // Surrounding context for word translation
+  wordIndex?: number // Index of the word in the context
 }
 
 serve(async (req) => {
@@ -16,12 +19,15 @@ serve(async (req) => {
   }
 
   try {
-    const { text, targetLanguage, userId, storyId } = await req.json() as TranslationParams
+    const { text, targetLanguage, userId, storyId, isWord, context, wordIndex } = await req.json() as TranslationParams
 
     console.log('text', text);
     console.log('targetLanguage', targetLanguage);
     console.log('userId', userId);
     console.log('storyId', storyId);
+    console.log('isWord', isWord);
+    console.log('context', context);
+    console.log('wordIndex', wordIndex);
 
     // Get story's generation model
     const { data: story, error: storyError } = await supabaseAdmin
@@ -33,14 +39,20 @@ serve(async (req) => {
     if (storyError) throw storyError
     const useGrok = story.generation_model === 'grok'
 
+    
     // Check if translation exists in cache
-    const { data: cachedTranslation, error: cacheError } = await supabaseAdmin
-      .from('translations')
-      .select('translated_text')
-      .eq('user_id', userId)
-      .eq('original_text', text)
-      .eq('target_language', targetLanguage)
+    let cachedTranslation: string | null = null;
+    let cacheError: Error | null = null;
+
+    if (!isWord) {
+      const { data: cachedTranslation, error: cacheError } = await supabaseAdmin
+        .from('translations')
+        .select('translated_text')
+        .eq('user_id', userId)
+        .eq('original_text', text)
+        .eq('target_language', targetLanguage)
       .single()
+    }
 
     console.log('cachedTranslation', cachedTranslation);
 
@@ -57,7 +69,9 @@ serve(async (req) => {
     }
 
     // Generate translation using the same model as the story
-    const prompt = `Translate the following text to ${targetLanguage}. Maintain the same tone and style. Only return the translation, no explanations:
+    const prompt = isWord 
+      ? `Translate the word "${text}" to ${targetLanguage}. The word appears in this context: "${context}" at position ${wordIndex} (0-based index). Only return the translation of this specific instance of the word, considering its exact position and context. Only return the translation, no explanations.`
+      : `Translate the following text to ${targetLanguage}. Maintain the same tone and style. Only return the translation, no explanations:
 
 ${text}`
 
@@ -83,9 +97,10 @@ ${text}`
       throw new Error('Failed to generate translation')
     }
 
-    // Cache the translation
-    const { error: insertError } = await supabaseAdmin
-      .from('translations')
+    // Cache the translation if not a word
+    if (!isWord) {
+      const { error: insertError } = await supabaseAdmin
+        .from('translations')
       .insert({
         user_id: userId,
         original_text: text,
@@ -93,10 +108,11 @@ ${text}`
         translated_text: translation,
       })
 
-    console.log('insertError', insertError);
+      console.log('insertError', insertError);
 
-    if (insertError) {
-      throw insertError
+      if (insertError) {
+        throw insertError
+      }
     }
 
     return new Response(

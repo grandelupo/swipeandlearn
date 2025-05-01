@@ -29,6 +29,9 @@ export interface TranslationParams {
   targetLanguage: string
   userId: string
   storyId: string
+  isWord?: boolean
+  context?: string
+  wordIndex?: number
 }
 
 export interface CreatePageParams {

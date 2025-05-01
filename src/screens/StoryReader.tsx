@@ -73,7 +73,9 @@ export default function StoryReader() {
   const [audioLoading, setAudioLoading] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<VoiceId>('21m00Tcm4TlvDq8ikWAM');
   const [showAudioPlayer, setShowAudioPlayer] = useState(false);
-  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [selectedWord, setSelectedWord] = useState<{ text: string; sentenceIndex: number; wordIndex: number } | null>(null);
+  const [selectedWordTranslation, setSelectedWordTranslation] = useState<string | null>(null);
+  const [wordTranslationLoading, setWordTranslationLoading] = useState(false);
   const [showDictionary, setShowDictionary] = useState(false);
   const [definitions, setDefinitions] = useState<Definition[] | null>(null);
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
@@ -84,6 +86,8 @@ export default function StoryReader() {
   // Add refs for tutorial targets
   const contentRef = useRef<View>(null);
   const audioButtonRef = useRef<View>(null);
+  const lastTapRef = useRef<number>(0);
+  const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchStoryAndPage();
@@ -412,8 +416,65 @@ export default function StoryReader() {
     }
   };
 
+  const handleWordPress = async (word: string, sentence: string, sentenceIndex: number, wordIndex: number) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+
+    if (lastTapRef.current && (now - lastTapRef.current) < DOUBLE_TAP_DELAY) {
+      // Double tap detected - translate sentence
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = null;
+      }
+      setSelectedWord(null);
+      setSelectedWordTranslation(null);
+      handleSentencePress(sentence);
+    } else {
+      // Single tap - wait to see if it's a double tap
+      lastTapRef.current = now;
+      
+      if (tapTimeoutRef.current) {
+        clearTimeout(tapTimeoutRef.current);
+      }
+
+      tapTimeoutRef.current = setTimeout(async () => {
+        // Single tap confirmed - translate word
+        setSelectedWord({ text: word, sentenceIndex, wordIndex });
+        setWordTranslationLoading(true);
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) throw new Error('Not authenticated');
+
+          // Calculate the actual word index in the sentence
+          const sentenceWords = sentence.trim().split(/\s+/);
+          const actualWordIndex = sentenceWords.findIndex((w, idx) => {
+            const cleanW = w.replace(/[.,!?。！？]$/, '');
+            return cleanW === word && idx === wordIndex;
+          });
+
+          const response = await translateText({
+            text: word,
+            targetLanguage: translationLanguage,
+            userId: user.id,
+            storyId,
+            isWord: true,
+            context: sentence,
+            wordIndex: actualWordIndex
+          });
+
+          setSelectedWordTranslation(response);
+        } catch (error) {
+          console.error('Error translating word:', error);
+          Alert.alert('Error', 'Failed to translate word');
+        } finally {
+          setWordTranslationLoading(false);
+        }
+      }, DOUBLE_TAP_DELAY);
+    }
+  };
+
   const handleWordLongPress = async (word: string) => {
-    setSelectedWord(word);
+    setSelectedWord(null);
     setShowDictionary(true);
     setIsDictionaryLoading(true);
 
@@ -433,7 +494,7 @@ export default function StoryReader() {
     if (selectedWord) {
       setIsDictionaryLoading(true);
       try {
-        const defs = await fetchDefinitions(selectedWord, story?.language || 'English', type);
+        const defs = await fetchDefinitions(selectedWord.text, story?.language || 'English', type);
         setDefinitions(defs);
       } catch (error) {
         console.error('Error fetching definitions:', error);
@@ -488,7 +549,6 @@ export default function StoryReader() {
         {sentences.map((sentence, index) => {
           let words;
           if (isCJK) {
-            // For Chinese and Japanese, split by individual characters
             words = sentence.trim().split('');
           } else {
             words = sentence.trim().split(/\s+/);
@@ -503,21 +563,37 @@ export default function StoryReader() {
                   isArabic && styles.arabicSentenceContainer
                 ]}
               >
-                {words.map((word, wordIndex) => (
-                  <Pressable
-                    key={wordIndex}
-                    onLongPress={() => handleWordLongPress(word.replace(/[.,!?。！？]$/, ''))}
-                    onPress={() => handleSentencePress(sentence.trim())}
-                    delayLongPress={500}
-                    style={styles.wordWrapper}
-                  >
-                    <Text style={[
-                      styles.word,
-                      isArabic && styles.arabicWord,
-                      isCJK && styles.cjkWord
-                    ]}>{word}</Text>
-                  </Pressable>
-                ))}
+                {words.map((word, wordIndex) => {
+                  const cleanWord = word.replace(/[.,!?。！？]$/, '');
+                  const isSelected = selectedWord?.text === cleanWord && 
+                                   selectedWord?.sentenceIndex === index && 
+                                   selectedWord?.wordIndex === wordIndex;
+                  return (
+                    <Pressable
+                      key={wordIndex}
+                      onPress={() => handleWordPress(cleanWord, sentence.trim(), index, wordIndex)}
+                      onLongPress={() => handleWordLongPress(cleanWord)}
+                      delayLongPress={500}
+                      style={styles.wordWrapper}
+                    >
+                      <Text style={[
+                        styles.word,
+                        isArabic && styles.arabicWord,
+                        isCJK && styles.cjkWord,
+                        isSelected && styles.highlightedWord
+                      ]}>{word}</Text>
+                      {isSelected && selectedWordTranslation && (
+                        <View style={styles.wordTranslationContainer}>
+                          {wordTranslationLoading ? (
+                            <ActivityIndicator size="small" color="#0066cc" />
+                          ) : (
+                            <Text style={styles.wordTranslationText}>{selectedWordTranslation}</Text>
+                          )}
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                })}
               </View>
               {selectedSentence === sentence.trim() && (
                 <View style={[
@@ -599,7 +675,7 @@ export default function StoryReader() {
   const storyReaderTutorialSteps = [
     {
       id: 'translation',
-      message: 'Click once on any sentence to translate it to your preferred language.',
+      message: 'Click once on any word to translate it to your preferred language. Double-tap for a sentence translation.',
       targetRef: contentRef,
     },
     {
@@ -792,7 +868,7 @@ export default function StoryReader() {
         </View>
       </Modal>
       <Dictionary
-        word={selectedWord || ''}
+        word={selectedWord?.text || ''}
         language={story?.language || 'English'}
         isVisible={showDictionary}
         onClose={() => {
@@ -1059,7 +1135,8 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   highlightedWord: {
-    backgroundColor: '#e1e8ed',
+    backgroundColor: COLORS.brighter,
+    borderRadius: 4,
   },
   fabContainer: {
     position: 'absolute',
@@ -1280,5 +1357,22 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+  },
+  wordTranslationContainer: {
+    backgroundColor: COLORS.accent,
+    borderRadius: 4,
+    padding: 4,
+    marginTop: 4,
+    zIndex: 1000,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  wordTranslationText: {
+    color: COLORS.card,
+    fontSize: 14,
+    fontFamily: 'Poppins-SemiBold',
   },
 }); 
