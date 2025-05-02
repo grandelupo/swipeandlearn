@@ -122,6 +122,11 @@ export default function StoryReader() {
     fetchTranslationLanguage();
     fetchUserVoicePreference();
     checkAvailableAudioRecordings();
+    
+    // Generate cache when reaching the last page
+    if (story && pageNumber === story.total_pages) {
+      generatePageCache();
+    }
   }, [storyId, pageNumber]);
 
   const fetchTranslationLanguage = async () => {
@@ -310,17 +315,66 @@ export default function StoryReader() {
       setGenerating(true);
       setError(null);
 
-      // Check if user has enough coins
+      // Check if user has enough coins and allow generation/reading cache of the next page
       const hasCoins = await useCoins('GENERATE_NEW_PAGE');
       if (!hasCoins) {
         showInsufficientCoinsAlert('GENERATE_NEW_PAGE', () => {});
         return;
       }
 
+      const targetWordsToUse = customTargetWords || personalizedTargetWords;
+
+      // First, check if we have a cached page
+      const { data: cachedPage, error: cacheError } = await supabase
+        .from('story_pages')
+        .select('*')
+        .eq('story_id', storyId)
+        .eq('page_number', pageNumber + 1)
+        .eq('is_cached', true)
+        .single();
+
+      if (cacheError) {
+        console.error('Error checking cached page:', cacheError);
+      }
+
+      // Check if cache exists and matches target words
+      const cacheMatchesTargetWords = cachedPage && 
+        (!targetWordsToUse.length || // No target words specified
+          (cachedPage.target_words && // Cache has target words
+           targetWordsToUse.length === cachedPage.target_words.length && // Same length
+           targetWordsToUse.every(word => cachedPage.target_words.includes(word)))); // Same words
+
+      if (cachedPage && cacheMatchesTargetWords) {
+        // Update the cached page to be a regular page
+        const { error: updateError } = await supabase
+          .from('story_pages')
+          .update({ is_cached: false })
+          .eq('story_id', storyId)
+          .eq('page_number', pageNumber + 1);
+
+        if (updateError) throw updateError;
+
+        // Update story's total pages
+        const { error: storyUpdateError } = await supabase
+          .from('stories')
+          .update({ total_pages: pageNumber + 1 })
+          .eq('id', storyId);
+
+        if (storyUpdateError) throw storyUpdateError;
+
+        // Navigate to the next page
+        navigation.setParams({ pageNumber: pageNumber + 1 });
+        setPersonalizedTargetWords([]);
+        setShowPersonalizeModal(false);
+        return;
+      }
+
+      // If cache doesn't exist or doesn't match target words, generate new page
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t('notAuthenticated'));
 
-      // Generate the page content
+      // Generate the page content with cache
       const response = await generateStoryContent({
         language: story?.language || 'English',
         difficulty: story?.difficulty || 'A1',
@@ -329,23 +383,20 @@ export default function StoryReader() {
         storyId,
         pageNumber: pageNumber + 1,
         previousPages,
-        targetWords: customTargetWords || currentPage?.target_words || [],
+        targetWords: targetWordsToUse,
+        generateCache: true // This will trigger generation of the next page in cache
       });
 
-      // Update the page in Supabase
-      const { error: updateError } = await supabase
-        .from('story_pages')
-        .update({ content: response.content })
-        .eq('story_id', storyId)
-        .eq('page_number', pageNumber + 1);
+      // Update story's total pages
+      const { error: storyUpdateError } = await supabase
+        .from('stories')
+        .update({ total_pages: pageNumber + 1 })
+        .eq('id', storyId);
 
-      console.log('pageNumber', pageNumber);
+      if (storyUpdateError) throw storyUpdateError;
 
-      if (updateError) throw updateError;
-
-      // Update local state
+      // Navigate to the next page
       navigation.setParams({ pageNumber: pageNumber + 1 });
-      setCurrentPage(prev => prev ? { ...prev, content: response.content } : null);
       setPersonalizedTargetWords([]);
       setShowPersonalizeModal(false);
 
@@ -748,6 +799,46 @@ export default function StoryReader() {
       targetRef: audioButtonRef,
     },
   ];
+
+  const generatePageCache = async () => {
+    try {
+      // Check if we already have a cached page
+      const { data: existingCache, error: cacheError } = await supabase
+        .from('story_pages')
+        .select('*')
+        .eq('story_id', storyId)
+        .eq('page_number', pageNumber + 1)
+        .eq('is_cached', true)
+        .single();
+
+      if (cacheError) {
+        console.error('Error checking cache:', cacheError);
+      }
+
+      // If cache exists, don't generate new one
+      if (existingCache) {
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Generate the next page for cache
+      await generateStoryContent({
+        language: story?.language || 'English',
+        difficulty: story?.difficulty || 'A1',
+        theme: story?.theme || 'general',
+        userId: user.id,
+        storyId,
+        pageNumber: pageNumber + 1,
+        previousPages: [...previousPages, currentPage?.content || ''],
+        targetWords: currentPage?.target_words || [],
+        generateCache: true
+      });
+    } catch (error) {
+      console.error('Error generating cache:', error);
+    }
+  };
 
   if (loading || generating) {
     return (

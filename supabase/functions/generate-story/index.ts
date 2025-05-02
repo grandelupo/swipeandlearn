@@ -11,6 +11,7 @@ interface StoryGenerationParams {
   previousPages?: string[]
   storyId?: string
   userId: string
+  generateCache?: boolean
 }
 
 const CEFR_GUIDELINES = {
@@ -58,7 +59,7 @@ serve(async (req) => {
   }
 
   try {
-    const { language, difficulty, theme, targetWords, pageNumber = 1, previousPages = [], storyId, userId } = await req.json() as StoryGenerationParams
+    const { language, difficulty, theme, targetWords, pageNumber = 1, previousPages = [], storyId, userId, generateCache } = await req.json() as StoryGenerationParams
     const guidelines = CEFR_GUIDELINES[difficulty]
 
     // Get user's preferred model
@@ -190,29 +191,36 @@ Response should be just the story text, no additional formatting or metadata.`
           page_number: pageNumber,
           content: content,
           target_words: targetWords,
+          is_cached: generateCache || false
         })
+        .select()
+        .single();
 
-      console.log('pageData', pageData);
-      console.log('pageError', pageError);
+      if (pageError) throw pageError;
 
-      if (pageError) throw pageError
+      // Only update total_pages if this is not a cached page
+      if (!generateCache) {
+        const { error: storyError } = await supabaseAdmin
+          .from('stories')
+          .update({ total_pages: pageNumber })
+          .eq('id', storyId);
 
-      // Update story total pages
-      const { error: updateError } = await supabaseAdmin
-        .from('stories')
-        .update({ total_pages: pageNumber })
-        .eq('id', storyId)
+        if (storyError) throw storyError;
+      }
 
-      if (updateError) throw updateError
+      return new Response(
+        JSON.stringify({
+          content,
+          target_words: targetWords,
+          page_number: pageNumber,
+          is_cached: generateCache || false
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
     }
-
-    return new Response(
-      JSON.stringify({ content, storyId }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
-    )
   } catch (error) {
     console.log('error', error);
     return new Response(

@@ -9,6 +9,7 @@ export interface StoryGenerationParams {
   previousPages?: string[]
   storyId?: string
   userId: string
+  generateCache?: boolean
 }
 
 export interface ImageGenerationParams {
