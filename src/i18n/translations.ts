@@ -23,6 +23,9 @@ const translations: Translations = {
     creatingStory: 'Creating Story...',
     createStory: 'Create Story',
     generateCoverImage: 'Generate cover image',
+    generatingTitle: 'Generating title...',
+    generatingCover: 'Generating cover...',
+    generatingPageNumber: 'Generating page {0} out of 4...',
     
     // Difficulty levels
     beginner: 'Beginner',
@@ -261,6 +264,9 @@ const translations: Translations = {
     creatingStory: 'Tworzenie historii...',
     createStory: 'Stwórz historię',
     generateCoverImage: 'Wygeneruj okładkę',
+    generatingTitle: 'Generowanie tytułu...',
+    generatingCover: 'Generowanie okładki...',
+    generatingPageNumber: 'Generowanie strony {0} z 4...',
     
     // Difficulty levels
     beginner: 'Początkujący',

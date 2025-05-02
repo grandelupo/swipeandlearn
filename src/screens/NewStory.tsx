@@ -382,7 +382,7 @@ export default function NewStoryScreen() {
 
       let previousPages: string[] = [];
       for (let pageNumber = 1; pageNumber <= 4; pageNumber++) {
-        setProgress(t('generatingPage', pageNumber));
+        setProgress(t('generatingPageNumber', pageNumber));
         
         const result = await generateStoryContent({
           language,
