@@ -193,6 +193,7 @@ Response should be just the story text, no additional formatting or metadata.`
         })
 
       console.log('pageData', pageData);
+      console.log('pageError', pageError);
 
       if (pageError) throw pageError
 
@@ -213,6 +214,7 @@ Response should be just the story text, no additional formatting or metadata.`
       },
     )
   } catch (error) {
+    console.log('error', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {

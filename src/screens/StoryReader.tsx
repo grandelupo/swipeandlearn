@@ -327,7 +327,7 @@ export default function StoryReader() {
         theme: story?.theme || 'general',
         userId: user.id,
         storyId,
-        pageNumber,
+        pageNumber: pageNumber + 1,
         previousPages,
         targetWords: customTargetWords || currentPage?.target_words || [],
       });
@@ -337,7 +337,7 @@ export default function StoryReader() {
         .from('story_pages')
         .update({ content: response.content })
         .eq('story_id', storyId)
-        .eq('page_number', pageNumber);
+        .eq('page_number', pageNumber + 1);
 
       if (updateError) throw updateError;
 
