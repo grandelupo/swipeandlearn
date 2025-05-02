@@ -136,6 +136,10 @@ const translations: Translations = {
     page: 'Page',
     of: 'of',
     dictionary: 'Dictionary',
+    defaultDictionary: 'Default',
+    wiktionary: 'Wiktionary',
+    diki: 'Diki (polski)',
+    wordNotFoundInDictionary: 'Word not found in dictionary',
 
     // Components - AudioPlayer
     generatingAudio: 'Generating audio...',
@@ -370,6 +374,11 @@ const translations: Translations = {
     page: 'Strona',
     of: 'z',
     dictionary: 'Słownik',
+    defaultDictionary: 'Domyślny',
+    wiktionary: 'Wikisłownik',
+    diki: 'Diki (polski)',
+    wordNotFoundInDictionary: 'Słowo nie znalezione w słowniku',
+    
 
     // Components - AudioPlayer
     generatingAudio: 'Generowanie audio...',

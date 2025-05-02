@@ -107,7 +107,7 @@ export default function StoryReader() {
   const [isDictionaryLoading, setIsDictionaryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableVoices, setAvailableVoices] = useState<VoiceId[]>([]);
-  const [selectedDictionaryType, setSelectedDictionaryType] = useState<DictionaryType>('default');
+  const [selectedDictionaryType, setSelectedDictionaryType] = useState<DictionaryType>('defaultDictionary');
   const [lastTapTimestamp, setLastTapTimestamp] = useState(0);
   const DOUBLE_TAP_DELAY = 300; // milliseconds
 

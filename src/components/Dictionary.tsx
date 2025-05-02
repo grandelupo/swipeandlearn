@@ -13,6 +13,7 @@ import { COLORS } from '@/constants/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DictionaryType, getAvailableDictionaryTypes } from '@/services/dictionary';
 import { Picker } from '@react-native-picker/picker';
+import { t } from '@/i18n/translations';
 
 export interface Definition {
   partOfSpeech: string;
@@ -43,7 +44,7 @@ export default function Dictionary({
   isLoading,
   onDictionaryTypeChange,
 }: DictionaryProps) {
-  const [selectedDictionaryType, setSelectedDictionaryType] = useState<DictionaryType>('default');
+  const [selectedDictionaryType, setSelectedDictionaryType] = useState<DictionaryType>('defaultDictionary');
   const availableDictionaries = getAvailableDictionaryTypes(language);
 
   useEffect(() => {
@@ -102,7 +103,7 @@ export default function Dictionary({
           <View style={styles.header}>
             <View style={styles.word}>
               <Text h4>{word}</Text>
-              <Text style={styles.languageText}>({language})</Text>
+              <Text style={styles.languageText}>({t(language)})</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Icon name="close" size={24} color="#000" />
@@ -111,7 +112,7 @@ export default function Dictionary({
 
           {availableDictionaries.length > 1 && (
             <View style={styles.dictionarySelector}>
-              <Text style={styles.selectorLabel}>Dictionary:</Text>
+              <Text style={styles.selectorLabel}>{t('dictionary')}:</Text>
               <Picker
                 selectedValue={selectedDictionaryType}
                 onValueChange={handleDictionaryTypeChange}
@@ -120,7 +121,7 @@ export default function Dictionary({
                 {availableDictionaries.map((type) => (
                   <Picker.Item
                     key={type}
-                    label={type.charAt(0).toUpperCase() + type.slice(1)}
+                    label={t(type)}
                     value={type}
                   />
                 ))}
@@ -130,7 +131,7 @@ export default function Dictionary({
 
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#0066cc" />
+              <ActivityIndicator size="large" color={COLORS.accent} />
               <Text style={styles.loadingText}>Loading definition...</Text>
             </View>
           ) : groupedDefinitions ? (

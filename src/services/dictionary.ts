@@ -1,11 +1,12 @@
 import { Definition } from '@/components/Dictionary';
 import { fetchDikiDefinitions } from './dikiDictionary';
+import { t } from '@/i18n/translations';
 
 // API URLs
 const ENGLISH_DICTIONARY_API = 'https://api.dictionaryapi.dev/api/v2/entries/en';
 
 // Dictionary types
-export type DictionaryType = 'default' | 'wiktionary' | 'diki (polski)';
+export type DictionaryType = 'defaultDictionary' | 'wiktionary' | 'diki';
 
 // Language codes mapping for Wiktionary
 const WIKTIONARY_LANG_CODES: Record<string, string> = {
@@ -118,16 +119,16 @@ async function fetchWiktionaryDefinitions(word: string, language: string): Promi
 export async function fetchDefinitions(
   word: string, 
   language: string = 'English',
-  dictionaryType: DictionaryType = 'default'
+  dictionaryType: DictionaryType = 'defaultDictionary'
 ): Promise<Definition[]> {
   try {
     // Use Diki.pl for Polish translations
-    if (dictionaryType === 'diki (polski)') {
+    if (dictionaryType === 'diki') {
       return await fetchDikiDefinitions(word);
     }
     
     // Use English dictionary API for English words with default dictionary
-    if (language === 'English' && dictionaryType === 'default') {
+    if (language === 'English' && dictionaryType === 'defaultDictionary') {
       return await fetchEnglishDefinitions(word);
     }
     
@@ -148,7 +149,7 @@ export async function fetchDefinitions(
     if (error.message === 'Word not found' || error.message === 'No definitions found for this language') {
       return [{
         partOfSpeech: 'error',
-        definitions: [{ text: 'Word not found in dictionary' }],
+        definitions: [{ text: t('wordNotFoundInDictionary') }],
         examples: undefined
       }];
     }
@@ -176,8 +177,8 @@ export function getAvailableDictionaryTypes(language: string): DictionaryType[] 
   const types: DictionaryType[] = [];
   
   if (language === 'English') {
-    types.push('default');
-    types.push('diki (polski)');
+    types.push('defaultDictionary');
+    types.push('diki');
   }
   
   if (language in WIKTIONARY_LANG_CODES) {
