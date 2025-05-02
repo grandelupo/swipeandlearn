@@ -844,7 +844,7 @@ export default function StoryReader() {
     return (
       <View style={styles.outerContainer}>
         <Text style={styles.loadingText}>
-          {generating ? 'Generating new page...' : 'Loading...'}
+          {generating ? t('generatingPage') : t('loadingStory')}
         </Text>
       </View>
     );
@@ -853,7 +853,7 @@ export default function StoryReader() {
   if (!story) {
     return (
       <View style={styles.outerContainer}>
-        <Text style={styles.loadingText}>Story not found</Text>
+        <Text style={styles.loadingText}>{t('storyNotFound')}</Text>
       </View>
     );
   }
@@ -862,9 +862,9 @@ export default function StoryReader() {
     if (pageNumber > story.total_pages) {
       return (
         <View style={styles.outerContainer}>
-          <Text style={styles.loadingText}>Page {pageNumber} not found</Text>
+          <Text style={styles.loadingText}>{t('pageNotFound', { pageNumber })}</Text>
           <Button
-            title="Go to last page"
+            title={t('goToLastPage')}
             onPress={() => navigation.setParams({ pageNumber: story.total_pages })}
             type="outline"
             containerStyle={{ marginTop: 16 }}

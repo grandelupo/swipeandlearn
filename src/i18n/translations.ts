@@ -186,10 +186,13 @@ const translations: Translations = {
     voiceFrederick: 'Professional British voice',
     voiceJohn: 'Narrative male voice',
     voiceJason: 'Neutral Australian male voice',
-
+    voiceAgatka: 'Bright and cheerful Polish female voice',
 
     // StoryReader additional translations
     continueReading: 'Continue Reading',
+    storyNotFound: 'Story not found',
+    pageNotFound: 'Page {0} not found',
+    goToLastPage: 'Go to last page',
     words: 'Words',
     addTargetWordsTitle: 'Add Target Words',
     addTargetWordsDescription: 'Enter words you want to focus on learning in this story.',
@@ -363,6 +366,9 @@ const translations: Translations = {
     // StoryReader screen
     loadingStory: 'Ładowanie historii...',
     generatingPage: 'Generowanie strony...',
+    storyNotFound: 'Historia nie znaleziona',
+    pageNotFound: 'Strona {0} nie znaleziona',
+    goToLastPage: 'Idź do ostatniej strony',
     personalizeStory: 'Personalizuj historię',
     addTargetWord: 'Dodaj słowo docelowe',
     targetWords: 'Słowa docelowe',
@@ -429,6 +435,7 @@ const translations: Translations = {
     voiceFrederick: 'Profesjonalny, dobrze wysławiający się głos brytyjski',
     voiceJohn: 'Narracyjny głos mężczyzny w średnim wieku',
     voiceJason: 'Neutralny, wyraźny męski głos australijski',
+    voiceAgatka: 'Jasny, ciepły głos kobiety z Polski',
     
 
 

@@ -15,6 +15,7 @@ import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { COLORS } from '@/constants/colors';
 import TutorialOverlay from '@/components/TutorialOverlay';
 import { t } from '@/i18n/translations';
+import { supabase } from '@/services/supabase';
 
 interface AudioPlayerProps {
   audioUrl: string | null;
@@ -53,8 +54,9 @@ export default function AudioPlayer({
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1.0);
-  const [showVoiceSelector, setShowVoiceSelector] = useState(false);
+  const [showVoices, setShowVoices] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [isVip, setIsVip] = useState(false);
   
   const soundRef = useRef(sound);
   soundRef.current = sound;
@@ -76,6 +78,10 @@ export default function AudioPlayer({
   useEffect(() => {
     loadAudio();
   }, [audioUrl]);
+
+  useEffect(() => {
+    checkVipStatus();
+  }, []);
 
   const loadAudio = async () => {
     if (!audioUrl) return;
@@ -195,6 +201,29 @@ export default function AudioPlayer({
     },
   ];
 
+  const checkVipStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('vip')
+        .eq('id', user.id)
+        .single();
+
+      setIsVip(profile?.vip || false);
+    } catch (error) {
+      console.error('Error checking VIP status:', error);
+    }
+  };
+
+  const availableVoicesList = AVAILABLE_VOICES.filter(voice => 
+    (!voice.requiresVip || isVip)
+  );
+
+  const selectedVoiceData = AVAILABLE_VOICES.find(v => v.id === selectedVoice);
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -259,13 +288,12 @@ export default function AudioPlayer({
         <TouchableOpacity
           ref={voiceSelectorRef}
           style={styles.voiceButton}
-          onPress={() => setShowVoiceSelector(!showVoiceSelector)}
+          onPress={() => setShowVoices(!showVoices)}
         >
           <Text style={styles.voiceButtonText}>
-            {AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.name || t('selectVoice')}{' '}
-            {getCountryFlag(AVAILABLE_VOICES.find(v => v.id === selectedVoice)?.country || 'US')}
+            {selectedVoiceData?.flag} {selectedVoiceData?.name}
           </Text>
-          <Icon name={showVoiceSelector ? 'keyboard-arrow-up' : 'keyboard-arrow-down'} size={24} color={COLORS.accent} />
+          <Icon name={showVoices ? 'expand-less' : 'expand-more'} size={24} color={COLORS.accent} />
         </TouchableOpacity>
 
         <View style={styles.speedControls}>
@@ -285,10 +313,10 @@ export default function AudioPlayer({
         </View>
       </View>
 
-      {showVoiceSelector && (
+      {showVoices && (
         <View style={styles.voiceSelector}>
           <ScrollView style={styles.voiceScroll} contentContainerStyle={{ paddingBottom: 8 }}>
-            {AVAILABLE_VOICES.map((voice) => (
+            {availableVoicesList.map((voice) => (
               <TouchableOpacity
                 key={voice.id}
                 style={[
@@ -297,13 +325,13 @@ export default function AudioPlayer({
                 ]}
                 onPress={() => {
                   onVoiceChange(voice.id);
-                  setShowVoiceSelector(false);
+                  setShowVoices(false);
                 }}
               >
                 <View style={styles.voiceHeader}>
                   <View style={styles.voiceNameContainer}>
                     <Text style={styles.voiceName}>{voice.name}</Text>
-                    <Text style={styles.countryFlag}>{getCountryFlag(voice.country)}</Text>
+                    <Text style={styles.countryFlag}>{voice.flag}</Text>
                   </View>
                   {availableVoices.includes(voice.id) && (
                     <Icon name="check-circle" size={16} color={COLORS.accent} />

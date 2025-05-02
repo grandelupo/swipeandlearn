@@ -8,21 +8,23 @@ export interface Voice {
   id: VoiceId;
   name: string;
   description: string;
-  country: 'US' | 'GB' | 'US-African-American' | 'AU'; // US for American, GB for British
+  flag: string;
+  requiresVip: boolean;
 }
 
 export const AVAILABLE_VOICES: Voice[] = [
-  { id: 'KoVIHoyLDrQyd4pGalbs', name: 'Autumn', description: 'Soft, clear narrative female', country: 'US' },
-  { id: 'j05EIz3iI3JmBTWC3CsA', name: 'Laura', description: 'ASMR soothing female', country: 'US' },
-  { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger', description: 'Deep and authoritative', country: 'US' },
-  { id: 'KStQ5J0QpMyuoKkTnbDO', name: 'Bill', description: 'Calm and soothing male', country: 'US' },
-  { id: 'NFG5qt843uXKj4pFvR7C', name: 'Adam', description: 'Deep British male', country: 'GB' },
-  { id: 'xctasy8XvGp2cVO9HL9k', name: 'Allisson', description: 'Emotional and expressive millennial female', country: 'US' },
-  { id: 'P7x743VjyZEOihNNygQ9', name: 'Dakota', description: 'Middle-aged African-American female', country: 'US-African-American' },
-  { id: 'c51VqUTljshmftbhJEGm', name: 'Emily', description: 'Young friendly female', country: 'US' },
-  { id: 'j9jfwdrw7BRfcR43Qohk', name: 'Frederick', description: 'Professional, well-spoken British male', country: 'GB' },
-  { id: 'EiNlNiXeDU1pqqOPrYMO', name: 'John', description: 'Narrative middle-aged male', country: 'US' },
-  { id: 'D9oXHIyU6iZzDJNymrTO', name: 'Jason', description: 'Neutral, clear Australian male', country: 'AU' },
+  { id: 'KoVIHoyLDrQyd4pGalbs', name: 'Autumn', description: 'Soft, clear narrative female', flag: '🇺🇸', requiresVip: false },
+  { id: 'j05EIz3iI3JmBTWC3CsA', name: 'Laura', description: 'ASMR soothing female', flag: '🇺🇸', requiresVip: false },
+  { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger', description: 'Deep and authoritative', flag: '🇺🇸', requiresVip: false },
+  { id: 'KStQ5J0QpMyuoKkTnbDO', name: 'Bill', description: 'Calm and soothing male', flag: '🇺🇸', requiresVip: false },
+  { id: 'NFG5qt843uXKj4pFvR7C', name: 'Adam', description: 'Deep British male', flag: '🇬🇧', requiresVip: false },
+  { id: 'xctasy8XvGp2cVO9HL9k', name: 'Allisson', description: 'Emotional and expressive millennial female', flag: '🇺🇸', requiresVip: false },
+  { id: 'P7x743VjyZEOihNNygQ9', name: 'Dakota', description: 'Middle-aged African-American female', flag: '🇺🇸 🇿🇦', requiresVip: false },
+  { id: 'c51VqUTljshmftbhJEGm', name: 'Emily', description: 'Young friendly female', flag: '🇺🇸', requiresVip: false },
+  { id: 'j9jfwdrw7BRfcR43Qohk', name: 'Frederick', description: 'Professional, well-spoken British male', flag: '🇬🇧', requiresVip: false },
+  { id: 'EiNlNiXeDU1pqqOPrYMO', name: 'John', description: 'Narrative middle-aged male', flag: '🇺🇸', requiresVip: false },
+  { id: 'D9oXHIyU6iZzDJNymrTO', name: 'Jason', description: 'Neutral, clear Australian male', flag: '🇦🇺', requiresVip: false },
+  { id: 'BfBBfKwsELqRpyPHjugT', name: 'Agatka', description: 'Polish bright and cheerful female with clear voice', flag: '🇵🇱', requiresVip: true },
 ];
 
 export async function generateSpeech(text: string, voiceId: VoiceId): Promise<string> {

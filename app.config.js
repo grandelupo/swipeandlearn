@@ -1,5 +1,3 @@
-import { COLORS } from "./src/constants/colors";
-
 module.exports = {
   expo: {
     name: "Swipe and Learn",
@@ -13,7 +11,7 @@ module.exports = {
     splash: {
       image: "./assets/images/splash.png",
       resizeMode: "contain",
-      backgroundColor: COLORS.accent
+      backgroundColor: '#FF6F1A'
     },
     assetBundlePatterns: [
       '**/*'
@@ -25,8 +23,8 @@ module.exports = {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: COLORS.accent,
-        iconBackground: COLORS.accent
+        backgroundColor: '#FF6F1A',
+        iconBackground: '#FF6F1A'
       },
       package: "com.latovi.swipeandlearn",
       permissions: ['com.android.vending.BILLING'],
