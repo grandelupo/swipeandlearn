@@ -15,7 +15,14 @@ const WIKTIONARY_LANG_CODES: Record<string, string> = {
   French: 'fr',
   German: 'de',
   Italian: 'it',
-  Portuguese: 'pt'
+  Portuguese: 'pt',
+  Chinese: 'zh',
+  Japanese: 'ja',
+  Korean: 'ko',
+  Russian: 'ru',
+  Arabic: 'ar',
+  Polish: 'pl',
+  
 };
 
 // Helper function to clean up Wiktionary HTML content
