@@ -103,7 +103,7 @@ export default function Dictionary({
           <View style={styles.header}>
             <View style={styles.word}>
               <Text h4>{word}</Text>
-              <Text style={styles.languageText}>({t(language)})</Text>
+              <Text style={styles.languageText}>{t(language.toLowerCase())}</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Icon name="close" size={24} color="#000" />

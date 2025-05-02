@@ -191,24 +191,6 @@ export default function TutorialOverlay({
     }
   };
 
-  const handleLanguageSelect = async (language: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ preferred_translation_language: language })
-        .eq('id', user.id);
-
-      if (error) throw error;
-      onLanguageSelect?.(language);
-      handleNext();
-    } catch (error) {
-      console.error('Error updating translation language:', error);
-    }
-  };
-
   const handleSkip = async () => {
     try {
       const tutorialKey = `tutorial_${screenName}`;
@@ -409,8 +391,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
-    marginHorizontal: 5,
-    marginVertical: 5,
   },
   languageButtonText: {
     color: COLORS.card,

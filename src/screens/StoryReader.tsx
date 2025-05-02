@@ -697,11 +697,9 @@ export default function StoryReader() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          preferred_language: language,
-        });
+        .from('profiles')
+        .update({ preferred_translation_language: language })
+        .eq('id', user.id);
     }
   };
 
