@@ -409,6 +409,27 @@ export default function StoryReader() {
 
   const generatePageAudio = async (voiceId: VoiceId = selectedVoice) => {
     try {
+      // Check if we already have this audio cached
+      const { data: existingRecording, error: recordingError } = await supabase
+        .from('audio_recordings')
+        .select('audio_url')
+        .eq('story_id', storyId)
+        .eq('page_number', pageNumber)
+        .eq('voice_id', voiceId)
+        .single();
+
+      if (recordingError) {
+        console.error('Error checking audio recording:', recordingError);
+      }
+
+      console.log('Checking audio recording:', { storyId, pageNumber, voiceId, existingRecording });
+
+      if (existingRecording?.audio_url) {
+        setAudioUrl(existingRecording.audio_url);
+        setShowAudioPlayer(true);
+        return;
+      }
+
       setAudioLoading(true);
       setError(null);
 

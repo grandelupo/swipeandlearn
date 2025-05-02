@@ -340,8 +340,7 @@ const styles = StyleSheet.create({
   controls: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
+    alignItems: 'center'
   },
   button: {
     padding: 10,
@@ -367,7 +366,6 @@ const styles = StyleSheet.create({
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
   },
   time: {
     fontSize: 13,
@@ -390,7 +388,8 @@ const styles = StyleSheet.create({
   voiceButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     backgroundColor: COLORS.bright,
     borderRadius: 18,
     shadowColor: COLORS.accent,
