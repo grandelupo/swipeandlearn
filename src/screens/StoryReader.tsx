@@ -339,9 +339,12 @@ export default function StoryReader() {
         .eq('story_id', storyId)
         .eq('page_number', pageNumber + 1);
 
+      console.log('pageNumber', pageNumber);
+
       if (updateError) throw updateError;
 
       // Update local state
+      navigation.setParams({ pageNumber: pageNumber + 1 });
       setCurrentPage(prev => prev ? { ...prev, content: response.content } : null);
       setPersonalizedTargetWords([]);
       setShowPersonalizeModal(false);
