@@ -1,18 +1,10 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { Story } from '@/types/story';
 
 interface StoryPage {
   content: string;
   page_number: number;
   target_words: string[];
-}
-
-interface Story {
-  id: string;
-  title: string;
-  language: string;
-  difficulty: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
-  theme: string;
-  total_pages: number;
 }
 
 interface StoryCache {

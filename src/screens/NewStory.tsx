@@ -352,7 +352,8 @@ export default function NewStoryScreen() {
             difficulty,
             theme: theme.trim() || 'free form',
             generation_model: useGrok ? 'grok' : 'gpt-4',
-            user_id: user.id
+            user_id: user.id,
+            last_viewed_page: 1
           })
           .select()
           .single();
@@ -952,4 +953,4 @@ const styles = StyleSheet.create({
   packageChipTextSelected: {
     color: COLORS.card,
   },
-}); 
+});

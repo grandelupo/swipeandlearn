@@ -1,8 +1,9 @@
 import { supabase } from './supabase'
+import { Story } from '@/types/story'
 
 export interface StoryGenerationParams {
   language: string
-  difficulty: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'Divine'
+  difficulty: Story['difficulty']
   theme: string
   targetWords?: string[]
   pageNumber?: number

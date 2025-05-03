@@ -27,17 +27,7 @@ import { COLORS } from '@/constants/colors';
 import TutorialOverlay from '@/components/TutorialOverlay';
 import { useFeedbackButton } from '@/contexts/FeedbackButtonContext';
 import { t } from '@/i18n/translations';
-
-interface Story {
-  id: string;
-  title: string;
-  language: string;
-  cover_image_url: string;
-  total_pages: number;
-  theme?: string;
-  last_accessed: string;
-  difficulty?: string;
-}
+import { Story } from '@/types/story';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 2;
@@ -180,7 +170,7 @@ export default function BookshelfScreen() {
     try {
       const { data: stories, error } = await supabase
         .from('stories')
-        .select('id, title, language, cover_image_url, total_pages, theme, last_accessed, difficulty')
+        .select('id, title, language, cover_image_url, total_pages, theme, last_accessed, difficulty, last_viewed_page')
         .eq('archived', false)
         .order('last_accessed', { ascending: false });
 
@@ -355,7 +345,7 @@ export default function BookshelfScreen() {
       onPress={() => {
         navigation.navigate('StoryReader', {
           storyId: item.id,
-          pageNumber: item.total_pages
+          pageNumber: item.last_viewed_page || 1
         });
       }}
       onLongPress={() => handleLongPress(item)}
@@ -720,4 +710,4 @@ const styles = StyleSheet.create({
     color: COLORS.accent,
     fontFamily: 'Poppins-Regular',
   },
-}); 
+});

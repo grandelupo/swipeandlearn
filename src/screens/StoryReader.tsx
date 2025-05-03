@@ -30,20 +30,12 @@ import { COLORS } from '@/constants/colors';
 import TutorialOverlay from '@/components/TutorialOverlay';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { t } from '@/i18n/translations';
+import { Story } from '@/types/story';
 
 interface StoryPage {
   content: string;
   page_number: number;
   target_words: string[];
-}
-
-interface Story {
-  id: string;
-  title: string;
-  language: string;
-  difficulty: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
-  theme: string;
-  total_pages: number;
 }
 
 type StoryReaderScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'StoryReader'>;
@@ -225,11 +217,18 @@ export default function StoryReader() {
         setPreviousPages([]);
       }
 
-      // Update last accessed timestamp
-      await supabase
+
+      console.log('pageNumber', pageNumber);
+      // Update last accessed timestamp and last viewed page
+      var result = await supabase
         .from('stories')
-        .update({ last_accessed: new Date().toISOString() })
+        .update({ 
+          last_accessed: new Date().toISOString(),
+          last_viewed_page: pageNumber
+        })
         .eq('id', storyId);
+
+      console.log('result', result);
 
     } catch (err) {
       console.error(t('errorLoadingStory'), err);
@@ -419,8 +418,25 @@ export default function StoryReader() {
     setPersonalizedTargetWords(personalizedTargetWords.filter(w => w !== word));
   };
 
-  const navigateToPage = (newPage: number) => {
+  const navigateToPage = async (newPage: number) => {
     if (story && newPage > 0 && newPage <= story.total_pages) {
+      // Update last_viewed_page in the database
+      try {
+        const { error } = await supabase
+          .from('stories')
+          .update({ 
+            last_viewed_page: newPage,
+            last_accessed: new Date().toISOString()
+          })
+          .eq('id', storyId);
+
+        if (error) {
+          console.error('Error updating last viewed page:', error);
+        }
+      } catch (err) {
+        console.error('Error updating last viewed page:', err);
+      }
+
       navigation.setParams({ pageNumber: newPage });
     }
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
@@ -1535,4 +1551,4 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
   },
-}); 
+});
