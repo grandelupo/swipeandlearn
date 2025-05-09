@@ -78,14 +78,16 @@ serve(async (req) => {
     
     if (pageNumber === 0) {
       // Generate title
-      prompt = `Create a short, captivating title for a language learning story in ${language} at CEFR level ${difficulty}. The title should spark curiosity and hint at an exciting adventure or intriguing situation.
+      prompt = `Create a short, captivating title for a story in ${language} at CEFR level ${difficulty}. The title should be evocative and hint at the story's core conflict or theme.
 
 Guidelines for ${difficulty} level:
 - Vocabulary: ${guidelines.vocabulary}
 - Grammar: ${guidelines.grammar}
 - Complexity: ${guidelines.complexity}
 
-The title should be 2-6 words long, appropriate for language learners at ${difficulty} level, and make readers curious to discover what happens in the story. Only respond with the title, no additional formatting or metadata. Make sure the title is less than 50 characters.`
+Style: Write in a Hemingway-inspired style - use short, declarative sentences, focus on concrete details, and emphasize action and dialogue. Avoid flowery language and excessive description.
+
+The title should be 2-6 words long and make readers curious to discover what happens in the story. Only respond with the title, no additional formatting or metadata. Make sure the title is less than 50 characters.`
 
       if (useGrok) {
         content = await generateWithGrok(prompt)
@@ -99,6 +101,38 @@ The title should be 2-6 words long, appropriate for language learners at ${diffi
         content = completion.choices[0]?.message?.content?.trim() || 'Untitled Story'
       }
 
+      // Generate story outline
+      const outlinePrompt = `Create a detailed outline for a ${difficulty}-level story in ${language}. The story should be engaging, with clear plot progression and character development.
+
+Guidelines for ${difficulty} level:
+- Vocabulary: ${guidelines.vocabulary}
+- Grammar: ${guidelines.grammar}
+- Complexity: ${guidelines.complexity}
+
+Style: Write in a Hemingway-inspired style - use short, declarative sentences, focus on concrete details, and emphasize action and dialogue. Avoid flowery language and excessive description.
+
+Create an outline with 5-7 key scenes/events, each corresponding to a page. For each scene:
+1. Specify the main action or event
+2. Note key character interactions
+3. Include any important plot developments
+4. Indicate the emotional tone
+5. Specify how it connects to the next scene
+
+Format the response as a numbered list of scenes, with each scene clearly marked for its page number.`
+
+      let storyOutline: string
+      if (useGrok) {
+        storyOutline = await generateWithGrok(outlinePrompt)
+      } else {
+        const outlineCompletion = await openai.chat.completions.create({
+          model: "gpt-4-turbo-preview",
+          messages: [{ role: "user", content: outlinePrompt }],
+          temperature: 0.7,
+          max_tokens: 500,
+        })
+        storyOutline = outlineCompletion.choices[0]?.message?.content?.trim() || ''
+      }
+
       // Create new story in database
       const { data: story, error: storyError } = await supabaseAdmin
         .from('stories')
@@ -110,6 +144,7 @@ The title should be 2-6 words long, appropriate for language learners at ${diffi
           theme: theme || null,
           difficulty,
           generation_model: generationModel,
+          story_outline: storyOutline,
         })
         .select()
         .single()
@@ -117,17 +152,17 @@ The title should be 2-6 words long, appropriate for language learners at ${diffi
       if (storyError) throw storyError
 
       return new Response(
-        JSON.stringify({ content, storyId: story.id }),
+        JSON.stringify({ content, storyId: story.id, storyOutline }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
         },
       )
     } else {
-      // Get story's generation model
+      // Get story's generation model and outline
       const { data: story, error: storyError } = await supabaseAdmin
         .from('stories')
-        .select('generation_model')
+        .select('generation_model, story_outline')
         .eq('id', storyId)
         .single()
 
@@ -135,35 +170,41 @@ The title should be 2-6 words long, appropriate for language learners at ${diffi
       const useGrokForPage = story.generation_model === 'grok'
 
       // Generate story page
-      prompt = `Create page ${pageNumber} of a captivating language learning story in ${language} at CEFR level ${difficulty}. Make it engaging, emotionally resonant, and occasionally humorous where appropriate.
-${theme !== 'free form' ? `Theme: ${theme}` : 'Create an engaging theme with clear protagonists and antagonists, mixing adventure, mystery, or humor.'}
-${targetWords?.length ? `Target words to incorporate naturally: ${targetWords.join(', ')}` : ''}
+      prompt = `Write page ${pageNumber} of a story in ${language} at CEFR level ${difficulty}. Follow the story outline provided and maintain a Hemingway-inspired style.
+
+Story Outline:
+${story.story_outline}
 
 Guidelines for ${difficulty} level:
 - Vocabulary: ${guidelines.vocabulary}
 - Grammar: ${guidelines.grammar}
 - Complexity: ${guidelines.complexity}
 
+Style Guidelines:
+- Use short, declarative sentences
+- Focus on concrete details and actions
+- Emphasize dialogue and character interactions
+- Avoid flowery language and excessive description
+- Show, don't tell
+- Use the "iceberg theory" - imply deeper meanings through surface details
+
+${targetWords?.length ? `Target words to incorporate naturally: ${targetWords.join(', ')}` : ''}
+
 ${previousPages.length ? `Previous pages:\n${previousPages.join('\n\n')}` : ''}
 
-Write a compelling continuation of the story that:
-1. Maintains consistent difficulty level (${difficulty})
-2. Uses language appropriate for ${difficulty} level learners
-3. Naturally incorporates target words if provided
-4. Connects logically to previous pages if provided
-5. Creates strong emotional engagement through:
-   - Relatable characters with clear motivations
-   - Moments of tension, humor, or discovery
-   - Clear stakes or consequences for the characters
-   - Vivid descriptions that bring scenes to life
-6. Ends each page with a mini-cliffhanger or hook that makes readers eager to continue:
-   - A surprising revelation
-   - An unresolved conflict
-   - A character's emotional reaction
-   - A mysterious observation
-   - A moment of suspense
-7. Keeps each page to about 100-150 words
-8. Balances positive and negative emotions to maintain reader interest
+Write a compelling continuation that:
+1. Follows the outline for this page
+2. Maintains consistent difficulty level (${difficulty})
+3. Uses language appropriate for ${difficulty} level
+4. Naturally incorporates target words if provided
+5. Connects logically to previous pages if provided
+6. Creates strong emotional engagement through:
+   - Clear character actions and reactions
+   - Meaningful dialogue
+   - Concrete sensory details
+   - Tension and conflict
+7. Ends with a hook that makes readers eager to continue
+8. Keeps each page to about 100-150 words
 
 Response should be just the story text, no additional formatting or metadata.`
 
