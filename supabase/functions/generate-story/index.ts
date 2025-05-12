@@ -1,10 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { openai, supabaseAdmin, generateWithGrok } from '../_shared/config.ts'
+import { openai, supabaseAdmin } from '../_shared/config.ts'
 import { corsHeaders } from '../_shared/cors.ts'
+import { generateTitle, generateOutline, generatePage } from './utils/generators.ts'
+import { CEFR_GUIDELINES } from './utils/constants.ts'
 
 interface StoryGenerationParams {
   language: string
-  difficulty: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2' | 'Divine'
+  difficulty: keyof typeof CEFR_GUIDELINES
   theme: string
   targetWords?: string[]
   pageNumber?: number
@@ -14,43 +16,7 @@ interface StoryGenerationParams {
   generateCache?: boolean
 }
 
-const CEFR_GUIDELINES = {
-  A1: {
-    vocabulary: 'Use only the most basic and common words. Focus on concrete, everyday objects and simple actions.',
-    grammar: 'Use simple present tense, basic subject-verb-object sentences. Avoid complex structures.',
-    complexity: 'Keep sentences very short and simple. Use basic conjunctions (and, but).',
-  },
-  A2: {
-    vocabulary: 'Use common, everyday vocabulary. Introduce some basic descriptive words.',
-    grammar: 'Use simple present and past tenses. Introduce basic prepositions and articles.',
-    complexity: 'Use short, connected sentences. Introduce because, when, then.',
-  },
-  B1: {
-    vocabulary: 'Use intermediate vocabulary. Include some idiomatic expressions.',
-    grammar: 'Use present, past, and future tenses. Include some modal verbs.',
-    complexity: 'Create compound sentences. Use relative clauses and basic subordination.',
-  },
-  B2: {
-    vocabulary: 'Use varied vocabulary. Include abstract concepts and specialized terms.',
-    grammar: 'Use all tenses confidently. Include passive voice and conditionals.',
-    complexity: 'Create complex sentences. Use varied conjunctions and transitions.',
-  },
-  C1: {
-    vocabulary: 'Use sophisticated vocabulary. Include nuanced expressions and colloquialisms.',
-    grammar: 'Use advanced grammatical structures. Include all tenses and aspects.',
-    complexity: 'Create sophisticated sentence structures. Use advanced literary devices.',
-  },
-  C2: {
-    vocabulary: 'Use precise and nuanced vocabulary. Include rare words and academic language.',
-    grammar: 'Master all grammatical structures. Include complex tenses and aspects.',
-    complexity: 'Create elegant and varied sentence structures. Use advanced rhetorical devices.',
-  },
-  Divine: {
-    vocabulary: 'Use archaic, esoteric, and philosophical terminology. Include rare literary allusions.',
-    grammar: 'Transcend conventional grammar. Employ experimental syntax.',
-    complexity: 'Create labyrinthine sentences with multiple layers of meaning.',
-  },
-}
+const OUTLINE_PAGE_RANGE = 7
 
 serve(async (req) => {
   // Handle CORS
@@ -60,7 +26,6 @@ serve(async (req) => {
 
   try {
     const { language, difficulty, theme, targetWords, pageNumber = 1, previousPages = [], storyId, userId, generateCache } = await req.json() as StoryGenerationParams
-    const guidelines = CEFR_GUIDELINES[difficulty]
 
     // Get user's preferred model
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -73,65 +38,9 @@ serve(async (req) => {
     const useGrok = profile?.preferred_model === 'grok'
     const generationModel = useGrok ? 'grok' : 'gpt-4'
 
-    let prompt: string
-    let content: string
-    
     if (pageNumber === 0) {
       // Generate title
-      prompt = `Create a short, captivating title for a story in ${language} at CEFR level ${difficulty}. The title should be evocative and hint at the story's core conflict or theme.
-
-Guidelines for ${difficulty} level:
-- Vocabulary: ${guidelines.vocabulary}
-- Grammar: ${guidelines.grammar}
-- Complexity: ${guidelines.complexity}
-
-Style: Write in a Hemingway-inspired style - use short, declarative sentences, focus on concrete details, and emphasize action and dialogue. Avoid flowery language and excessive description.
-
-The title should be 2-6 words long and make readers curious to discover what happens in the story. Only respond with the title, no additional formatting or metadata. Make sure the title is less than 50 characters.`
-
-      if (useGrok) {
-        content = await generateWithGrok(prompt)
-      } else {
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4-turbo-preview",
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.7,
-          max_tokens: 50,
-        })
-        content = completion.choices[0]?.message?.content?.trim() || 'Untitled Story'
-      }
-
-      // Generate story outline
-      const outlinePrompt = `Create a detailed outline for a ${difficulty}-level story in ${language}. The story should be engaging, with clear plot progression and character development.
-
-Guidelines for ${difficulty} level:
-- Vocabulary: ${guidelines.vocabulary}
-- Grammar: ${guidelines.grammar}
-- Complexity: ${guidelines.complexity}
-
-Style: Write in a Hemingway-inspired style - use short, declarative sentences, focus on concrete details, and emphasize action and dialogue. Avoid flowery language and excessive description.
-
-Create an outline with 5-7 key scenes/events, each corresponding to a page. For each scene:
-1. Specify the main action or event
-2. Note key character interactions
-3. Include any important plot developments
-4. Indicate the emotional tone
-5. Specify how it connects to the next scene
-
-Format the response as a numbered list of scenes, with each scene clearly marked for its page number.`
-
-      let storyOutline: string
-      if (useGrok) {
-        storyOutline = await generateWithGrok(outlinePrompt)
-      } else {
-        const outlineCompletion = await openai.chat.completions.create({
-          model: "gpt-4-turbo-preview",
-          messages: [{ role: "user", content: outlinePrompt }],
-          temperature: 0.7,
-          max_tokens: 500,
-        })
-        storyOutline = outlineCompletion.choices[0]?.message?.content?.trim() || ''
-      }
+      const content = await generateTitle(language, difficulty, useGrok)
 
       // Create new story in database
       const { data: story, error: storyError } = await supabaseAdmin
@@ -144,7 +53,6 @@ Format the response as a numbered list of scenes, with each scene clearly marked
           theme: theme || null,
           difficulty,
           generation_model: generationModel,
-          story_outline: storyOutline,
         })
         .select()
         .single()
@@ -152,73 +60,81 @@ Format the response as a numbered list of scenes, with each scene clearly marked
       if (storyError) throw storyError
 
       return new Response(
-        JSON.stringify({ content, storyId: story.id, storyOutline }),
+        JSON.stringify({ content, storyId: story.id }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
         },
       )
     } else {
-      // Get story's generation model and outline
+      // Get story's generation model
       const { data: story, error: storyError } = await supabaseAdmin
         .from('stories')
-        .select('generation_model, story_outline')
+        .select('generation_model')
         .eq('id', storyId)
         .single()
 
       if (storyError) throw storyError
       const useGrokForPage = story.generation_model === 'grok'
 
-      // Generate story page
-      prompt = `Write page ${pageNumber} of a story in ${language} at CEFR level ${difficulty}. Follow the story outline provided and maintain a Hemingway-inspired style.
+      // Calculate the outline range for the current page
+      const outlineStartPage = Math.floor((pageNumber - 1) / OUTLINE_PAGE_RANGE) * OUTLINE_PAGE_RANGE + 1
+      const outlineEndPage = outlineStartPage + OUTLINE_PAGE_RANGE - 1
 
-Story Outline:
-${story.story_outline}
+      // Get existing outlines for this story
+      const { data: existingOutlines, error: outlinesError } = await supabaseAdmin
+        .from('story_outlines')
+        .select('*')
+        .eq('story_id', storyId)
+        .order('start_page', { ascending: true })
 
-Guidelines for ${difficulty} level:
-- Vocabulary: ${guidelines.vocabulary}
-- Grammar: ${guidelines.grammar}
-- Complexity: ${guidelines.complexity}
+      if (outlinesError) throw outlinesError
 
-Style Guidelines:
-- Use short, declarative sentences
-- Focus on concrete details and actions
-- Emphasize dialogue and character interactions
-- Avoid flowery language and excessive description
-- Show, don't tell
-- Use the "iceberg theory" - imply deeper meanings through surface details
+      // Find the outline for the current page range
+      let currentOutline = existingOutlines?.find(outline => 
+        outline.start_page === outlineStartPage && outline.end_page === outlineEndPage
+      )
 
-${targetWords?.length ? `Target words to incorporate naturally: ${targetWords.join(', ')}` : ''}
+      // If no outline exists for this range, generate a new one
+      if (!currentOutline) {
+        const previousOutlines = existingOutlines?.filter(outline => 
+          outline.start_page < outlineStartPage
+        ) || []
 
-${previousPages.length ? `Previous pages:\n${previousPages.join('\n\n')}` : ''}
+        const newOutline = await generateOutline(
+          language,
+          difficulty,
+          useGrokForPage,
+          outlineStartPage,
+          previousOutlines
+        )
 
-Write a compelling continuation that:
-1. Follows the outline for this page
-2. Maintains consistent difficulty level (${difficulty})
-3. Uses language appropriate for ${difficulty} level
-4. Naturally incorporates target words if provided
-5. Connects logically to previous pages if provided
-6. Creates strong emotional engagement through:
-   - Clear character actions and reactions
-   - Meaningful dialogue
-   - Concrete sensory details
-   - Tension and conflict
-7. Ends with a hook that makes readers eager to continue
-8. Keeps each page to about 100-150 words
+        // Store the new outline
+        const { data: savedOutline, error: saveError } = await supabaseAdmin
+          .from('story_outlines')
+          .insert({
+            story_id: storyId,
+            start_page: outlineStartPage,
+            end_page: outlineEndPage,
+            outline: newOutline
+          })
+          .select()
+          .single()
 
-Response should be just the story text, no additional formatting or metadata.`
-
-      if (useGrokForPage) {
-        content = await generateWithGrok(prompt)
-      } else {
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4-turbo-preview",
-          messages: [{ role: "user", content: prompt }],
-          temperature: 0.7,
-          max_tokens: 500,
-        })
-        content = completion.choices[0]?.message?.content?.trim() || 'Error generating content.'
+        if (saveError) throw saveError
+        currentOutline = savedOutline
       }
+
+      // Generate story page
+      const content = await generatePage(
+        language,
+        difficulty,
+        pageNumber,
+        currentOutline.outline,
+        useGrokForPage,
+        targetWords,
+        previousPages
+      )
 
       if (!storyId) {
         throw new Error('Story ID is required for generating pages')
@@ -265,7 +181,7 @@ Response should be just the story text, no additional formatting or metadata.`
   } catch (error) {
     console.log('error', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
