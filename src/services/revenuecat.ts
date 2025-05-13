@@ -165,47 +165,34 @@ export async function hasEnoughCoins(functionType: keyof typeof FUNCTION_COSTS):
 }
 
 // Spend coins for a function
-export async function spendCoins(functionType: keyof typeof FUNCTION_COSTS): Promise<boolean> {
+export const spendCoins = async (functionType: 'GENERATE_STORY' | 'GENERATE_COVER' | 'GENERATE_AUDIO' | 'GENERATE_NEW_PAGE', additionalCost?: number): Promise<boolean> => {
   try {
-    const cost = FUNCTION_COSTS[functionType];
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
-    }
-    
-    // Get current coins
+    if (!user) return false;
+
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('coins')
       .eq('id', user.id)
       .single();
-      
-    if (profileError) {
-      throw profileError;
-    }
-    
-    if ((profile.coins || 0) < cost) {
-      return false;
-    }
-    
-    // Update coins in database
-    const newCoinBalance = profile.coins - cost;
+
+    if (profileError) throw profileError;
+
+    const totalCost = FUNCTION_COSTS[functionType] + (additionalCost || 0);
+    if (profile.coins < totalCost) return false;
+
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ coins: newCoinBalance })
+      .update({ coins: profile.coins - totalCost })
       .eq('id', user.id);
-      
-    if (updateError) {
-      throw updateError;
-    }
-    
-    console.log(`Spent ${cost} coins. New balance: ${newCoinBalance}`);
+
+    if (updateError) throw updateError;
     return true;
   } catch (error) {
     console.error('Error spending coins:', error);
     return false;
   }
-}
+};
 
 // Get current user's coin balance
 export async function getCoinBalance(): Promise<number> {

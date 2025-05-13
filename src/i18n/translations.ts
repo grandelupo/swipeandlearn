@@ -26,6 +26,7 @@ const translations: Translations = {
     generatingTitle: 'Generating title...',
     generatingCover: 'Generating cover...',
     generatingPageNumber: 'Generating page {0} out of 4...',
+    generatingStory: 'Generating story...',
     
     // Difficulty levels
     beginner: 'Beginner',
@@ -252,6 +253,19 @@ const translations: Translations = {
     russian: 'Russian 🇷🇺',
     arabic: 'Arabic 🇸🇦',
     polish: 'Polish 🇵🇱',
+
+    // Alerts
+    error: 'Error',
+    success: 'Success',
+    insufficientCoins: 'Insufficient coins',
+    insufficientCoinsMessage: 'You need {0} coins to {1}. Would you like to buy more coins?',
+    cancelAlert: 'Cancel',
+    getCoins: 'Get Coins',
+    fnameGenerateStory: 'generate story',
+    fnameGenerateCover: 'generate cover',
+    fnameGenerateAudio: 'generate audio',
+    fnameGenerateNewPage: 'generate new page',
+    errorTranslatingSentence: 'Failed to translate sentence',
     
   },
   pl: {
@@ -271,6 +285,7 @@ const translations: Translations = {
     generatingTitle: 'Generowanie tytułu...',
     generatingCover: 'Generowanie okładki...',
     generatingPageNumber: 'Generowanie strony {0} z 4...',
+    generatingStory: 'Generowanie historii...',
     
     // Difficulty levels
     beginner: 'Początkujący',
@@ -509,10 +524,10 @@ const translations: Translations = {
     insufficientCoinsMessage: 'Potrzebujesz {0} monet na {1}. Czy chcesz kupić więcej monet?',
     cancelAlert: 'Anuluj',
     getCoins: 'Kup monety',
-    fnameGenerateStory: 'generuj historię',
-    fnameGenerateCover: 'generuj okładkę',
-    fnameGenerateAudio: 'generuj audio',
-    fnameGenerateNewPage: 'generuj nową stronę',
+    fnameGenerateStory: 'wygenerowanie historii',
+    fnameGenerateCover: 'wygenerowanie okładki',
+    fnameGenerateAudio: 'wygenerowanie audio',
+    fnameGenerateNewPage: 'wygenerowanie nowej strony',
     errorTranslatingSentence: 'Nie udało się przetłumaczyć zdania',
 
   }

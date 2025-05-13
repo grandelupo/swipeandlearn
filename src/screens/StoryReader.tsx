@@ -62,10 +62,6 @@ interface TranslationParams {
   wordIndex?: number;
 }
 
-interface StoryGenerationResponse {
-  content: string;
-}
-
 export default function StoryReader() {
   const route = useRoute<StoryReaderScreenRouteProp>();
   const navigation = useNavigation<StoryReaderScreenNavigationProp>();
@@ -114,11 +110,6 @@ export default function StoryReader() {
     fetchTranslationLanguage();
     fetchUserVoicePreference();
     checkAvailableAudioRecordings();
-    
-    // Generate cache when reaching the last page
-    if (story && pageNumber === story.total_pages) {
-      generatePageCache();
-    }
   }, [storyId, pageNumber]);
 
   const fetchTranslationLanguage = async () => {
@@ -162,6 +153,7 @@ export default function StoryReader() {
   };
 
   const fetchStoryAndPage = useCallback(async () => {
+
     try {
       setLoading(true);
       setError(null);
@@ -229,6 +221,12 @@ export default function StoryReader() {
         .eq('id', storyId);
 
       console.log('result', result);
+
+      // Generate cache when reaching the last page
+      if (pageNumber === storyData.total_pages) {
+        console.log('Generating page cache for last page');
+        generatePageCache(pageNumber + 1);
+      }
 
     } catch (err) {
       console.error(t('errorLoadingStory'), err);
@@ -314,11 +312,14 @@ export default function StoryReader() {
       setGenerating(true);
       setError(null);
 
-      // Check if user has enough coins and allow generation/reading cache of the next page
-      const hasCoins = await useCoins('GENERATE_NEW_PAGE');
-      if (!hasCoins) {
-        showInsufficientCoinsAlert('GENERATE_NEW_PAGE', () => {});
-        return;
+      // Skip coin check for first 4 pages
+      if (pageNumber >= 4) {
+        // Check if user has enough coins and allow generation/reading cache of the next page
+        const hasCoins = await useCoins('GENERATE_NEW_PAGE');
+        if (!hasCoins) {
+          showInsufficientCoinsAlert('GENERATE_NEW_PAGE', () => {});
+          return;
+        }
       }
 
       const targetWordsToUse = customTargetWords || personalizedTargetWords;
@@ -332,6 +333,8 @@ export default function StoryReader() {
         .eq('is_cached', true)
         .single();
 
+      console.log('cachedPage', cachedPage);
+
       if (cacheError) {
         console.error('Error checking cached page:', cacheError);
       }
@@ -344,6 +347,7 @@ export default function StoryReader() {
            targetWordsToUse.every(word => cachedPage.target_words.includes(word)))); // Same words
 
       if (cachedPage && cacheMatchesTargetWords) {
+        console.log('pageNumber', pageNumber);
         // Update the cached page to be a regular page
         const { error: updateError } = await supabase
           .from('story_pages')
@@ -365,6 +369,7 @@ export default function StoryReader() {
         navigation.setParams({ pageNumber: pageNumber + 1 });
         setPersonalizedTargetWords([]);
         setShowPersonalizeModal(false);
+
         return;
       }
 
@@ -373,7 +378,7 @@ export default function StoryReader() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t('notAuthenticated'));
 
-      // Generate the page content with cache
+      // Generate the page content
       const response = await generateStoryContent({
         language: story?.language || 'English',
         difficulty: story?.difficulty || 'A1',
@@ -383,7 +388,7 @@ export default function StoryReader() {
         pageNumber: pageNumber + 1,
         previousPages,
         targetWords: targetWordsToUse,
-        generateCache: true // This will trigger generation of the next page in cache
+        generateCache: false
       });
 
       // Update story's total pages
@@ -398,6 +403,9 @@ export default function StoryReader() {
       navigation.setParams({ pageNumber: pageNumber + 1 });
       setPersonalizedTargetWords([]);
       setShowPersonalizeModal(false);
+
+      // Generate cache for the next page
+      generatePageCache(pageNumber + 2);
 
     } catch (err) {
       console.error(t('errorGeneratingPage'), err);
@@ -816,16 +824,17 @@ export default function StoryReader() {
     },
   ];
 
-  const generatePageCache = async () => {
+  const generatePageCache = async (pageNumber: number) => {
+    console.log('Generating page cache');
     try {
       // Check if we already have a cached page
       const { data: existingCache, error: cacheError } = await supabase
         .from('story_pages')
         .select('*')
         .eq('story_id', storyId)
-        .eq('page_number', pageNumber + 1)
+        .eq('page_number', pageNumber)
         .eq('is_cached', true)
-        .single();
+        .maybeSingle();
 
       if (cacheError) {
         console.error('Error checking cache:', cacheError);
@@ -846,11 +855,14 @@ export default function StoryReader() {
         theme: story?.theme || 'general',
         userId: user.id,
         storyId,
-        pageNumber: pageNumber + 1,
+        pageNumber: pageNumber,
         previousPages: [...previousPages, currentPage?.content || ''],
         targetWords: currentPage?.target_words || [],
         generateCache: true
       });
+
+      console.log('Page cache generated');
+
     } catch (error) {
       console.error('Error generating cache:', error);
     }
@@ -962,8 +974,12 @@ export default function StoryReader() {
             activeOpacity={0.85}
           >
             <Text style={styles.fabContinueButtonText}>{t('continueReading')}</Text>
-            <Text style={styles.fabContinueButtonPrice}>{FUNCTION_COSTS.GENERATE_NEW_PAGE}</Text>
-            <Icon name="monetization-on" size={16} color={COLORS.card} style={styles.fabContinueButtonIcon} />
+            {pageNumber >= 4 && (
+              <>
+                <Text style={styles.fabContinueButtonPrice}>{FUNCTION_COSTS.GENERATE_NEW_PAGE}</Text>
+                <Icon name="monetization-on" size={16} color={COLORS.card} style={styles.fabContinueButtonIcon} />
+              </>
+            )}
             <Icon name="arrow-forward" size={24} color={COLORS.card} style={styles.fabArrowIcon} />
           </TouchableOpacity>
         </View>

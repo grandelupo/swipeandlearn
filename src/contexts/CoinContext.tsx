@@ -9,7 +9,7 @@ interface CoinContextType {
   isLoading: boolean;
   refreshBalance: () => Promise<void>;
   purchaseCoins: (packageId: CoinPackage) => Promise<boolean>;
-  useCoins: (functionType: 'GENERATE_STORY' | 'GENERATE_COVER' | 'GENERATE_AUDIO' | 'GENERATE_NEW_PAGE') => Promise<boolean>;
+  useCoins: (functionType: 'GENERATE_STORY' | 'GENERATE_COVER' | 'GENERATE_AUDIO' | 'GENERATE_NEW_PAGE', additionalCost?: number) => Promise<boolean>;
   showInsufficientCoinsAlert: (
     functionType: 'GENERATE_STORY' | 'GENERATE_COVER' | 'GENERATE_AUDIO' | 'GENERATE_NEW_PAGE',
     onPurchase: () => void
@@ -70,12 +70,15 @@ export const CoinProvider = ({ children }: CoinProviderProps) => {
   };
 
   const useCoins = async (
-    functionType: 'GENERATE_STORY' | 'GENERATE_COVER' | 'GENERATE_AUDIO' | 'GENERATE_NEW_PAGE'
+    functionType: 'GENERATE_STORY' | 'GENERATE_COVER' | 'GENERATE_AUDIO' | 'GENERATE_NEW_PAGE',
+    additionalCost?: number
   ): Promise<boolean> => {
-    const success = await spendCoins(functionType);
+    const totalCost = FUNCTION_COSTS[functionType] + (additionalCost || 0);
+    const success = await spendCoins(functionType, additionalCost);
+    console.log('useCoins', functionType, additionalCost, totalCost, success);
     if (success) {
       // Update the local state immediately to avoid delay
-      setCoins(prevCoins => prevCoins - FUNCTION_COSTS[functionType]);
+      setCoins(prevCoins => prevCoins - totalCost);
     }
     return success;
   };

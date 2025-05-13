@@ -19,7 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
-import { generateStoryContent, generateBookCover } from '@/services/edgeFunctions';
+import { generateStoryContent, generateBookCover, generateFullStory } from '@/services/edgeFunctions';
 import { useCoins as useCoinContext } from '../contexts/CoinContext';
 import { FUNCTION_COSTS } from '@/services/revenuecat';
 import { COLORS } from '@/constants/colors';
@@ -294,31 +294,12 @@ export default function NewStoryScreen() {
   };
 
   const handleCreateStory = async () => {
-    const hasStoryCoins = await useCoins('GENERATE_STORY');
-    if (!hasStoryCoins) {
+    const additionalCost = generateCover ? FUNCTION_COSTS.GENERATE_COVER : 0;
+    const hasEnoughCoins = await useCoins('GENERATE_STORY', additionalCost);
+    
+    if (!hasEnoughCoins) {
       showInsufficientCoinsAlert('GENERATE_STORY', () => {});
       return;
-    }
-
-    if (generateCover) {
-      const hasCoverCoins = await useCoins('GENERATE_COVER');
-      if (!hasCoverCoins) {
-        Alert.alert(
-          t('insufficientCoinsTitle'),
-          t('insufficientCoinsForCover', FUNCTION_COSTS.GENERATE_COVER),
-          [
-            { text: t('cancel'), style: 'cancel' },
-            { 
-              text: t('continueWithoutCover'), 
-              onPress: () => {
-                setGenerateCover(false);
-                setTimeout(() => handleCreateStory(), 500);
-              }
-            }
-          ]
-        );
-        return;
-      }
     }
 
     setLoading(true);
@@ -327,84 +308,24 @@ export default function NewStoryScreen() {
       if (userError) throw userError;
       if (!user) throw new Error('User not authenticated');
 
-      let storyId: string;
-      let storyTitle: string;
+      setProgress(t('generatingStory'));
 
-      if (!title.trim()) {
-        setProgress(t('generatingTitle'));
-        const result = await generateStoryContent({
-          language,
-          theme: theme.trim() || 'free form',
-          targetWords,
-          difficulty,
-          pageNumber: 0,
-          userId: user.id,
-        });
-        
-        storyTitle = result.content;
-        storyId = result.storyId!;
-      } else {
-        const { data: storyData, error: storyError } = await supabase
-          .from('stories')
-          .insert({
-            title: title.trim(),
-            language,
-            difficulty,
-            theme: theme.trim() || 'free form',
-            generation_model: useGrok ? 'grok' : 'gpt-4',
-            user_id: user.id,
-            last_viewed_page: 1
-          })
-          .select()
-          .single();
-
-        if (storyError) throw storyError;
-        storyId = storyData.id;
-        storyTitle = title.trim();
-      }
-
-      if (generateCover) {
-        setProgress(t('generatingCover'));
-        try {
-          const coverUrl = await generateBookCover({
-            theme: theme.trim() || 'fantasy story',
-            title: storyTitle,
-            storyId,
-          });
-
-          await supabase
-            .from('stories')
-            .update({ cover_image_url: coverUrl })
-            .eq('id', storyId);
-        } catch (coverError) {
-          console.error('Error generating cover:', coverError);
-        }
-      }
-
-      let previousPages: string[] = [];
-      for (let pageNumber = 1; pageNumber <= 4; pageNumber++) {
-        setProgress(t('generatingPageNumber', pageNumber));
-        
-        const result = await generateStoryContent({
-          language,
-          theme: theme.trim() || 'free form',
-          targetWords,
-          difficulty,
-          pageNumber,
-          previousPages,
-          storyId,
-          userId: user.id,
-        });
-
-        previousPages.push(result.content);
-      }
+      console.log('Generate cover:', generateCover);
+      
+      const result = await generateFullStory({
+        language,
+        theme: theme.trim() || 'free form',
+        targetWords,
+        difficulty,
+        title: title.trim(),
+        userId: user.id,
+        generateCover
+      });
 
       setTitle('');
       setTheme('');
       setTargetWords([]);
-      setLanguage(SUPPORTED_LANGUAGES[0].value);
-      setDifficulty(DIFFICULTY_LEVELS[0].value);
-      navigation.navigate('StoryReader', { storyId, pageNumber: 1 });
+      navigation.navigate('StoryReader', { storyId: result.storyId, pageNumber: 1 });
     } catch (error: any) {
       console.error('Full error object:', error);
       Alert.alert(

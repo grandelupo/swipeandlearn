@@ -3,7 +3,7 @@ import { Story } from '@/types/story'
 
 export interface StoryGenerationParams {
   language: string
-  difficulty: Story['difficulty']
+  difficulty: string
   theme: string
   targetWords?: string[]
   pageNumber?: number
@@ -11,6 +11,16 @@ export interface StoryGenerationParams {
   storyId?: string
   userId: string
   generateCache?: boolean
+}
+
+export interface FullStoryGenerationParams {
+  language: string
+  difficulty: string
+  theme: string
+  targetWords?: string[]
+  title?: string
+  userId: string
+  generateCover?: boolean
 }
 
 export interface ImageGenerationParams {
@@ -61,9 +71,19 @@ interface CreatePageResponse {
 interface StoryGenerationResponse {
   content: string
   storyId?: string
+  target_words?: string[]
+  page_number?: number
+  is_cached?: boolean
 }
 
-export const generateStoryContent = async (params: StoryGenerationParams): Promise<StoryGenerationResponse> => {
+interface FullStoryGenerationResponse {
+  storyId: string
+  title: string
+  coverUrl?: string
+  firstPage: string
+}
+
+export async function generateStoryContent(params: StoryGenerationParams): Promise<StoryGenerationResponse> {
   const { data, error } = await supabase.functions.invoke('generate-story', {
     body: params,
   })
@@ -72,13 +92,22 @@ export const generateStoryContent = async (params: StoryGenerationParams): Promi
   return data
 }
 
-export const generateBookCover = async (params: ImageGenerationParams): Promise<string> => {
-  const { data, error } = await supabase.functions.invoke('generate-image', {
+export async function generateFullStory(params: FullStoryGenerationParams): Promise<FullStoryGenerationResponse> {
+  const { data, error } = await supabase.functions.invoke('generate-story/generate-full-story', {
     body: params,
   })
 
   if (error) throw error
-  return data.imageUrl
+  return data
+}
+
+export async function generateBookCover(params: { theme: string; title: string; storyId: string }): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('generate-cover', {
+    body: params,
+  })
+
+  if (error) throw error
+  return data.coverUrl
 }
 
 export const generateSpeech = async (params: AudioGenerationParams): Promise<string> => {
