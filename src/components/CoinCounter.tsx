@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { 
   View, 
   Text, 
@@ -17,12 +17,20 @@ import { Button } from '@rneui/themed';
 import { COLORS } from '@/constants/colors';
 import { t } from '@/i18n/translations';
 
-const CoinCounter = () => {
+export interface CoinCounterRef {
+  openModal: () => void;
+}
+
+const CoinCounter = forwardRef<CoinCounterRef>((_, ref) => {
   const { coins, isLoading, purchaseCoins } = useCoins();
   const [modalVisible, setModalVisible] = useState(false);
   const [purchaseInProgress, setPurchaseInProgress] = useState(false);
   const [availablePackages, setAvailablePackages] = useState<PackageDetails[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
+
+  useImperativeHandle(ref, () => ({
+    openModal: () => setModalVisible(true)
+  }));
 
   useEffect(() => {
     if (modalVisible) {
@@ -146,7 +154,7 @@ const CoinCounter = () => {
       </Modal>
     </>
   );
-};
+});
 
 const styles = StyleSheet.create({
   coinContainer: {

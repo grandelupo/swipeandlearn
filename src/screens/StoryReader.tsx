@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Text, Button, Input, Chip } from '@rneui/themed';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { generateStoryContent, generateSpeech, translateText } from '@/services/edgeFunctions';
@@ -31,6 +31,7 @@ import TutorialOverlay from '@/components/TutorialOverlay';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { t } from '@/i18n/translations';
 import { Story } from '@/types/story';
+import CoinCounter, { CoinCounterRef } from '@/components/CoinCounter';
 
 interface StoryPage {
   content: string;
@@ -62,10 +63,14 @@ interface TranslationParams {
   wordIndex?: number;
 }
 
-export default function StoryReader() {
-  const route = useRoute<StoryReaderScreenRouteProp>();
+interface StoryReaderScreenProps extends NativeStackScreenProps<MainStackParamList, 'StoryReader'> {
+  coinCounterRef: React.RefObject<CoinCounterRef>;
+}
+
+export default function StoryReaderScreen({ route, coinCounterRef }: StoryReaderScreenProps) {
   const navigation = useNavigation<StoryReaderScreenNavigationProp>();
-  const { storyId, pageNumber = 1 } = route.params;
+  const { storyId, pageNumber: initialPageNumber = 1 } = route.params;
+  const [pageNumber, setPageNumber] = useState(initialPageNumber);
   const scrollViewRef = useRef<ScrollView>(null);
   const { getCachedPage, getCachedStory, cachePage } = useStoryCache();
   const { useCoins, showInsufficientCoinsAlert } = useCoinContext();
@@ -314,10 +319,11 @@ export default function StoryReader() {
 
       // Skip coin check for first 4 pages
       if (pageNumber >= 4) {
-        // Check if user has enough coins and allow generation/reading cache of the next page
-        const hasCoins = await useCoins('GENERATE_NEW_PAGE');
-        if (!hasCoins) {
-          showInsufficientCoinsAlert('GENERATE_NEW_PAGE', () => {});
+        const hasEnoughCoins = await useCoins('GENERATE_NEW_PAGE');
+        if (!hasEnoughCoins) {
+          showInsufficientCoinsAlert('GENERATE_NEW_PAGE', () => {
+            coinCounterRef.current?.openModal();
+          });
           return;
         }
       }

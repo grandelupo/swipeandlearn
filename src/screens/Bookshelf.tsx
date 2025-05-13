@@ -28,6 +28,7 @@ import TutorialOverlay from '@/components/TutorialOverlay';
 import { useFeedbackButton } from '@/contexts/FeedbackButtonContext';
 import { t } from '@/i18n/translations';
 import { Story } from '@/types/story';
+import CoinCounter, { CoinCounterRef } from '@/components/CoinCounter';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 2;
@@ -37,6 +38,7 @@ const ITEM_WIDTH = (width - (GRID_PADDING * 2) - (ITEM_SPACING * (COLUMN_COUNT -
 
 interface BookshelfScreenProps extends NativeStackScreenProps<MainStackParamList, 'Bookshelf'> {
   feedbackButtonRef: React.RefObject<View>;
+  coinCounterRef: React.RefObject<CoinCounterRef>;
 }
 
 const AnimatedBackground = React.memo(() => {
@@ -146,7 +148,7 @@ const AnimatedBackground = React.memo(() => {
   );
 });
 
-export default function BookshelfScreen() {
+export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps) {
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
@@ -214,7 +216,9 @@ export default function BookshelfScreen() {
     // Check if user has enough coins
     const hasCoins = await useCoinContext('GENERATE_COVER');
     if (!hasCoins) {
-      showInsufficientCoinsAlert('GENERATE_COVER', () => {});
+      showInsufficientCoinsAlert('GENERATE_COVER', () => {
+        coinCounterRef.current?.openModal();
+      });
       setShowModal(false);
       setSelectedStory(null);
       return;

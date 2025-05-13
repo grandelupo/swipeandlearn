@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,7 @@ import StoryReader from '../screens/StoryReader';
 import NewStoryScreen from '../screens/NewStory';
 import ProfileScreen from '../screens/Profile';
 import { MainStackParamList } from './types';
-import CoinCounter from '@/components/CoinCounter';
+import CoinCounter, { CoinCounterRef } from '@/components/CoinCounter';
 import ArchiveScreen from '@/screens/Archive';
 import FeedbackButton from '@/components/FeedbackButton';
 import { FeedbackButtonProvider } from '@/contexts/FeedbackButtonContext';
@@ -16,16 +16,18 @@ import { t } from '@/i18n/translations';
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
 function MainStackContent() {
+  const coinCounterRef = useRef<CoinCounterRef>(null);
+
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="Bookshelf"
-        component={BookshelfScreen}
+        component={(props) => <BookshelfScreen {...props} coinCounterRef={coinCounterRef} />}
         options={({ navigation }) => ({
           title: t('bookshelf'),
           headerRight: () => (
             <View style={styles.headerRightContainer}>
-              <CoinCounter />
+              <CoinCounter ref={coinCounterRef} />
               <FeedbackButton />
               <TouchableOpacity
                 style={styles.profileButton}
@@ -39,12 +41,12 @@ function MainStackContent() {
       />
       <Stack.Screen
         name="NewStory"
-        component={NewStoryScreen}
+        component={(props) => <NewStoryScreen {...props} coinCounterRef={coinCounterRef} />}
         options={{ 
           title: t('createStory'),
           headerRight: () => (
             <View style={styles.headerRightContainer}>
-              <CoinCounter />
+              <CoinCounter ref={coinCounterRef} />
               <FeedbackButton />
             </View>
           )
@@ -56,7 +58,7 @@ function MainStackContent() {
         options={{
           headerRight: () => (
             <View style={styles.headerRightContainer}>
-              <CoinCounter />
+              <CoinCounter ref={coinCounterRef} />
               <FeedbackButton />
             </View>
           ),
@@ -65,14 +67,14 @@ function MainStackContent() {
       />
       <Stack.Screen
         name="StoryReader"
-        component={StoryReader}
+        component={(props) => <StoryReader {...props} coinCounterRef={coinCounterRef} />}
         options={{ 
           headerShown: true,
           headerBackTitle: t('back'),
           title: t('story'),
           headerRight: () => (
             <View style={styles.headerRightContainer}>
-              <CoinCounter />
+              <CoinCounter ref={coinCounterRef} />
               <FeedbackButton />
             </View>
           )
@@ -84,7 +86,7 @@ function MainStackContent() {
         options={{
           headerRight: () => (
             <View style={styles.headerRightContainer}>
-              <CoinCounter />
+              <CoinCounter ref={coinCounterRef} />
               <FeedbackButton />
             </View>
           ),

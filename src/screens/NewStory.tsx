@@ -16,7 +16,7 @@ import { Input, Button, Text, Chip } from '@rneui/themed';
 import { Icon } from '@rneui/base';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { generateStoryContent, generateBookCover, generateFullStory } from '@/services/edgeFunctions';
@@ -27,6 +27,7 @@ import Modal from 'react-native-modal';
 import TutorialOverlay from '@/components/TutorialOverlay';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import { t } from '@/i18n/translations';
+import CoinCounter, { CoinCounterRef } from '@/components/CoinCounter';
 
 type NewStoryScreenNavigationProp = NativeStackNavigationProp<MainStackParamList>;
 
@@ -195,7 +196,11 @@ const TARGET_WORD_PACKAGES = [
   }
 ];
 
-export default function NewStoryScreen() {
+interface NewStoryScreenProps extends NativeStackScreenProps<MainStackParamList, 'NewStory'> {
+  coinCounterRef: React.RefObject<CoinCounterRef>;
+}
+
+export default function NewStoryScreen({ coinCounterRef }: NewStoryScreenProps) {
   const [title, setTitle] = useState('');
   const [language, setLanguage] = useState(SUPPORTED_LANGUAGES[0].value);
   const [difficulty, setDifficulty] = useState<Difficulty>(DIFFICULTY_LEVELS[0].value);
@@ -298,7 +303,9 @@ export default function NewStoryScreen() {
     const hasEnoughCoins = await useCoins('GENERATE_STORY', additionalCost);
     
     if (!hasEnoughCoins) {
-      showInsufficientCoinsAlert('GENERATE_STORY', () => {});
+      showInsufficientCoinsAlert('GENERATE_STORY', () => {
+        coinCounterRef.current?.openModal();
+      });
       return;
     }
 
