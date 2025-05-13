@@ -37,7 +37,7 @@ const CoinCounter = () => {
       setAvailablePackages(packages);
     } catch (error) {
       console.error('Error loading packages:', error);
-      Alert.alert('Error', t('noPackagesAvailable'));
+      Alert.alert(t('error'), t('noPackagesAvailable'));
     } finally {
       setPackagesLoading(false);
     }
@@ -51,11 +51,11 @@ const CoinCounter = () => {
       if (success) {
         setModalVisible(false);
       } else {
-        Alert.alert('Error', t('purchaseError'));
+        Alert.alert(t('error'), t('purchaseError'));
       }
     } catch (error) {
       console.error('Purchase error:', error);
-      Alert.alert('Error', t('purchaseError'));
+      Alert.alert(t('error'), t('purchaseError'));
     } finally {
       setPurchaseInProgress(false);
     }

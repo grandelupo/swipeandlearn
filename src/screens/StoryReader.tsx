@@ -300,7 +300,7 @@ export default function StoryReader() {
         setTranslation(translation);
       } catch (error) {
         console.error('Error translating sentence:', error);
-        Alert.alert('Error', 'Failed to translate sentence');
+        Alert.alert(t('error'), t('errorTranslatingSentence'));
       } finally {
         setTranslationLoading(false);
       }
@@ -622,7 +622,7 @@ export default function StoryReader() {
         setDefinitions(defs);
       } catch (error) {
         console.error('Error fetching definitions:', error);
-        Alert.alert('Error', 'Failed to fetch word definition');
+        Alert.alert(t('error'), t('errorFetchingDefinitions'));
       } finally {
         setIsDictionaryLoading(false);
       }

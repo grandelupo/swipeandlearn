@@ -112,6 +112,7 @@ const translations: Translations = {
     // Bookshelf screen
     myStories: 'My Stories',
     pages: 'Pages',
+    noStoriesMessage: 'You haven\'t created any stories yet. Click the + button to create a new story.',
 
     // Archive screen
     archivedStories: 'Archived Stories',
@@ -362,6 +363,7 @@ const translations: Translations = {
     // Bookshelf screen
     myStories: 'Moje historie',
     pages: 'strony',
+    noStoriesMessage: 'Nie masz jeszcze żadnych historii. Kliknij przycisk + aby stworzyć nową historię.',
 
     // StoryReader screen
     loadingStory: 'Ładowanie historii...',
@@ -499,6 +501,19 @@ const translations: Translations = {
     russian: 'Rosyjski 🇷🇺',
     arabic: 'Arabski 🇸🇦',
     polish: 'Polski 🇵🇱',
+
+    // Alerts
+    error: 'Błąd',
+    success: 'Zrobione!',
+    insufficientCoins: 'Niewystarczająca liczba monet',
+    insufficientCoinsMessage: 'Potrzebujesz {0} monet na {1}. Czy chcesz kupić więcej monet?',
+    cancelAlert: 'Anuluj',
+    getCoins: 'Kup monety',
+    fnameGenerateStory: 'generuj historię',
+    fnameGenerateCover: 'generuj okładkę',
+    fnameGenerateAudio: 'generuj audio',
+    fnameGenerateNewPage: 'generuj nową stronę',
+    errorTranslatingSentence: 'Nie udało się przetłumaczyć zdania',
 
   }
 };

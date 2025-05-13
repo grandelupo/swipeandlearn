@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect, ReactNode } from
 import { getCoinBalance, spendCoins, purchasePackage, CoinPackage } from '@/services/revenuecat';
 import { Alert } from 'react-native';
 import { supabase } from '@/services/supabase';
+import { t } from '@/i18n/translations';
 
 interface CoinContextType {
   coins: number;
@@ -31,10 +32,10 @@ interface CoinProviderProps {
 }
 
 const FUNCTION_NAMES = {
-  GENERATE_STORY: 'generating a story',
-  GENERATE_COVER: 'generating a cover image',
-  GENERATE_AUDIO: 'generating audio',
-  GENERATE_NEW_PAGE: 'generating a new page',
+  GENERATE_STORY: t('fnameGenerateStory'),
+  GENERATE_COVER: t('fnameGenerateCover'),
+  GENERATE_AUDIO: t('fnameGenerateAudio'),
+  GENERATE_NEW_PAGE: t('fnameGenerateNewPage'),
 };
 
 const FUNCTION_COSTS = {
@@ -84,11 +85,11 @@ export const CoinProvider = ({ children }: CoinProviderProps) => {
     onPurchase: () => void
   ) => {
     Alert.alert(
-      'Insufficient Coins',
-      `You need ${FUNCTION_COSTS[functionType]} coins for ${FUNCTION_NAMES[functionType]}. Would you like to purchase more coins?`,
+      t('insufficientCoins'),
+      t('insufficientCoinsMessage', FUNCTION_COSTS[functionType], FUNCTION_NAMES[functionType]),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Get Coins', onPress: onPurchase }
+        { text: t('cancelAlert'), style: 'cancel' },
+        { text: t('getCoins'), onPress: onPurchase }
       ]
     );
   };

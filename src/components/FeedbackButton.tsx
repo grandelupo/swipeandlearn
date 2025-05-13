@@ -26,7 +26,7 @@ export default function FeedbackButton({ isEnabled = true }: FeedbackButtonProps
 
   const handleSubmit = async () => {
     if (!feedback.trim()) {
-      Alert.alert('Error', t('enterFeedback'));
+      Alert.alert(t('error'), t('enterFeedback'));
       return;
     }
 
@@ -44,12 +44,12 @@ export default function FeedbackButton({ isEnabled = true }: FeedbackButtonProps
 
       if (error) throw error;
 
-      Alert.alert('Success', t('feedbackSuccess'));
+      Alert.alert(t('success'), t('feedbackSuccess'));
       setFeedback('');
       setIsVisible(false);
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      Alert.alert('Error', t('feedbackError'));
+      Alert.alert(t('error'), t('feedbackError'));
     } finally {
       setIsSubmitting(false);
     }
