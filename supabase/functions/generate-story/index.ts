@@ -270,6 +270,43 @@ serve(async (req) => {
           throw new Error('Story ID is required for generating pages')
         }
 
+        // Check if page already exists
+        const { data: existingPage, error: existingPageError } = await supabaseAdmin
+          .from('story_pages')
+          .select('*')
+          .eq('story_id', storyId)
+          .eq('page_number', pageNumber)
+          .single()
+
+        if (existingPageError && existingPageError.code !== 'PGRST116') { // PGRST116 is "not found" error
+          throw existingPageError
+        }
+
+        // If page exists, return existing page
+        if (existingPage) {
+          // Make sure the page is marked as not cached
+          const { error: updateError } = await supabaseAdmin
+            .from('story_pages')
+            .update({ is_cached: false })
+            .eq('story_id', storyId)
+            .eq('page_number', pageNumber)
+
+          if (updateError) throw updateError
+
+          return new Response(
+            JSON.stringify({
+              content: existingPage.content,
+              target_words: existingPage.target_words,
+              page_number: existingPage.page_number,
+              is_cached: existingPage.is_cached
+            }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200,
+            }
+          )
+        }
+
         // Insert new page
         const { error: pageError, data: pageData } = await supabaseAdmin
           .from('story_pages')
