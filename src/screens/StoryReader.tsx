@@ -322,6 +322,7 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
         const hasEnoughCoins = await useCoins('GENERATE_NEW_PAGE');
         if (!hasEnoughCoins) {
           showInsufficientCoinsAlert('GENERATE_NEW_PAGE', () => {
+            console.log('coinCounterRef', coinCounterRef.current);
             coinCounterRef.current?.openModal();
           });
           return;
@@ -373,6 +374,7 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
 
         // Navigate to the next page
         navigation.setParams({ pageNumber: pageNumber + 1 });
+        setPageNumber(pageNumber + 1);
         setPersonalizedTargetWords([]);
         setShowPersonalizeModal(false);
 
@@ -407,6 +409,7 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
 
       // Navigate to the next page
       navigation.setParams({ pageNumber: pageNumber + 1 });
+      setPageNumber(pageNumber + 1);
       setPersonalizedTargetWords([]);
       setShowPersonalizeModal(false);
 
@@ -452,6 +455,7 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
       }
 
       navigation.setParams({ pageNumber: newPage });
+      setPageNumber(newPage);
     }
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
   };
@@ -899,7 +903,7 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
           <Text style={styles.loadingText}>{t('pageNotFound', { pageNumber })}</Text>
           <Button
             title={t('goToLastPage')}
-            onPress={() => navigation.setParams({ pageNumber: story.total_pages })}
+            onPress={() => navigateToPage(story.total_pages)}
             type="outline"
             containerStyle={{ marginTop: 16 }}
             buttonStyle={{ borderColor: COLORS.accent, borderRadius: 16 }}

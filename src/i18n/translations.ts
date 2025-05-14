@@ -266,6 +266,13 @@ const translations: Translations = {
     fnameGenerateAudio: 'generate audio',
     fnameGenerateNewPage: 'generate new page',
     errorTranslatingSentence: 'Failed to translate sentence',
+
+    // Ad rewards
+    watchAdForCoins: 'Watch an ad to get {0} coins',
+    loadingAd: 'Loading ad...',
+    adRewardSuccess: 'You received {0} coins!',
+    adError: 'Failed to show ad. Please try again later.',
+    adCooldown: 'Please wait an hour between watching ads', 
     
   },
   pl: {
@@ -529,6 +536,13 @@ const translations: Translations = {
     fnameGenerateAudio: 'wygenerowanie audio',
     fnameGenerateNewPage: 'wygenerowanie nowej strony',
     errorTranslatingSentence: 'Nie udało się przetłumaczyć zdania',
+
+    // Ad rewards
+    watchAdForCoins: 'Obejrzyj reklamę, aby dostać {0} monet',
+    loadingAd: 'Ładowanie reklamy...',
+    adRewardSuccess: 'Otrzymałeś {0} monet!',
+    adError: 'Nie udało się wyświetlić reklamy. Proszę spróbować ponownie później.',
+    adCooldown: 'Proszę poczekać godzinę między oglądaniem reklam', 
 
   }
 };

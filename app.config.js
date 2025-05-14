@@ -40,6 +40,12 @@ module.exports = {
     owner: "latovi",
     plugins: [
       'expo-router',
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-8821837072274540~5417339989",
+        }
+      ],
     ],
     experiments: {
       tsconfigPaths: true

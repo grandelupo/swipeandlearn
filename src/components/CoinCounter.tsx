@@ -8,7 +8,8 @@ import {
   SafeAreaView, 
   FlatList,
   ActivityIndicator,
-  Alert
+  Alert,
+  Platform
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useCoins } from '@/contexts/CoinContext';
@@ -16,17 +17,31 @@ import { getAvailablePackages, PackageDetails, CoinPackage } from '@/services/re
 import { Button } from '@rneui/themed';
 import { COLORS } from '@/constants/colors';
 import { t } from '@/i18n/translations';
+import { supabase } from '@/services/supabase';
+import mobileAds, { AdEventType, RewardedAd, RewardedAdEventType, TestIds } from 'react-native-google-mobile-ads';
 
 export interface CoinCounterRef {
   openModal: () => void;
 }
 
+const AD_REWARD_AMOUNT = 2;
+const AD_UNIT_ID = __DEV__ 
+  ? TestIds.REWARDED 
+  : Platform.select({
+      ios: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS ad unit ID
+      android: 'ca-app-pub-8821837072274540/4654088507', // Android ad unit ID
+    });
+
 const CoinCounter = forwardRef<CoinCounterRef>((_, ref) => {
-  const { coins, isLoading, purchaseCoins } = useCoins();
+  const { coins, isLoading, purchaseCoins, refreshBalance } = useCoins();
   const [modalVisible, setModalVisible] = useState(false);
   const [purchaseInProgress, setPurchaseInProgress] = useState(false);
   const [availablePackages, setAvailablePackages] = useState<PackageDetails[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
+  const [watchingAd, setWatchingAd] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState<number | null>(null);
+  const [adLoaded, setAdLoaded] = useState(false);
+  const [rewardedAd, setRewardedAd] = useState<RewardedAd | null>(null);
 
   useImperativeHandle(ref, () => ({
     openModal: () => setModalVisible(true)
@@ -35,8 +50,148 @@ const CoinCounter = forwardRef<CoinCounterRef>((_, ref) => {
   useEffect(() => {
     if (modalVisible) {
       loadPackages();
+      checkAdCooldown();
+      loadAd();
     }
   }, [modalVisible]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (cooldownTime && cooldownTime > 0) {
+      timer = setInterval(() => {
+        setCooldownTime(prev => prev ? prev - 1 : null);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [cooldownTime]);
+
+  const loadAd = async () => {
+    try {
+      // Initialize mobile ads
+      await mobileAds().initialize();
+      
+      // Create a new rewarded ad instance
+      const rewarded = RewardedAd.createForAdRequest(AD_UNIT_ID!, {
+        requestNonPersonalizedAdsOnly: true,
+        keywords: ['game', 'education'],
+      });
+
+      // Set up event listeners
+      const unsubscribeLoaded = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
+        setAdLoaded(true);
+      });
+
+      const unsubscribeEarned = rewarded.addAdEventListener(
+        RewardedAdEventType.EARNED_REWARD,
+        async () => {
+          console.log('Ad earned reward event received');
+          // Get current user
+          const { data: { user }, error: authError } = await supabase.auth.getUser();
+          if (authError) {
+            console.error('Auth error:', authError);
+            throw authError;
+          }
+          if (!user) {
+            console.error('No user found');
+            throw new Error('Not authenticated');
+          }
+
+          console.log('Calling show-ad edge function for user:', user.id);
+          // Call the edge function to handle reward
+          const { data, error } = await supabase.functions.invoke('show-ad', {
+            body: { userId: user.id }
+          });
+
+          console.log('Edge function response:', { data, error });
+
+          if (error) {
+            console.error('Edge function error:', error);
+            throw error;
+          }
+
+          if (data) {
+            // Update local coins state using CoinContext
+            await refreshBalance();
+
+            Alert.alert(
+              t('success'),
+              t('adRewardSuccess', AD_REWARD_AMOUNT)
+            );
+
+            // Set cooldown
+            setCooldownTime(3600); // 1 hour in seconds
+          } else {
+            console.error('No data returned from edge function');
+            throw new Error('Failed to process ad reward');
+          }
+        }
+      );
+
+      const unsubscribeClosed = rewarded.addAdEventListener(AdEventType.CLOSED, () => {
+        setWatchingAd(false);
+        setAdLoaded(false);
+        loadAd(); // Load the next ad
+      });
+
+      // Load the ad
+      rewarded.load();
+      setRewardedAd(rewarded);
+
+      // Clean up event listeners
+      return () => {
+        unsubscribeLoaded();
+        unsubscribeEarned();
+        unsubscribeClosed();
+      };
+    } catch (error) {
+      console.error('Error loading ad:', error);
+      setAdLoaded(false);
+    }
+  };
+
+  const checkAdCooldown = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: lastAdWatch, error } = await supabase
+        .from('ad_watches')
+        .select('watched_at')
+        .eq('user_id', user.id)
+        .order('watched_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking ad cooldown:', error);
+        return;
+      }
+
+      if (lastAdWatch) {
+        const lastWatchTime = new Date(lastAdWatch.watched_at);
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        
+        if (lastWatchTime > oneHourAgo) {
+          const remainingSeconds = Math.ceil((lastWatchTime.getTime() - oneHourAgo.getTime()) / 1000);
+          setCooldownTime(remainingSeconds);
+        } else {
+          setCooldownTime(null);
+        }
+      } else {
+        setCooldownTime(null);
+      }
+    } catch (error) {
+      console.error('Error checking ad cooldown:', error);
+    }
+  };
+
+  const formatCooldownTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   const loadPackages = async () => {
     try {
@@ -66,6 +221,24 @@ const CoinCounter = forwardRef<CoinCounterRef>((_, ref) => {
       Alert.alert(t('error'), t('purchaseError'));
     } finally {
       setPurchaseInProgress(false);
+    }
+  };
+
+  const handleWatchAd = async () => {
+    try {
+      setWatchingAd(true);
+      
+      if (!rewardedAd) {
+        throw new Error('Ad not loaded');
+      }
+
+      await rewardedAd.show();
+    } catch (error) {
+      console.error('Ad error:', error);
+      Alert.alert(t('error'), t('adError'));
+      setWatchingAd(false);
+      setAdLoaded(false);
+      loadAd(); // Try to load a new ad
     }
   };
 
@@ -108,6 +281,25 @@ const CoinCounter = forwardRef<CoinCounterRef>((_, ref) => {
               </Text>
               <Icon name="monetization-on" size={18} color={COLORS.primary} />
             </View>
+
+            <TouchableOpacity
+              style={[
+                styles.watchAdButton,
+                (!adLoaded || cooldownTime !== null) && styles.watchAdButtonDisabled
+              ]}
+              onPress={handleWatchAd}
+              disabled={!adLoaded || watchingAd || cooldownTime !== null}
+            >
+              <Icon name="play-circle-outline" size={24} color={COLORS.card} />
+              <Text style={styles.watchAdButtonText}>
+                {watchingAd ? t('loadingAd') : 
+                 cooldownTime !== null ? t('adCooldown', { time: formatCooldownTime(cooldownTime) }) :
+                 t('watchAdForCoins', AD_REWARD_AMOUNT)}
+              </Text>
+              {(watchingAd || !adLoaded) && (
+                <ActivityIndicator size="small" color={COLORS.card} style={styles.adLoader} />
+              )}
+            </TouchableOpacity>
 
             {packagesLoading ? (
               <View style={styles.loadingContainer}>
@@ -305,6 +497,35 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     textAlign: 'center',
     fontFamily: 'Poppins-Regular',
+  },
+  watchAdButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.accent,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginBottom: 20,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  watchAdButtonDisabled: {
+    backgroundColor: COLORS.bright,
+    opacity: 0.7,
+  },
+  watchAdButtonText: {
+    color: COLORS.card,
+    fontWeight: 'bold',
+    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    marginLeft: 8,
+  },
+  adLoader: {
+    marginLeft: 8,
   },
 });
 
