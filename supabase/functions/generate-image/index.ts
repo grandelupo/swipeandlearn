@@ -40,11 +40,11 @@ serve(async (req) => {
     const useGrok = story.generation_model === 'grok'
 
     // Generate the image prompt using the same model as the story
-    const basePrompt = `Create a beautiful, appropriate book cover for a language learning story titled "${title}" with theme "${theme}". The style should be engaging and suitable for all ages. Make sure no to include any text, words or letters on the cover.`
+    const basePrompt = `Create a beautiful, appropriate book cover for a language learning story titled "${title}" with theme "${theme}". The style should be engaging and suitable for all ages. Make sure not to include any text, words or letters on the cover.`
     
     let imagePrompt: string
     imagePrompt = await generateWithGrok(
-      `You are a professional book cover designer. Create a detailed prompt for an AI image generator to create a book cover. Base prompt: ${basePrompt}\nMake the prompt more specific and artistic, but keep the core requirements. Return only the prompt text. Make sure the prompt is no longer than 1024 characters.`
+      `You are a professional book cover designer. Create a detailed prompt for an AI image generator to create a book cover. Base prompt: ${basePrompt}\nMake the prompt more specific and artistic, but keep the core requirements. Return only the prompt text. Make sure the prompt is no longer than 1000 characters.`
     )
     imagePrompt = imagePrompt.slice(0, 1024)
 
