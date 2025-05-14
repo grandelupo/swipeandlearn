@@ -10,19 +10,23 @@ import { MainStackParamList } from './types';
 import CoinCounter, { CoinCounterRef } from '@/components/CoinCounter';
 import ArchiveScreen from '@/screens/Archive';
 import FeedbackButton from '@/components/FeedbackButton';
-import { FeedbackButtonProvider } from '@/contexts/FeedbackButtonContext';
+import { FeedbackButtonProvider, useFeedbackButton } from '@/contexts/FeedbackButtonContext';
 import { t } from '@/i18n/translations';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 const Stack = createNativeStackNavigator<MainStackParamList>();
 
 function MainStackContent() {
   const coinCounterRef = useRef<CoinCounterRef>(null);
+  const { feedbackButtonRef } = useFeedbackButton();
 
   return (
     <Stack.Navigator>
       <Stack.Screen
         name="Bookshelf"
-        component={(props) => <BookshelfScreen {...props} coinCounterRef={coinCounterRef} />}
+        component={(props: NativeStackScreenProps<MainStackParamList, 'Bookshelf'>) => (
+          <BookshelfScreen {...props} coinCounterRef={coinCounterRef} feedbackButtonRef={feedbackButtonRef} />
+        )}
         options={({ navigation }) => ({
           title: t('bookshelf'),
           headerRight: () => (
@@ -41,7 +45,9 @@ function MainStackContent() {
       />
       <Stack.Screen
         name="NewStory"
-        component={(props) => <NewStoryScreen {...props} coinCounterRef={coinCounterRef} />}
+        component={(props: NativeStackScreenProps<MainStackParamList, 'NewStory'>) => (
+          <NewStoryScreen {...props} coinCounterRef={coinCounterRef} />
+        )}
         options={{ 
           title: t('createStory'),
           headerRight: () => (
@@ -67,7 +73,9 @@ function MainStackContent() {
       />
       <Stack.Screen
         name="StoryReader"
-        component={(props) => <StoryReader {...props} coinCounterRef={coinCounterRef} />}
+        component={(props: NativeStackScreenProps<MainStackParamList, 'StoryReader'>) => (
+          <StoryReader {...props} coinCounterRef={coinCounterRef} />
+        )}
         options={{ 
           headerShown: true,
           headerBackTitle: t('back'),
