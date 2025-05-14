@@ -11,6 +11,7 @@ export interface StoryGenerationParams {
   storyId?: string
   userId: string
   generateCache?: boolean
+  authorStyle?: string
 }
 
 export interface FullStoryGenerationParams {
@@ -21,6 +22,7 @@ export interface FullStoryGenerationParams {
   title?: string
   userId: string
   generateCover?: boolean
+  authorStyle?: string
 }
 
 export interface ImageGenerationParams {

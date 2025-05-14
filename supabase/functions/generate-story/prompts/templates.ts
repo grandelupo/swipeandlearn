@@ -50,9 +50,101 @@ export const generatePagePrompt = (
   pageNumber: number,
   storyOutline: string,
   targetWords?: string[],
-  previousPages?: string[]
-) => `
-Write page ${pageNumber} of a story in ${language} at CEFR level ${difficulty}. Follow the story outline provided and maintain a Hemingway-inspired style.
+  previousPages?: string[],
+  authorStyle: string = 'Default'
+) => {
+  const styleGuidelines = {
+    'Default': `
+Style Guidelines:
+- Use clear, straightforward language
+- Focus on engaging storytelling
+- Balance description with action
+- Create natural dialogue
+- Maintain consistent tone`,
+    'Ernest Hemingway': `
+Style Guidelines:
+- Use short, declarative sentences
+- Focus on concrete details and actions
+- Emphasize dialogue and character interactions
+- Avoid flowery language and excessive description
+- Show, don't tell
+- Use the "iceberg theory" - imply deeper meanings through surface details`,
+    'Terry Pratchett': `
+Style Guidelines:
+- Use witty, satirical humor
+- Include clever wordplay and puns
+- Blend fantasy with social commentary
+- Create memorable, quirky characters
+- Use footnotes for humorous asides
+- Maintain a warm, humanistic tone`,
+    'Douglas Adams': `
+Style Guidelines:
+- Use absurdist humor and unexpected twists
+- Include clever wordplay and witty observations
+- Create bizarre but logical situations
+- Use dry, British humor
+- Include philosophical musings
+- Maintain a detached, observational tone`,
+    'George Orwell': `
+Style Guidelines:
+- Use clear, precise language
+- Focus on political and social themes
+- Create stark, vivid imagery
+- Use allegory and symbolism
+- Maintain a serious, critical tone
+- Emphasize the impact of power and control`,
+    'Joan Didion': `
+Style Guidelines:
+- Use precise, elegant prose
+- Focus on psychological depth
+- Create atmospheric descriptions
+- Use fragmented narrative structure
+- Maintain a cool, analytical tone
+- Emphasize personal and cultural observations`,
+    'Adam Mickiewicz': `
+Style Guidelines:
+- Use rich, poetic language
+- Focus on national and romantic themes
+- Create vivid, emotional imagery
+- Use allegory and symbolism
+- Maintain a passionate, lyrical tone
+- Emphasize cultural and historical elements`,
+    'Alexandre Dumas': `
+Style Guidelines:
+- Use dramatic, sweeping prose
+- Focus on adventure and intrigue
+- Create vivid character descriptions
+- Use detailed historical settings
+- Maintain an exciting, romantic tone
+- Emphasize honor and revenge themes`,
+    'Vladimir Nabokov': `
+Style Guidelines:
+- Use intricate, layered prose
+- Focus on psychological complexity
+- Create vivid sensory details
+- Use wordplay and literary allusions
+- Maintain a precise, intellectual tone
+- Emphasize the unreliable narrator`,
+    'Oscar Wilde': `
+Style Guidelines:
+- Use witty, epigrammatic prose
+- Focus on social satire
+- Create elegant dialogue
+- Use clever wordplay and paradoxes
+- Maintain a sophisticated, ironic tone
+- Emphasize aesthetic and moral themes`,
+    'F. Scott Fitzgerald': `
+Style Guidelines:
+- Use lyrical, descriptive prose
+- Focus on the American Dream
+- Create vivid imagery and symbolism
+- Use elegant, flowing sentences
+- Maintain a nostalgic, romantic tone
+- Emphasize themes of wealth and aspiration`
+  }[authorStyle] || styleGuidelines['Default']
+
+  return `
+Write page ${pageNumber} of a story in ${language} at CEFR level ${difficulty}. Follow the story outline provided and maintain the style of ${authorStyle}.
 
 Story Outline:
 ${storyOutline}
@@ -62,13 +154,7 @@ Guidelines for ${difficulty} level:
 - Grammar: ${guidelines.grammar}
 - Complexity: ${guidelines.complexity}
 
-Style Guidelines:
-- Use short, declarative sentences
-- Focus on concrete details and actions
-- Emphasize dialogue and character interactions
-- Avoid flowery language and excessive description
-- Show, don't tell
-- Use the "iceberg theory" - imply deeper meanings through surface details
+${styleGuidelines}
 
 ${targetWords?.length ? `Target words to incorporate naturally: ${targetWords.join(', ')}` : ''}
 
@@ -88,4 +174,5 @@ Write a compelling continuation that:
 7. Ends with a hook that makes readers eager to continue
 8. Keeps each page to about 100-150 words
 
-Response should be just the story text, no additional formatting or metadata.` 
+Response should be just the story text, no additional formatting or metadata.`
+} 

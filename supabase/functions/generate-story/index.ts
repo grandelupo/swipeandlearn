@@ -14,6 +14,7 @@ interface StoryGenerationParams {
   storyId?: string
   userId: string
   generateCache?: boolean
+  authorStyle?: string
 }
 
 interface FullStoryGenerationParams {
@@ -24,6 +25,7 @@ interface FullStoryGenerationParams {
   title?: string
   userId: string
   generateCover?: boolean
+  authorStyle?: string
 }
 
 const OUTLINE_PAGE_RANGE = 7
@@ -58,7 +60,8 @@ serve(async (req) => {
         targetWords, 
         title, 
         userId, 
-        generateCover 
+        generateCover,
+        authorStyle
       } = params as FullStoryGenerationParams
 
       // Generate or use provided title
@@ -75,6 +78,7 @@ serve(async (req) => {
           theme: theme || null,
           difficulty,
           generation_model: generationModel,
+          author_style: authorStyle || 'Default'
         })
         .select()
         .single()
@@ -129,7 +133,8 @@ serve(async (req) => {
         initialOutline,
         useGrok,
         targetWords,
-        []
+        [],
+        authorStyle || 'Default'
       )
 
       // Insert first page
@@ -166,7 +171,7 @@ serve(async (req) => {
       )
     } else {
       // Original story generation logic
-      const { language, difficulty, theme, targetWords, pageNumber = 1, previousPages = [], storyId, userId, generateCache } = params as StoryGenerationParams
+      const { language, difficulty, theme, targetWords, pageNumber = 1, previousPages = [], storyId, userId, generateCache, authorStyle } = params as StoryGenerationParams
 
       if (pageNumber === 0) {
         // Generate title
@@ -183,6 +188,7 @@ serve(async (req) => {
             theme: theme || null,
             difficulty,
             generation_model: generationModel,
+            author_style: authorStyle || 'Default'
           })
           .select()
           .single()
@@ -263,7 +269,8 @@ serve(async (req) => {
           currentOutline.outline,
           useGrokForPage,
           targetWords,
-          previousPages
+          previousPages,
+          authorStyle || 'Default'
         )
 
         if (!storyId) {

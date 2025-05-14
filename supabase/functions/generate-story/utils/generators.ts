@@ -53,7 +53,8 @@ export async function generatePage(
   storyOutline: string,
   useGrok: boolean,
   targetWords?: string[],
-  previousPages?: string[]
+  previousPages?: string[],
+  authorStyle: string = 'Default'
 ): Promise<string> {
   const guidelines = CEFR_GUIDELINES[difficulty]
   const prompt = generatePagePrompt(
@@ -63,7 +64,8 @@ export async function generatePage(
     pageNumber,
     storyOutline,
     targetWords,
-    previousPages
+    previousPages,
+    authorStyle
   )
 
   if (useGrok) {

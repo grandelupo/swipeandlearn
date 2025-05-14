@@ -86,6 +86,64 @@ const DIFFICULTY_LEVELS: Array<{ label: string; value: Difficulty; description: 
   }
 ];
 
+const AUTHOR_STYLES = [
+  { 
+    label: t('defaultStyle'), 
+    value: 'Default',
+    description: t('defaultStyleDesc')
+  },
+  { 
+    label: t('hemingwayStyle'), 
+    value: 'Ernest Hemingway',
+    description: t('hemingwayStyleDesc')
+  },
+  { 
+    label: t('pratchettStyle'), 
+    value: 'Terry Pratchett',
+    description: t('pratchettStyleDesc')
+  },
+  { 
+    label: t('adamsStyle'), 
+    value: 'Douglas Adams',
+    description: t('adamsStyleDesc')
+  },
+  { 
+    label: t('orwellStyle'), 
+    value: 'George Orwell',
+    description: t('orwellStyleDesc')
+  },
+  { 
+    label: t('didionStyle'), 
+    value: 'Joan Didion',
+    description: t('didionStyleDesc')
+  },
+  { 
+    label: t('mickiewiczStyle'), 
+    value: 'Adam Mickiewicz',
+    description: t('mickiewiczStyleDesc')
+  },
+  { 
+    label: t('dumasStyle'), 
+    value: 'Alexandre Dumas',
+    description: t('dumasStyleDesc')
+  },
+  { 
+    label: t('nabokovStyle'), 
+    value: 'Vladimir Nabokov',
+    description: t('nabokovStyleDesc')
+  },
+  { 
+    label: t('wildeStyle'), 
+    value: 'Oscar Wilde',
+    description: t('wildeStyleDesc')
+  },
+  { 
+    label: t('fitzgeraldStyle'), 
+    value: 'F. Scott Fitzgerald',
+    description: t('fitzgeraldStyleDesc')
+  }
+];
+
 const TARGET_WORD_PACKAGES = [
   {
     id: 'administration',
@@ -212,6 +270,7 @@ export default function NewStoryScreen({ coinCounterRef }: NewStoryScreenProps) 
   const [useGrok, setUseGrok] = useState(false);
   const [generateCover, setGenerateCover] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [authorStyle, setAuthorStyle] = useState(AUTHOR_STYLES[0].value);
   const navigation = useNavigation<NewStoryScreenNavigationProp>();
   const { useCoins, showInsufficientCoinsAlert } = useCoinContext();
   const [targetWordModalVisible, setTargetWordModalVisible] = useState(false);
@@ -326,7 +385,8 @@ export default function NewStoryScreen({ coinCounterRef }: NewStoryScreenProps) 
         difficulty,
         title: title.trim(),
         userId: user.id,
-        generateCover
+        generateCover,
+        authorStyle
       });
 
       setTitle('');
@@ -382,7 +442,7 @@ export default function NewStoryScreen({ coinCounterRef }: NewStoryScreenProps) 
               placeholder={t('storyTitlePlaceholder')}
               value={title}
               onChangeText={setTitle}
-              placeholderTextColor={COLORS.accent}
+              placeholderTextColor={COLORS.bright}
             />
           </View>
 
@@ -426,6 +486,27 @@ export default function NewStoryScreen({ coinCounterRef }: NewStoryScreenProps) 
           </Text>
 
           <View style={styles.inputRow}>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={authorStyle}
+                onValueChange={setAuthorStyle}
+                style={styles.picker}
+              >
+                {AUTHOR_STYLES.map((style) => (
+                  <Picker.Item
+                    key={style.value}
+                    label={style.label}
+                    value={style.value}
+                  />
+                ))}
+              </Picker>
+            </View>
+          </View>
+          <Text style={styles.authorStyleDescription}>
+            {AUTHOR_STYLES.find(style => style.value === authorStyle)?.description}
+          </Text>
+
+          <View style={styles.inputRow}>
             <Input
               inputContainerStyle={styles.inputContainer}
               inputStyle={styles.input}
@@ -433,7 +514,7 @@ export default function NewStoryScreen({ coinCounterRef }: NewStoryScreenProps) 
               placeholder={t('storyThemePlaceholder')}
               value={theme}
               onChangeText={setTheme}
-              placeholderTextColor={COLORS.accent}
+              placeholderTextColor={COLORS.bright}
             />
           </View>
 
@@ -668,12 +749,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 4,
     marginBottom: 8,
-    marginHorizontal: 10,
-    width: '90%',
+    width: '100%',
     borderColor: COLORS.accent
-  },
-  picker: {
-    height: 50,
   },
   difficultyDescription: {
     fontSize: 14,
@@ -880,5 +957,12 @@ const styles = StyleSheet.create({
   },
   packageChipTextSelected: {
     color: COLORS.card,
+  },
+  authorStyleDescription: {
+    fontSize: 14,
+    color: COLORS.bright,
+    marginHorizontal: 10,
+    marginBottom: 20,
+    fontStyle: 'italic',
   },
 });
