@@ -155,6 +155,7 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
   const [showModal, setShowModal] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [recentlyUpdatedStoryId, setRecentlyUpdatedStoryId] = useState<string | null>(null);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { useCoins: useCoinContext, showInsufficientCoinsAlert } = useCoins();
   const { feedbackButtonRef } = useFeedbackButton();
@@ -318,10 +319,13 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
           .from('book-covers')
           .getPublicUrl(filePath);
 
+        // Add version parameter to the URL
+        const versionedUrl = `${publicUrl}?v=${Date.now()}`;
+
         // Update story record with new cover image URL
         const { error: updateError } = await supabase
           .from('stories')
-          .update({ cover_image_url: publicUrl })
+          .update({ cover_image_url: versionedUrl })
           .eq('id', selectedStory.id);
 
         if (updateError) throw updateError;
@@ -329,9 +333,17 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
         // Update local state
         setStories(stories.map(story =>
           story.id === selectedStory.id
-            ? { ...story, cover_image_url: publicUrl }
+            ? { ...story, cover_image_url: versionedUrl }
             : story
         ));
+
+        // Set the recently updated story ID
+        setRecentlyUpdatedStoryId(selectedStory.id);
+        // Clear the recently updated story ID after 5 seconds
+        setTimeout(() => setRecentlyUpdatedStoryId(null), 5000);
+
+        // Refresh stories list to ensure we have the latest data
+        await fetchStories();
       }
     } catch (error: any) {
       console.error('Error uploading image:', error);

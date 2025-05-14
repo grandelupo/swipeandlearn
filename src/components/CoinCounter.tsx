@@ -29,7 +29,7 @@ const AD_UNIT_ID = __DEV__
   ? TestIds.REWARDED 
   : Platform.select({
       ios: 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // iOS ad unit ID
-      android: 'ca-app-pub-8821837072274540/4654088507', // Android ad unit ID
+      android: 'ca-app-pub-3940256099942544/5354046379', // Android ad unit ID
     });
 
 const CoinCounter = forwardRef<CoinCounterRef>((_, ref) => {
