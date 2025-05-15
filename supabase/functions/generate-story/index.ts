@@ -65,7 +65,14 @@ serve(async (req) => {
       } = params as FullStoryGenerationParams
 
       // Generate or use provided title
-      const storyTitle = title || await generateTitle(language, difficulty, useGrok)
+      const storyTitle = title || await generateTitle(
+        language, 
+        difficulty, 
+        useGrok,
+        theme,
+        targetWords,
+        authorStyle || 'Default'
+      )
 
       // Create new story in database
       const { data: story, error: storyError } = await supabaseAdmin
@@ -110,6 +117,9 @@ serve(async (req) => {
         difficulty,
         useGrok,
         1,
+        theme,
+        targetWords,
+        authorStyle || 'Default',
         []
       )
 
@@ -242,6 +252,9 @@ serve(async (req) => {
             difficulty,
             useGrokForPage,
             outlineStartPage,
+            theme,
+            targetWords,
+            authorStyle || 'Default',
             previousOutlines
           )
 

@@ -1,14 +1,23 @@
 import { CEFR_GUIDELINES } from '../utils/constants.ts'
 
-export const generateTitlePrompt = (language: string, difficulty: string, guidelines: typeof CEFR_GUIDELINES[keyof typeof CEFR_GUIDELINES]) => `
+export const generateTitlePrompt = (
+  language: string, 
+  difficulty: string, 
+  guidelines: typeof CEFR_GUIDELINES[keyof typeof CEFR_GUIDELINES],
+  theme: string,
+  targetWords?: string[],
+  authorStyle: string = 'Default'
+) => `
 Create a short, captivating title for a story in ${language} at CEFR level ${difficulty}. The title should be evocative and hint at the story's core conflict or theme.
+
+Theme: ${theme}
+${targetWords?.length ? `Target words to incorporate naturally: ${targetWords.join(', ')}` : ''}
+Author Style: ${authorStyle}
 
 Guidelines for ${difficulty} level:
 - Vocabulary: ${guidelines.vocabulary}
 - Grammar: ${guidelines.grammar}
 - Complexity: ${guidelines.complexity}
-
-Style: Write in a Hemingway-inspired style - use short, declarative sentences, focus on concrete details, and emphasize action and dialogue. Avoid flowery language and excessive description.
 
 The title should be 2-6 words long and make readers curious to discover what happens in the story. Only respond with the title, no additional formatting or metadata. Make sure the title is less than 50 characters.`
 
@@ -17,9 +26,16 @@ export const generateOutlinePrompt = (
   difficulty: string,
   guidelines: typeof CEFR_GUIDELINES[keyof typeof CEFR_GUIDELINES],
   startPage: number,
+  theme: string,
+  targetWords?: string[],
+  authorStyle: string = 'Default',
   previousOutlines?: { start_page: number; end_page: number; outline: string }[]
 ) => `
 Create a detailed outline for a ${difficulty}-level story in ${language}. The story should be engaging, with clear plot progression and character development.
+
+Theme: ${theme}
+${targetWords?.length ? `Target words to incorporate naturally: ${targetWords.join(', ')}` : ''}
+Author Style: ${authorStyle}
 
 ${previousOutlines?.length ? `Previous story outlines:
 ${previousOutlines.map(outline => `Pages ${outline.start_page}-${outline.end_page}:
@@ -31,8 +47,6 @@ Guidelines for ${difficulty} level:
 - Vocabulary: ${guidelines.vocabulary}
 - Grammar: ${guidelines.grammar}
 - Complexity: ${guidelines.complexity}
-
-Style: Write in a Hemingway-inspired style - use short, declarative sentences, focus on concrete details, and emphasize action and dialogue. Avoid flowery language and excessive description.
 
 Create an outline with 5-7 key scenes/events, each corresponding to a page. For each scene:
 1. Specify the main action or event

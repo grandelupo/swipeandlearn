@@ -5,10 +5,13 @@ import { CEFR_GUIDELINES } from './constants.ts'
 export async function generateTitle(
   language: string,
   difficulty: keyof typeof CEFR_GUIDELINES,
-  useGrok: boolean
+  useGrok: boolean,
+  theme: string,
+  targetWords?: string[],
+  authorStyle: string = 'Default'
 ): Promise<string> {
   const guidelines = CEFR_GUIDELINES[difficulty]
-  const prompt = generateTitlePrompt(language, difficulty, guidelines)
+  const prompt = generateTitlePrompt(language, difficulty, guidelines, theme, targetWords, authorStyle)
 
   if (useGrok) {
     return await generateWithGrok(prompt)
@@ -28,10 +31,22 @@ export async function generateOutline(
   difficulty: keyof typeof CEFR_GUIDELINES,
   useGrok: boolean,
   startPage: number,
+  theme: string,
+  targetWords?: string[],
+  authorStyle: string = 'Default',
   previousOutlines?: { start_page: number; end_page: number; outline: string }[]
 ): Promise<string> {
   const guidelines = CEFR_GUIDELINES[difficulty]
-  const prompt = generateOutlinePrompt(language, difficulty, guidelines, startPage, previousOutlines)
+  const prompt = generateOutlinePrompt(
+    language, 
+    difficulty, 
+    guidelines, 
+    startPage, 
+    theme, 
+    targetWords, 
+    authorStyle, 
+    previousOutlines
+  )
 
   if (useGrok) {
     return await generateWithGrok(prompt)
@@ -41,7 +56,7 @@ export async function generateOutline(
     model: "gpt-4-turbo-preview",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
-    max_tokens: 500,
+    max_tokens: 5000,
   })
   return completion.choices[0]?.message?.content?.trim() || ''
 }
@@ -76,7 +91,7 @@ export async function generatePage(
     model: "gpt-4-turbo-preview",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
-    max_tokens: 500,
+    max_tokens: 1500,
   })
   return completion.choices[0]?.message?.content?.trim() || 'Error generating content.'
 } 
