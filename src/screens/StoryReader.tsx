@@ -386,11 +386,27 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t('notAuthenticated'));
 
+      // If story is null, fetch it first
+      let storyData = story;
+      if (!storyData) {
+        const { data, error } = await supabase
+          .from('stories')
+          .select('*')
+          .eq('id', storyId)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching story:', error);
+          throw new Error(t('errorLoadingStory'));
+        }
+        storyData = data;
+      }
+
       // Generate the page content
       const response = await generateStoryContent({
-        language: story?.language || 'English',
-        difficulty: story?.difficulty || 'A1',
-        theme: story?.theme || 'general',
+        language: storyData?.language!,
+        difficulty: storyData?.difficulty!,
+        theme: storyData?.theme!,
         userId: user.id,
         storyId,
         pageNumber: pageNumber + 1,
@@ -858,11 +874,27 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // If story is null, fetch it first
+      let storyData = story;
+      if (!storyData) {
+        const { data, error } = await supabase
+          .from('stories')
+          .select('*')
+          .eq('id', storyId)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching story:', error);
+          return;
+        }
+        storyData = data;
+      }
+
       // Generate the next page for cache
       await generateStoryContent({
-        language: story?.language || 'English',
-        difficulty: story?.difficulty || 'A1',
-        theme: story?.theme || 'general',
+        language: storyData?.language!,
+        difficulty: storyData?.difficulty!,
+        theme: storyData?.theme!,
         userId: user.id,
         storyId,
         pageNumber: pageNumber,

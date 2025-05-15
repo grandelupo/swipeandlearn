@@ -261,6 +261,16 @@ serve(async (req) => {
           currentOutline = savedOutline
         }
 
+        console.log('generation params', {
+          language,
+          difficulty,
+          pageNumber,
+          currentOutline,
+          useGrokForPage,
+          targetWords,
+          authorStyle
+        })
+
         // Generate story page
         const content = await generatePage(
           language,
