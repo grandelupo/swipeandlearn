@@ -21,7 +21,7 @@ export async function generateTitle(
     model: "gpt-4-turbo-preview",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
-    max_tokens: 50,
+    max_tokens: 200,
   })
   return completion.choices[0]?.message?.content?.trim() || 'Untitled Story'
 }
@@ -34,7 +34,8 @@ export async function generateOutline(
   theme: string,
   targetWords?: string[],
   authorStyle: string = 'Default',
-  previousOutlines?: { start_page: number; end_page: number; outline: string }[]
+  previousOutlines?: { start_page: number; end_page: number; outline: string }[],
+  recentStoryOutlines?: { title: string; outline: string }[]
 ): Promise<string> {
   const guidelines = CEFR_GUIDELINES[difficulty]
   const prompt = generateOutlinePrompt(
@@ -45,7 +46,8 @@ export async function generateOutline(
     theme, 
     targetWords, 
     authorStyle, 
-    previousOutlines
+    previousOutlines,
+    recentStoryOutlines
   )
 
   if (useGrok) {
@@ -56,7 +58,7 @@ export async function generateOutline(
     model: "gpt-4-turbo-preview",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.7,
-    max_tokens: 5000,
+    // unlimited tokens, i.e. 4096
   })
   return completion.choices[0]?.message?.content?.trim() || ''
 }

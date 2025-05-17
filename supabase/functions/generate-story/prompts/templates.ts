@@ -29,7 +29,8 @@ export const generateOutlinePrompt = (
   theme: string,
   targetWords?: string[],
   authorStyle: string = 'Default',
-  previousOutlines?: { start_page: number; end_page: number; outline: string }[]
+  previousOutlines?: { start_page: number; end_page: number; outline: string }[],
+  recentStoryOutlines?: { title: string; outline: string }[]
 ) => `
 Create a detailed outline for a ${difficulty}-level story in ${language}. The story should be engaging, with clear plot progression and character development.
 
@@ -42,6 +43,10 @@ ${previousOutlines.map(outline => `Pages ${outline.start_page}-${outline.end_pag
 ${outline.outline}`).join('\n\n')}
 
 Continue the story from where the previous outline ended, maintaining consistency with the established plot and characters.` : ''}
+
+${recentStoryOutlines?.length ? `Recent story outlines to avoid similar plots:
+${recentStoryOutlines.map(story => `Title: ${story.title}
+Outline: ${story.outline}`).join('\n\n')}` : ''}
 
 Guidelines for ${difficulty} level:
 - Vocabulary: ${guidelines.vocabulary}

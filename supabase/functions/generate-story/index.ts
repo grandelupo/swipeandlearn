@@ -247,6 +247,34 @@ serve(async (req) => {
             outline.start_page < outlineStartPage
           ) || []
 
+          // Only fetch recent story outlines for the first outline generation (pages 1-7)
+          let recentStoryOutlines = undefined
+          if (outlineStartPage === 1) {
+            const { data: recentStories, error: recentStoriesError } = await supabaseAdmin
+              .from('stories')
+              .select('id, title')
+              .neq('id', storyId)
+              .order('created_at', { ascending: false })
+              .limit(10)
+
+            if (recentStoriesError) throw recentStoriesError
+
+            if (recentStories?.length) {
+              const { data: recentOutlines, error: recentOutlinesError } = await supabaseAdmin
+                .from('story_outlines')
+                .select('story_id, outline')
+                .in('story_id', recentStories.map(s => s.id))
+                .eq('start_page', 1)
+
+              if (recentOutlinesError) throw recentOutlinesError
+
+              recentStoryOutlines = recentStories.map(story => ({
+                title: story.title,
+                outline: recentOutlines?.find(o => o.story_id === story.id)?.outline || ''
+              }))
+            }
+          }
+
           const newOutline = await generateOutline(
             language,
             difficulty,
@@ -255,7 +283,8 @@ serve(async (req) => {
             theme,
             targetWords,
             authorStyle || 'Default',
-            previousOutlines
+            previousOutlines,
+            recentStoryOutlines
           )
 
           // Store the new outline
