@@ -1083,7 +1083,7 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
               ))}
             </View>
             <TouchableOpacity style={styles.targetWordModalDoneButton} onPress={() => setShowPersonalizeModal(false)}>
-              <Text style={styles.targetWordModalDoneText}>Done</Text>
+              <Text style={styles.targetWordModalDoneText}>{t('done')}</Text>
             </TouchableOpacity>
           </View>
         </View>
