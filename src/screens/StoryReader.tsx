@@ -686,9 +686,25 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
         })
         .filter(Boolean);
     } else {
-      // For other languages, use standard punctuation
+      // For other languages, use improved punctuation that handles abbreviations
+      // Common abbreviations that shouldn't end sentences
+      const abbreviations = [
+        'Mr', 'Mrs', 'Ms', 'Dr', 'Prof', 'Sr', 'Jr', 'St', 'Ave', 'Blvd', 'Rd', 'Ln', 'Ct', 'Pl', 'Apt', 'Ste', 'Fl', 'Rm',
+        'Inc', 'Corp', 'Ltd', 'LLC', 'Co', 'Dept', 'Univ', 'Assoc', 'Bros', 'Est', 'Gov', 'Pres', 'Sen', 'Rep', 'Gen', 'Col', 'Maj', 'Capt', 'Lt', 'Sgt', 'Cpl', 'Pvt',
+        'Jan', 'Feb', 'Mar', 'Apr', 'Jun', 'Jul', 'Aug', 'Sep', 'Sept', 'Oct', 'Nov', 'Dec',
+        'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun',
+        'a.m', 'p.m', 'am', 'pm', 'A.M', 'P.M', 'AM', 'PM',
+        'etc', 'vs', 'i.e', 'e.g', 'viz', 'cf', 'ca', 'approx', 'min', 'max', 'no', 'vol', 'ch', 'pp', 'p', 'ed', 'eds', 'trans', 'rev', 'fig', 'ref', 'refs'
+      ];
+      
+      // Create regex pattern that excludes abbreviations
+      const abbreviationPattern = abbreviations.map(abbr => 
+        `(?<!\\b${abbr})\\.`
+      ).join('|');
+      
+      // Split by sentence-ending punctuation, but not by periods that are part of abbreviations
       sentences = currentPage.content
-        .split(/([.!?]+\s+)/)
+        .split(new RegExp(`([!?]+\\s+|${abbreviationPattern}\\s+)`, 'g'))
         .filter(Boolean)
         .map((part, i, arr) => {
           if (i % 2 === 0 && i + 1 < arr.length) {
