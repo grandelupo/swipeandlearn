@@ -135,6 +135,7 @@ const translations: Translations = {
     // Bookshelf screen
     myStories: 'My Stories',
     pages: 'Pages',
+    generatingFirstPage: 'Generating first page...',
     noStoriesMessage: 'You haven\'t created any stories yet. Click the + button to create a new story.',
 
     // Archive screen
@@ -429,6 +430,7 @@ const translations: Translations = {
     // Bookshelf screen
     myStories: 'Moje historie',
     pages: 'strony',
+    generatingFirstPage: 'Generowanie pierwszej strony...',
     noStoriesMessage: 'Nie masz jeszcze żadnych historii. Kliknij przycisk + aby stworzyć nową historię.',
 
     // StoryReader screen

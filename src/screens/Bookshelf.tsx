@@ -162,12 +162,39 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
 
   // Add refs for tutorial targets
   const addStoryButtonRef = useRef<View>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useFocusEffect(
     React.useCallback(() => {
       fetchStories();
     }, [])
   );
+
+  // Poll for stories with 0 pages to check if first page has been generated
+  useEffect(() => {
+    const storiesWithZeroPages = stories.filter(story => story.total_pages === 0);
+    
+    if (storiesWithZeroPages.length > 0) {
+      // Start polling every 4 seconds
+      pollIntervalRef.current = setInterval(() => {
+        fetchStories();
+      }, 4000);
+    } else {
+      // Stop polling if no stories with 0 pages
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [stories]);
 
   async function fetchStories() {
     try {
@@ -381,7 +408,9 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
             <Text style={styles.cefrText}>{item.difficulty || '?'}</Text>
           </View>
         </View>
-        <Text style={styles.pageCount}>{item.total_pages} {t('pages')}</Text>
+        <Text style={styles.pageCount}>
+          {item.total_pages === 0 ? t('generatingFirstPage') : `${item.total_pages} ${t('pages')}`}
+        </Text>
       </View>
     </TouchableOpacity>
   );
