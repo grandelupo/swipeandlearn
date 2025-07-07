@@ -906,8 +906,10 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
         storyData = data;
       }
 
+      
+
       // Generate the next page for cache
-      await generateStoryContent({
+      const response = await generateStoryContent({
         language: storyData?.language!,
         difficulty: storyData?.difficulty!,
         theme: storyData?.theme!,

@@ -54,24 +54,3 @@ create policy "Users can delete their story pages"
 -- Create indexes
 create index story_pages_story_id_idx on public.story_pages(story_id);
 create unique index story_pages_story_id_page_number_idx on public.story_pages(story_id, page_number);
-
--- Create trigger to update total_pages in stories table
-create or replace function public.update_story_total_pages()
-returns trigger as $$
-begin
-  if (TG_OP = 'INSERT') then
-    update public.stories
-    set total_pages = total_pages + 1
-    where id = NEW.story_id;
-  elsif (TG_OP = 'DELETE') then
-    update public.stories
-    set total_pages = total_pages - 1
-    where id = OLD.story_id;
-  end if;
-  return null;
-end;
-$$ language plpgsql security definer;
-
-create trigger update_story_total_pages
-after insert or delete on public.story_pages
-for each row execute function public.update_story_total_pages(); 
