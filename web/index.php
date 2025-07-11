@@ -786,8 +786,21 @@ $t = $translations[$lang];
         }
 
         .language-flag {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
+            width: 100px;
+            height: 70px;
+            margin: 0 auto 0.5rem;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .language-flag img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .language-name {
@@ -1322,51 +1335,75 @@ $t = $translations[$lang];
             
             <div class="languages-grid">
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇬🇧</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/gb.svg" alt="English Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Angielski' : 'English'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇪🇸</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/es.svg" alt="Spanish Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Hiszpański' : 'Spanish'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇫🇷</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/fr.svg" alt="French Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Francuski' : 'French'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇩🇪</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/de.svg" alt="German Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Niemiecki' : 'German'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇮🇹</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/it.svg" alt="Italian Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Włoski' : 'Italian'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇵🇹</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/pt.svg" alt="Portuguese Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Portugalski' : 'Portuguese'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇨🇳</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/cn.svg" alt="Chinese Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Chiński' : 'Chinese'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇯🇵</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/jp.svg" alt="Japanese Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Japoński' : 'Japanese'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇰🇷</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/kr.svg" alt="Korean Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Koreański' : 'Korean'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇷🇺</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/ru.svg" alt="Russian Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Rosyjski' : 'Russian'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇸🇦</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/sa.svg" alt="Arabic Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Arabski' : 'Arabic'; ?></div>
                 </div>
                 <div class="language-card animate-on-scroll">
-                    <div class="language-flag">🇵🇱</div>
+                    <div class="language-flag">
+                        <img src="assets/images/flags/pl.svg" alt="Polish Flag">
+                    </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Polski' : 'Polish'; ?></div>
                 </div>
             </div>
