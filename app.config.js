@@ -46,6 +46,12 @@ module.exports = {
           "androidAppId": "ca-app-pub-8821837072274540~5417339989",
         }
       ],
+      [
+        "expo-auth-session",
+        {
+          "scheme": "swipeandlearn"
+        }
+      ]
     ],
     experiments: {
       tsconfigPaths: true

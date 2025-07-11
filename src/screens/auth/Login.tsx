@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/types';
 import { supabase } from '@/services/supabase';
+import { OAuthService } from '@/services/oauth';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/colors';
 import AnimatedBackground from '@/components/AnimatedBackground';
@@ -24,6 +25,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'facebook' | null>(null);
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   async function handleLogin() {
@@ -39,6 +41,36 @@ export default function LoginScreen() {
       Alert.alert(t('error'), t('invalidCredentials'));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    if (oauthLoading) return;
+    setOauthLoading('google');
+    try {
+      const result = await OAuthService.signInWithGoogle();
+      if (!result.success) {
+        Alert.alert(t('error'), result.error || 'Google login failed');
+      }
+    } catch (error: any) {
+      Alert.alert(t('error'), error.message || 'Google login failed');
+    } finally {
+      setOauthLoading(null);
+    }
+  }
+
+  async function handleFacebookLogin() {
+    if (oauthLoading) return;
+    setOauthLoading('facebook');
+    try {
+      const result = await OAuthService.signInWithFacebook();
+      if (!result.success) {
+        Alert.alert(t('error'), result.error || 'Facebook login failed');
+      }
+    } catch (error: any) {
+      Alert.alert(t('error'), error.message || 'Facebook login failed');
+    } finally {
+      setOauthLoading(null);
     }
   }
 
@@ -94,6 +126,49 @@ export default function LoginScreen() {
             <Ionicons name="arrow-forward" size={24} color={COLORS.background} />
           </View>
         </TouchableOpacity>
+
+        {/* Divider */}
+        <View style={styles.dividerContainer}>
+          <View style={styles.dividerLine} />
+          <RNText style={styles.dividerText}>or</RNText>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* OAuth Buttons */}
+        <View style={styles.oauthContainer}>
+          <TouchableOpacity
+            style={[styles.oauthButton, styles.googleButton]}
+            onPress={handleGoogleLogin}
+            disabled={oauthLoading === 'google'}
+          >
+            <Ionicons 
+              name="logo-google" 
+              size={24} 
+              color="#4285F4" 
+              style={styles.oauthIcon} 
+            />
+            <RNText style={styles.oauthButtonText}>
+              {oauthLoading === 'google' ? 'Connecting...' : 'Continue with Google'}
+            </RNText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.oauthButton, styles.facebookButton]}
+            onPress={handleFacebookLogin}
+            disabled={oauthLoading === 'facebook'}
+          >
+            <Ionicons 
+              name="logo-facebook" 
+              size={24} 
+              color="#1877F2" 
+              style={styles.oauthIcon} 
+            />
+            <RNText style={styles.oauthButtonText}>
+              {oauthLoading === 'facebook' ? 'Connecting...' : 'Continue with Facebook'}
+            </RNText>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.bottomLinksContainer}>
           <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <RNText style={styles.linkText}>{t('dontHaveAccount')}</RNText>
@@ -193,6 +268,57 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 32,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: COLORS.bright,
+    opacity: 0.3,
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 16,
+    color: COLORS.bright,
+    fontFamily: 'Poppins-Regular',
+  },
+  oauthContainer: {
+    gap: 16,
+  },
+  oauthButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.card,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  googleButton: {
+    borderWidth: 1,
+    borderColor: '#E8F0FE',
+  },
+  facebookButton: {
+    borderWidth: 1,
+    borderColor: '#E7F3FF',
+  },
+  oauthIcon: {
+    marginRight: 12,
+  },
+  oauthButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.primary,
+    fontFamily: 'Poppins-SemiBold',
   },
   bottomLinksContainer: {
     flexDirection: 'row',
