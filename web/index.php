@@ -606,7 +606,6 @@ $t = $translations[$lang];
             max-width: 100%;
             height: auto;
             max-height: 50rem;
-            border-radius: 20px;
             filter: drop-shadow(0 8px 30px rgba(0, 0, 0, 0.2));
             transform: perspective(1000px) rotateY(-5deg);
             transition: transform 0.3s ease;
@@ -1051,6 +1050,18 @@ $t = $translations[$lang];
 
             .nav-links {
                 display: none;
+            }
+
+            .download-btn {
+                display: none;
+            }
+
+            .hero-image img {
+                height: 30rem;
+            }
+
+            .hero-image {
+                height: 15rem;
             }
 
             .mobile-menu-toggle {
