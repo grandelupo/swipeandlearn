@@ -288,19 +288,6 @@ $t = $translations[$lang];
     <meta name="description" content="<?php echo $t['description']; ?>">
     <meta name="keywords" content="<?php echo $t['keywords']; ?>">
     
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="<?php echo $t['og_title']; ?>">
-    <meta property="og:description" content="<?php echo $t['og_description']; ?>">
-    <meta property="og:image" content="assets/images/og-image.jpg">
-    <meta property="og:url" content="https://sal.karolkrakowski.pl">
-    <meta property="og:type" content="website">
-    
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="<?php echo $t['twitter_title']; ?>">
-    <meta name="twitter:description" content="<?php echo $t['twitter_description']; ?>">
-    <meta name="twitter:image" content="assets/images/twitter-card.jpg">
-    
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
     <link rel="apple-touch-icon" href="assets/images/icon.png">
     
