@@ -113,7 +113,7 @@ $translations = [
             <ul>
                 <li><strong>Access: Request a copy of your personal data</strong></li>
                 <li><strong>Correction: Update or correct inaccurate information</strong></li>
-                <li><strong>Deletion: Request deletion of your account and associated data</strong></li>
+                <li><strong>Deletion: Request deletion of your account and associated data</strong> - <a href="data-deletion.php?lang=<?php echo $lang; ?>">View detailed data deletion instructions</a></li>
                 <li><strong>Portability: Export your learning data in a structured format</strong></li>
                 <li><strong>Opt-out: Unsubscribe from promotional communications</strong></li>
             </ul>
@@ -247,7 +247,7 @@ $translations = [
             <ul>
                 <li><strong>Dostęp: Żądanie kopii Twoich danych osobowych</strong></li>
                 <li><strong>Korekta: Aktualizacja lub korekta nieprawidłowych informacji</strong></li>
-                <li><strong>Usunięcie: Żądanie usunięcia Twojego konta i powiązanych danych</strong></li>
+                <li><strong>Usunięcie: Żądanie usunięcia Twojego konta i powiązanych danych</strong> - <a href="data-deletion.php?lang=<?php echo $lang; ?>">Zobacz szczegółowe instrukcje usuwania danych</a></li>
                 <li><strong>Przenośność: Eksport Twoich danych nauki w strukturalnym formacie</strong></li>
                 <li><strong>Rezygnacja: Wypisanie się z komunikacji promocyjnej</strong></li>
             </ul>
