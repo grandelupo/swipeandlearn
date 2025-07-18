@@ -28,6 +28,8 @@ module.exports = {
       },
       package: "com.latovi.swipeandlearn",
       permissions: ['com.android.vending.BILLING'],
+      compileSdkVersion: 35,
+      targetSdkVersion: 35,
     },
     web: {
       favicon: "./assets/images/favicon.png"
@@ -54,6 +56,15 @@ module.exports = {
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-8821837072274540~5417339989",
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+          }
         }
       ]
     ],

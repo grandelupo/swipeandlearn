@@ -22,6 +22,7 @@ const TRANSLATION_LANGUAGES = [
   { label: 'Russian', value: 'Russian' },
   { label: 'Arabic', value: 'Arabic' },
   { label: 'Polish', value: 'Polish' },
+  { label: 'Ukrainian', value: 'Ukrainian' },
 ];
 
 export default function ProfileScreen() {

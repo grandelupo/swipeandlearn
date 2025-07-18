@@ -30,6 +30,7 @@ const SUPPORTED_LANGUAGES = [
   { label: t('russian'), value: 'Russian' },
   { label: t('arabic'), value: 'Arabic' },
   { label: t('polish'), value: 'Polish' },
+  { label: t('ukrainian'), value: 'Ukrainian' },
 ];
 
 interface TutorialStep {
