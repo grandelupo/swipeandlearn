@@ -1,6 +1,7 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 import { supabase } from './supabase';
+import { statusCodes } from '@react-native-google-signin/google-signin';
 
 // Initialize Google Sign-In
 GoogleSignin.configure({
@@ -21,7 +22,22 @@ export const OAuthService = {
       }
       
       // Sign in with Google
-      await GoogleSignin.signIn();
+      let userInfo;
+      try {
+        userInfo = await GoogleSignin.signIn();
+      } catch (error: any) {
+        // If user cancels the sign-in, return null
+        if (error.code === statusCodes.SIGN_IN_CANCELLED || error.code === '-5') {
+          console.log('Google OAuth cancelled by user');
+          return null;
+        }
+        throw error;
+      }
+      
+      // If no user is signed in, return null
+      if (!userInfo.data) {
+        return null;
+      }
       
       // Get the ID token after successful sign-in
       const tokens = await GoogleSignin.getTokens();
@@ -45,15 +61,7 @@ export const OAuthService = {
       return data;
     } catch (error: any) {
       console.error('Google OAuth error:', error);
-      
-      if (error.code === '-5') {
-        // User cancelled the login flow
-        console.log('Google OAuth cancelled by user');
-        return null;
-      } else {
-        // Some other error happened
-        throw error;
-      }
+      throw error;
     }
   },
 
