@@ -718,7 +718,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    color: COLORS.primary,
+    color: COLORS.accent,
     fontWeight: '600',
     fontFamily: 'Poppins-SemiBold',
     width: 80,
@@ -740,21 +740,28 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: 16,
-    color: COLORS.primary,
+    color: 'COLORS.primary',
     fontWeight: '500',
     fontFamily: 'Poppins-Regular',
     paddingLeft: 0,
   },
   pickerContainer: {
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: 8,
     marginBottom: 8,
     width: '100%',
-    borderColor: COLORS.accent
+    borderColor: COLORS.accent,
+    backgroundColor: COLORS.card,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  picker: {
+    color: COLORS.primary,
+    backgroundColor: 'transparent',
   },
   difficultyDescription: {
     fontSize: 14,
-    color: COLORS.bright,
+    color: 'COLORS.bright',
     marginHorizontal: 10,
     marginBottom: 20,
     fontStyle: 'italic',

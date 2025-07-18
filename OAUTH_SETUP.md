@@ -1,97 +1,249 @@
-# OAuth Setup Guide for Swipe and Learn
+# OAuth Setup Guide
 
-This guide explains how to set up Google and Facebook OAuth authentication in your Supabase project.
+This guide explains how to set up Google and Facebook OAuth authentication in your React Native app using the official libraries.
+
+## Overview
+
+The app uses:
+- **Google Sign-In**: `@react-native-google-signin/google-signin` - Official Google Sign-In library
+- **Facebook SDK**: `react-native-fbsdk-next` - Official Facebook SDK for React Native
+- **Supabase**: For backend authentication and user management
 
 ## Prerequisites
 
-- Supabase project with authentication enabled
-- Google Cloud Console account
-- Facebook Developer account
+1. **Google Cloud Console** account
+2. **Facebook Developer** account
+3. **Supabase** project with OAuth providers configured
+4. **App uploaded to Play Store** (for production Facebook authentication on Android)
 
-## 1. Supabase Configuration
+## Google Sign-In Setup
 
-### Enable OAuth Providers
+### 1. Google Cloud Console Configuration
 
-1. Go to your Supabase project dashboard
-2. Navigate to **Authentication** > **Providers**
-3. Enable **Google** and **Facebook** providers
-
-### Configure Redirect URLs
-
-Add these redirect URLs to your OAuth providers:
-- `swipeandlearn://auth/callback` (for mobile)
-- `http://localhost:3000/auth/callback` (for development)
-
-## 2. Google OAuth Setup
-
-### Create Google OAuth App
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select an existing one
-3. Enable the **Google+ API**
-4. Go to **Credentials** > **Create Credentials** > **OAuth 2.0 Client ID**
-5. Configure the consent screen
-6. Create credentials for:
-   - **Application type**: Web application
-   - **Authorized redirect URIs**: Add your Supabase auth callback URL
+3. Enable the **Google+ API** and **Google Identity API**
+4. Go to **Credentials** > **Create Credentials** > **OAuth 2.0 Client IDs**
 
-### Configure in Supabase
+Create the following OAuth 2.0 client IDs:
 
-1. In Supabase dashboard, go to **Authentication** > **Providers** > **Google**
-2. Enable Google provider
-3. Add your Google OAuth credentials:
-   - **Client ID**: Your Google OAuth client ID
-   - **Client Secret**: Your Google OAuth client secret
+#### For Android:
+- **Application type**: Android
+- **Package name**: `com.latovi.swipeandlearn` (from your app.config.js)
+- **SHA-1 certificate fingerprint**: 
+  - For development: Get from `expo start` output or `keytool -list -v -keystore ~/.android/debug.keystore`
+  - For production: Get from Play Console > App Integrity > App signing key certificate
 
-## 3. Facebook OAuth Setup
+#### For iOS:
+- **Application type**: iOS
+- **Bundle ID**: `com.latovi.swipeandlearn` (from your app.config.js)
 
-### Create Facebook App
+#### For Web (Required for ID token):
+- **Application type**: Web application
+- **Authorized redirect URIs**: Add your Supabase auth callback URL
+
+### 2. Firebase Setup (Optional but Recommended)
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project or select existing
+3. Add Android and iOS apps to your project
+4. Download `google-services.json` (Android) and `GoogleService-Info.plist` (iOS)
+5. Configure OAuth in Firebase Authentication
+
+### 3. App Configuration
+
+Update your `app.config.js` to include the Google Sign-In plugin:
+
+```javascript
+plugins: [
+  'expo-router',
+  '@react-native-google-signin/google-signin',
+  'react-native-fbsdk-next',
+  // ... other plugins
+],
+```
+
+### 4. Code Configuration
+
+In your OAuth service, configure Google Sign-In:
+
+```javascript
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+GoogleSignin.configure({
+  webClientId: 'YOUR_WEB_CLIENT_ID_HERE', // From Google Cloud Console (Web OAuth client)
+  offlineAccess: true,
+  scopes: ['email', 'profile'],
+});
+```
+
+## Facebook Authentication Setup
+
+### 1. Facebook Developer Console
 
 1. Go to [Facebook Developers](https://developers.facebook.com/)
-2. Create a new app
-3. Add **Facebook Login** product
-4. Configure OAuth settings:
-   - **Valid OAuth Redirect URIs**: Add your Supabase auth callback URL
+2. Create a new app or select existing
+3. Add the Facebook Login product
+4. Configure OAuth redirect URIs
 
-### Configure in Supabase
+### 2. Platform Configuration
 
-1. In Supabase dashboard, go to **Authentication** > **Providers** > **Facebook**
-2. Enable Facebook provider
-3. Add your Facebook app credentials:
-   - **App ID**: Your Facebook app ID
-   - **App Secret**: Your Facebook app secret
+#### For Android:
+1. Add Android platform in Facebook app settings
+2. **Package Name**: `com.latovi.swipeandlearn`
+3. **Key Hash**: Convert SHA-1 certificate to Base64
+   - Get SHA-1 from Play Console > App Integrity > App signing key certificate
+   - Convert to Base64 and add to Facebook settings
 
-## 4. Test OAuth Flow
+#### For iOS:
+1. Add iOS platform in Facebook app settings
+2. **Bundle ID**: `com.latovi.swipeandlearn`
 
-1. Build and run your app
-2. Try logging in with Google and Facebook
-3. Check Supabase dashboard for new user registrations
+### 3. App Configuration
+
+The Facebook SDK plugin is already configured in `app.config.js`. Make sure your Android app is published to Play Store for production use.
+
+## Supabase Configuration
+
+### 1. Enable OAuth Providers
+
+In your Supabase dashboard:
+1. Go to **Authentication** > **Providers**
+2. Enable **Google** and **Facebook**
+3. Add the respective client IDs and secrets
+
+### 2. Configure Redirect URLs
+
+Add redirect URLs for your OAuth providers:
+- Google: `https://your-project.supabase.co/auth/v1/callback`
+- Facebook: `https://your-project.supabase.co/auth/v1/callback`
+
+## Implementation
+
+### OAuth Service
+
+The OAuth service (`src/services/oauth.ts`) provides:
+
+- `signInWithGoogle()`: Google Sign-In flow
+- `signInWithFacebook()`: Facebook Login flow
+- `signOut()`: Sign out from all providers
+- `getCurrentUser()`: Get current authenticated user
+
+### Usage Example
+
+```javascript
+import { OAuthService } from '../services/oauth';
+
+// Google Sign-In
+try {
+  const result = await OAuthService.signInWithGoogle();
+  if (result === null) {
+    // User cancelled
+  } else {
+    // Success - user is logged in
+  }
+} catch (error) {
+  // Handle error
+}
+
+// Facebook Login
+try {
+  const result = await OAuthService.signInWithFacebook();
+  if (result === null) {
+    // User cancelled
+  } else {
+    // Success - user is logged in
+  }
+} catch (error) {
+  // Handle error
+}
+```
+
+## Build Configuration
+
+### Android Build
+
+For Android builds, ensure you have:
+1. `google-services.json` in your project (if using Firebase)
+2. Correct SHA-1 certificate fingerprints configured
+3. App uploaded to Play Store for Facebook authentication
+
+### iOS Build
+
+For iOS builds, ensure you have:
+1. `GoogleService-Info.plist` in your project (if using Firebase)
+2. Correct bundle identifier configured
+3. URL schemes configured for deep linking
+
+## Testing
+
+### Development Testing
+
+1. **Google Sign-In**: Works in development with debug certificates
+2. **Facebook Login**: Requires app to be in Facebook app review or live for production testing
+
+### Production Testing
+
+1. **Google Sign-In**: Requires production certificates and Play Store upload
+2. **Facebook Login**: Requires app to be published and approved
 
 ## Troubleshooting
 
-### Common Issues
+### Common Google Sign-In Issues
 
-1. **OAuth redirect mismatch**: Ensure redirect URLs match exactly
-2. **App not approved**: For production, submit your app for review
-3. **Scope issues**: Ensure you have the necessary permissions
+1. **"Developer Error" or "Invalid Client"**
+   - Check that the SHA-1 certificate fingerprint is correct
+   - Verify the package name matches your app configuration
+   - Ensure the webClientId is correctly configured
 
-### Development vs Production
+2. **"Play Services Not Available"**
+   - Ensure Google Play Services is installed and updated
+   - Test on a physical device rather than emulator
 
-- For development: Use test credentials
-- For production: Use production credentials and submit apps for review
+3. **"Sign-In Cancelled"**
+   - User cancelled the sign-in flow
+   - Handle this gracefully in your app
 
-## Security Notes
+### Common Facebook Login Issues
 
-- Keep your client secrets secure
-- Use environment variables for sensitive data
-- Regularly rotate your OAuth credentials
-- Monitor OAuth usage in your provider dashboards
+1. **"App Not Setup"**
+   - Ensure your app is published to Play Store
+   - Check that the key hash is correctly configured
+   - Verify the package name matches
+
+2. **"Login Failed"**
+   - Check Facebook app configuration
+   - Ensure proper permissions are requested
+   - Verify the app is in the correct mode (development/live)
+
+### Supabase Issues
+
+1. **"Invalid Grant" or "OAuth Error"**
+   - Check that redirect URLs are correctly configured
+   - Verify OAuth provider settings in Supabase dashboard
+   - Ensure client IDs and secrets are correct
+
+## Security Considerations
+
+1. **Never commit sensitive keys** to version control
+2. **Use environment variables** for production configurations
+3. **Configure proper redirect URIs** to prevent OAuth hijacking
+4. **Validate tokens** on the server side
+5. **Use HTTPS** for all OAuth redirect URIs
+
+## Support
+
+For additional help:
+- [Google Sign-In Documentation](https://docs.expo.dev/guides/google-authentication/)
+- [Facebook Login Documentation](https://docs.expo.dev/guides/facebook-authentication/)
+- [Supabase Auth Documentation](https://supabase.com/docs/guides/auth)
+- [React Native Google Sign-In Docs](https://react-native-google-signin.github.io/docs/install)
+- [React Native Facebook SDK Docs](https://github.com/thebergamo/react-native-fbsdk-next)
 
 ## Next Steps
 
-After setting up OAuth:
-1. Test the authentication flow
-2. Handle user profile data
-3. Implement proper error handling
-4. Add logout functionality
-5. Consider adding more OAuth providers if needed 
+1. Configure your OAuth providers in Google Cloud Console and Facebook Developer Console
+2. Set up Supabase authentication with the provider credentials
+3. Test the authentication flow in development
+4. Upload your app to Play Store for production Facebook authentication
+5. Test the production authentication flow 

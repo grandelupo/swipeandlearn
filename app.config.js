@@ -40,16 +40,20 @@ module.exports = {
     owner: "latovi",
     plugins: [
       'expo-router',
+      '@react-native-google-signin/google-signin',
+      [
+        'react-native-fbsdk-next',
+        {
+          "appID": "725982793731293",
+          "displayName": "Swipe and Learn",
+          "clientToken": "1e125b75b8054a47fc82223a7ca92710",
+          "scheme": "fb725982793731293",
+        }
+      ],
       [
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-8821837072274540~5417339989",
-        }
-      ],
-      [
-        "expo-auth-session",
-        {
-          "scheme": "swipeandlearn"
         }
       ]
     ],

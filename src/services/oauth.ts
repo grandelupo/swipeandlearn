@@ -1,114 +1,129 @@
-import { makeRedirectUri } from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 import { supabase } from './supabase';
 
-WebBrowser.maybeCompleteAuthSession();
+// Initialize Google Sign-In
+GoogleSignin.configure({
+  webClientId: '766945742721-4oqhajk9miu7bloevl781rjob4svi038.apps.googleusercontent.com',
+  offlineAccess: true,
+  scopes: ['email', 'profile'],
+});
 
 export const OAuthService = {
   async signInWithGoogle() {
     try {
-      const redirectUrl = makeRedirectUri({
-        scheme: 'swipeandlearn',
-        path: 'auth/callback',
-      });
+      // Check if your device supports Google Play
+      await GoogleSignin.hasPlayServices();
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      if (GoogleSignin.hasPreviousSignIn()) {
+        await GoogleSignin.revokeAccess();
+        await GoogleSignin.signOut();
+      }
+      
+      // Sign in with Google
+      await GoogleSignin.signIn();
+      
+      // Get the ID token after successful sign-in
+      const tokens = await GoogleSignin.getTokens();
+      
+      if (!tokens.idToken) {
+        throw new Error('No ID token received from Google');
+      }
+      
+      // Sign in with Supabase using the ID token
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
-        options: {
-          redirectTo: redirectUrl,
-        },
+        token: tokens.idToken,
       });
 
       if (error) {
-        throw error;
+        console.error('Supabase Google OAuth error:', error);
+        return null;
       }
 
-      if (data.url) {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-        
-        if (result.type === 'success') {
-          // Parse the URL to get the auth tokens
-          const url = result.url;
-          const urlParts = url.split('#');
-          if (urlParts.length > 1) {
-            const params = new URLSearchParams(urlParts[1]);
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
-            
-            if (accessToken && refreshToken) {
-              const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              });
-              
-              if (sessionError) {
-                throw sessionError;
-              }
-              
-              return { success: true, data: sessionData };
-            }
-          }
-        }
-      }
-      
-      return { success: false, error: 'Authentication cancelled or failed' };
+      console.log('Google OAuth successful');
+      return data;
     } catch (error: any) {
       console.error('Google OAuth error:', error);
-      return { success: false, error: error.message || 'Google authentication failed' };
+      
+      if (error.code === '-5') {
+        // User cancelled the login flow
+        console.log('Google OAuth cancelled by user');
+        return null;
+      } else {
+        // Some other error happened
+        throw error;
+      }
     }
   },
 
   async signInWithFacebook() {
     try {
-      const redirectUrl = makeRedirectUri({
-        scheme: 'swipeandlearn',
-        path: 'auth/callback',
-      });
+      // Request permissions
+      const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+      
+      if (result.isCancelled) {
+        console.log('Facebook OAuth cancelled by user');
+        return null;
+      }
+      
+      // Get the access token
+      const accessTokenData = await AccessToken.getCurrentAccessToken();
+      
+      if (!accessTokenData) {
+        throw new Error('Failed to get Facebook access token');
+      }
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      // Sign in with Supabase using the access token
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'facebook',
-        options: {
-          redirectTo: redirectUrl,
-        },
+        token: accessTokenData.accessToken,
       });
 
       if (error) {
+        console.error('Supabase Facebook OAuth error:', error);
         throw error;
       }
 
-      if (data.url) {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-        
-        if (result.type === 'success') {
-          // Parse the URL to get the auth tokens
-          const url = result.url;
-          const urlParts = url.split('#');
-          if (urlParts.length > 1) {
-            const params = new URLSearchParams(urlParts[1]);
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
-            
-            if (accessToken && refreshToken) {
-              const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
-              });
-              
-              if (sessionError) {
-                throw sessionError;
-              }
-              
-              return { success: true, data: sessionData };
-            }
-          }
-        }
-      }
-      
-      return { success: false, error: 'Authentication cancelled or failed' };
+      console.log('Facebook OAuth successful');
+      return data;
     } catch (error: any) {
       console.error('Facebook OAuth error:', error);
-      return { success: false, error: error.message || 'Facebook authentication failed' };
+      throw error;
+    }
+  },
+
+  async signOut() {
+    try {
+      // Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // Sign out from Google
+      try {
+        await GoogleSignin.signOut();
+      } catch (error) {
+        console.log('Google sign out error:', error);
+      }
+      
+      // Sign out from Facebook
+      try {
+        LoginManager.logOut();
+      } catch (error) {
+        console.log('Facebook sign out error:', error);
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+      throw error;
+    }
+  },
+
+  async getCurrentUser() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    } catch (error) {
+      console.error('Get current user error:', error);
+      return null;
     }
   },
 }; 

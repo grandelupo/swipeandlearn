@@ -25,7 +25,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState<'google' | 'facebook' | null>(null);
+  const [oauthLoading, setOauthLoading] = useState<'google' | null>(null);
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   async function handleLogin() {
@@ -49,8 +49,12 @@ export default function LoginScreen() {
     setOauthLoading('google');
     try {
       const result = await OAuthService.signInWithGoogle();
-      if (!result.success) {
-        Alert.alert(t('error'), result.error || 'Google login failed');
+      if (result === null) {
+        // User cancelled the OAuth flow
+        console.log('User cancelled Google login');
+      } else {
+        // Success - user should be logged in now
+        console.log('Google login successful');
       }
     } catch (error: any) {
       Alert.alert(t('error'), error.message || 'Google login failed');
@@ -59,20 +63,7 @@ export default function LoginScreen() {
     }
   }
 
-  async function handleFacebookLogin() {
-    if (oauthLoading) return;
-    setOauthLoading('facebook');
-    try {
-      const result = await OAuthService.signInWithFacebook();
-      if (!result.success) {
-        Alert.alert(t('error'), result.error || 'Facebook login failed');
-      }
-    } catch (error: any) {
-      Alert.alert(t('error'), error.message || 'Facebook login failed');
-    } finally {
-      setOauthLoading(null);
-    }
-  }
+
 
   return (
     <KeyboardAvoidingView
@@ -130,7 +121,7 @@ export default function LoginScreen() {
         {/* Divider */}
         <View style={styles.dividerContainer}>
           <View style={styles.dividerLine} />
-          <RNText style={styles.dividerText}>or</RNText>
+          <RNText style={styles.dividerText}>{t('or')}</RNText>
           <View style={styles.dividerLine} />
         </View>
 
@@ -144,27 +135,11 @@ export default function LoginScreen() {
             <Ionicons 
               name="logo-google" 
               size={24} 
-              color="#4285F4" 
+              color={COLORS.accent} 
               style={styles.oauthIcon} 
             />
             <RNText style={styles.oauthButtonText}>
-              {oauthLoading === 'google' ? 'Connecting...' : 'Continue with Google'}
-            </RNText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.oauthButton, styles.facebookButton]}
-            onPress={handleFacebookLogin}
-            disabled={oauthLoading === 'facebook'}
-          >
-            <Ionicons 
-              name="logo-facebook" 
-              size={24} 
-              color="#1877F2" 
-              style={styles.oauthIcon} 
-            />
-            <RNText style={styles.oauthButtonText}>
-              {oauthLoading === 'facebook' ? 'Connecting...' : 'Continue with Facebook'}
+              {oauthLoading === 'google' ? t('loading') : t('continueWithGoogle')}
             </RNText>
           </TouchableOpacity>
         </View>
@@ -305,11 +280,7 @@ const styles = StyleSheet.create({
   },
   googleButton: {
     borderWidth: 1,
-    borderColor: '#E8F0FE',
-  },
-  facebookButton: {
-    borderWidth: 1,
-    borderColor: '#E7F3FF',
+    borderColor: COLORS.bright,
   },
   oauthIcon: {
     marginRight: 12,

@@ -1,3 +1,10 @@
+// Polyfill for structuredClone (needed for React Native)
+if (typeof global.structuredClone === 'undefined') {
+  global.structuredClone = (obj: any) => {
+    return JSON.parse(JSON.stringify(obj));
+  };
+}
+
 import { registerRootComponent } from 'expo';
 
 import App from './App';
