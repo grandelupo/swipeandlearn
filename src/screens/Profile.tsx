@@ -3,6 +3,8 @@ import { View, StyleSheet, Alert, ScrollView, Animated, Easing } from 'react-nat
 import { Text, Button, ListItem, Input, Switch } from '@rneui/themed';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { COLORS } from '@/constants/colors';
 import { t } from '@/i18n/translations';
@@ -29,7 +31,7 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState<any>(null);
   const [translationLanguage, setTranslationLanguage] = useState<string>('English');
   const [useGrok, setUseGrok] = useState(false);
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
 
   // Animated accent circles
   const circle1 = useRef(new Animated.ValueXY({ x: -80, y: -60 })).current;
