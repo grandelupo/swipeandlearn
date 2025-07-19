@@ -13,13 +13,17 @@ import { StoryCacheProvider } from './src/contexts/StoryCacheContext';
 import { CoinProvider } from './src/contexts/CoinContext';
 import { initializeRevenueCat } from './src/services/revenuecat';
 import { FeedbackButtonProvider } from '@/contexts/FeedbackButtonContext';
+import { getOrCreateGuestSession, shouldShowRegisterScreen } from './src/services/guestAuth';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 
-function AuthNavigator() {
+function AuthNavigator({ initialRoute = 'Login' }: { initialRoute?: 'Login' | 'Register' }) {
   return (
-    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Navigator 
+      screenOptions={{ headerShown: false }}
+      initialRouteName={initialRoute}
+    >
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="Register" component={RegisterScreen} />
     </AuthStack.Navigator>
@@ -28,20 +32,51 @@ function AuthNavigator() {
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [showRegister, setShowRegister] = useState(false);
 
   useEffect(() => {
-    // Initialize RevenueCat
-    initializeRevenueCat();
-
-    // Set up Supabase auth
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+    initializeApp();
   }, []);
+
+  const initializeApp = async () => {
+    try {
+      // Initialize RevenueCat
+      initializeRevenueCat();
+
+      // Check for existing session first
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        console.log('Existing session found');
+        setSession(session);
+      } else {
+        console.log('No existing session, checking register flag');
+        // Check if user should see register screen
+        const shouldRegister = await shouldShowRegisterScreen();
+        setShowRegister(shouldRegister);
+        
+        if (!shouldRegister) {
+          // No existing session and no register flag, create/get guest session
+          console.log('Creating guest session');
+          const guestSession = await getOrCreateGuestSession();
+          if (guestSession) {
+            setSession(guestSession);
+          }
+        }
+      }
+
+      // Set up auth state change listener
+      supabase.auth.onAuthStateChange((_event, session) => {
+        console.log('Auth state changed:', _event, session?.user?.email);
+        setSession(session);
+      });
+    } catch (error) {
+      console.error('Error initializing app:', error);
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   return (
     <SafeAreaProvider>
@@ -50,10 +85,15 @@ export default function App() {
           <FeedbackButtonProvider>
             <NavigationContainer>
               <Stack.Navigator screenOptions={{ headerShown: false }}>
-                {session ? (
+                {isInitializing ? (
+                  // Show loading screen while initializing
+                  <Stack.Screen name="Loading" component={() => null} />
+                ) : session ? (
                   <Stack.Screen name="Main" component={MainStack} />
                 ) : (
-                  <Stack.Screen name="Auth" component={AuthNavigator} />
+                  <Stack.Screen name="Auth">
+                    {() => <AuthNavigator initialRoute='Register' />}
+                  </Stack.Screen>
                 )}
               </Stack.Navigator>
             </NavigationContainer>

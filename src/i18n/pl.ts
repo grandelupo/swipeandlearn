@@ -48,6 +48,16 @@ export const pl = {
   mastery: 'Mistrzowski',
   divine: 'Boski - Poza ludzkim pojmowaniem',
   
+  // Guest mode
+  guestBanner: 'Zarejestruj się za darmo i otrzymaj kolejne 50 monet',
+  registerNow: 'Zarejestruj się teraz',
+  guestAccount: 'Konto gościa',
+  convertingAccount: 'Konwertowanie konta...',
+  accountConverted: 'Konto zostało pomyślnie ulepszone! Otrzymałeś 50 bonusowych monet.',
+  errorConvertingAccount: 'Błąd podczas ulepszania konta',
+  migratingData: 'Migrowanie twoich historii i danych...',
+  migrationComplete: 'Migracja zakończona pomyślnie!',
+  
   // Difficulty descriptions
   beginnerDesc: 'Podstawowe zwroty i codzienne wyrażenia. Możliwość przedstawienia się i prostej interakcji.',
   elementaryDesc: 'Znajome tematy i rutynowe sprawy. Możliwość opisania aspektów swojego otoczenia i środowiska.',

@@ -29,6 +29,7 @@ import { useFeedbackButton } from '@/contexts/FeedbackButtonContext';
 import { t } from '@/i18n/translations';
 import { Story } from '@/types/story';
 import CoinCounter, { CoinCounterRef } from '@/components/CoinCounter';
+import { isGuestUser, signOutGuestForRegistration } from '@/services/guestAuth';
 
 const { width } = Dimensions.get('window');
 const COLUMN_COUNT = 2;
@@ -156,6 +157,8 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
   const [generatingImage, setGeneratingImage] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [recentlyUpdatedStoryId, setRecentlyUpdatedStoryId] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
+  const [showGuestBanner, setShowGuestBanner] = useState(true);
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { useCoins: useCoinContext, showInsufficientCoinsAlert } = useCoins();
   const { feedbackButtonRef } = useFeedbackButton();
@@ -167,8 +170,20 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
   useFocusEffect(
     React.useCallback(() => {
       fetchStories();
+      checkGuestStatus();
     }, [])
   );
+
+  const checkGuestStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.email) {
+        setIsGuest(isGuestUser(user.email));
+      }
+    } catch (error) {
+      console.error('Error checking guest status:', error);
+    }
+  };
 
   // Poll for stories with 0 pages to check if first page has been generated
   useEffect(() => {
@@ -439,6 +454,25 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
   return (
     <View style={styles.outerContainer}>
       <AnimatedBackground />
+      {isGuest && showGuestBanner && (
+        <View style={styles.guestBanner}>
+          <View style={styles.guestBannerContent}>
+            <Text style={styles.guestBannerText}>{t('guestBanner')}</Text>
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={() => signOutGuestForRegistration()}
+            >
+              <Text style={styles.registerButtonText}>{t('registerNow')}</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            style={styles.closeBannerButton}
+            onPress={() => setShowGuestBanner(false)}
+          >
+            <Icon name="close" type="ionicon" color={COLORS.primary} size={20} />
+          </TouchableOpacity>
+        </View>
+      )}
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>{t('myStories')}</Text>
         <TouchableOpacity
@@ -754,5 +788,53 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: COLORS.accent,
     fontFamily: 'Poppins-Regular',
+  },
+  guestBanner: {
+    backgroundColor: COLORS.accent,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 10,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  guestBannerContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  guestBannerText: {
+    color: COLORS.card,
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    flex: 1,
+    marginRight: 12,
+  },
+  registerButton: {
+    backgroundColor: COLORS.card,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
+  },
+  registerButtonText: {
+    color: COLORS.accent,
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
+  },
+  closeBannerButton: {
+    padding: 4,
+    marginLeft: 8,
   },
 });

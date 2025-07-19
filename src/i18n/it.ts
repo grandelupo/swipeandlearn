@@ -48,6 +48,16 @@ export const it = {
   mastery: 'Maestria',
   divine: 'Divino - Oltre la Comprensione Mortale',
   
+  // Guest mode
+  guestBanner: 'Registrati gratuitamente e ottieni altre 50 monete',
+  registerNow: 'Registrati ora',
+  guestAccount: 'Account ospite',
+  convertingAccount: 'Conversione account...',
+  accountConverted: 'Account aggiornato con successo! Hai ricevuto 50 monete bonus.',
+  errorConvertingAccount: 'Errore durante l\'aggiornamento dell\'account',
+  migratingData: 'Migrazione delle tue storie e dati...',
+  migrationComplete: 'Migrazione completata con successo!',
+  
   // Difficulty descriptions
   beginnerDesc: 'Frasi di base ed espressioni quotidiane. Può presentarsi e interagire in modo semplice.',
   elementaryDesc: 'Argomenti familiari e questioni di routine. Può descrivere aspetti del proprio background e ambiente immediato.',

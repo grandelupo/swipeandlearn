@@ -48,6 +48,16 @@ export const en = {
   mastery: 'Mastery',
   divine: 'Divine - Beyond Mortal Understanding',
   
+  // Guest mode
+  guestBanner: 'Register for free and get another 50 coins',
+  registerNow: 'Register now',
+  guestAccount: 'Guest Account',
+  convertingAccount: 'Converting account...',
+  accountConverted: 'Account successfully upgraded! You received 50 bonus coins.',
+  errorConvertingAccount: 'Error upgrading account',
+  migratingData: 'Migrating your stories and data...',
+  migrationComplete: 'Migration completed successfully!',
+  
   // Difficulty descriptions
   beginnerDesc: 'Basic phrases and everyday expressions. Can introduce themselves and interact in a simple way.',
   elementaryDesc: 'Familiar topics and routine matters. Can describe aspects of their background and immediate environment.',

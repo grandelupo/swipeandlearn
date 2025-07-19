@@ -48,6 +48,16 @@ export const es = {
   mastery: 'Maestría',
   divine: 'Divino - Más Allá del Entendimiento Mortal',
   
+  // Guest mode
+  guestBanner: 'Regístrate gratis y obtén otras 50 monedas',
+  registerNow: 'Regístrate ahora',
+  guestAccount: 'Cuenta de invitado',
+  convertingAccount: 'Convirtiendo cuenta...',
+  accountConverted: '¡Cuenta mejorada con éxito! Recibiste 50 monedas de bonificación.',
+  errorConvertingAccount: 'Error al mejorar la cuenta',
+  migratingData: 'Migrando tus historias y datos...',
+  migrationComplete: '¡Migración completada exitosamente!',
+  
   // Difficulty descriptions
   beginnerDesc: 'Frases básicas y expresiones cotidianas. Puede presentarse e interactuar de manera simple.',
   elementaryDesc: 'Temas familiares y asuntos rutinarios. Puede describir aspectos de su trasfondo y entorno inmediato.',

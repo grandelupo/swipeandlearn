@@ -48,6 +48,16 @@ export const de = {
   mastery: 'Meisterschaft',
   divine: 'Göttlich - Jenseits des menschlichen Verstehens',
   
+  // Guest mode
+  guestBanner: 'Kostenlos registrieren und weitere 50 Münzen erhalten',
+  registerNow: 'Jetzt registrieren',
+  guestAccount: 'Gastkonto',
+  convertingAccount: 'Konto wird konvertiert...',
+  accountConverted: 'Konto erfolgreich aufgewertet! Du hast 50 Bonus-Münzen erhalten.',
+  errorConvertingAccount: 'Fehler beim Aufwerten des Kontos',
+  migratingData: 'Deine Geschichten und Daten werden migriert...',
+  migrationComplete: 'Migration erfolgreich abgeschlossen!',
+  
   // Difficulty descriptions
   beginnerDesc: 'Grundlegende Phrasen und alltägliche Ausdrücke. Kann sich vorstellen und einfach interagieren.',
   elementaryDesc: 'Vertraute Themen und Routineangelegenheiten. Kann Aspekte ihres Hintergrunds und unmittelbaren Umfelds beschreiben.',
