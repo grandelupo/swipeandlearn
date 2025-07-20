@@ -8,6 +8,7 @@ import { MainStackParamList } from '@/navigation/types';
 import { supabase } from '@/services/supabase';
 import { COLORS } from '@/constants/colors';
 import { t } from '@/i18n/translations';
+import { clearStoredGuestMigrationData, isGuestUser } from '@/services/guestAuth';
 
 const TRANSLATION_LANGUAGES = [
   { label: 'English', value: 'English' },
@@ -105,8 +106,20 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     try {
+      // Check if current user is a guest before signing out
+      const { data: { user } } = await supabase.auth.getUser();
+      const isGuest = user && isGuestUser(user.email);
+      
+      // Sign out the user
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
+      // If the user was NOT a guest, clear any stored migration data
+      // This prevents data from being copied to new accounts when regular users sign out
+      if (!isGuest) {
+        await clearStoredGuestMigrationData();
+        console.log('Cleared stored migration data for regular user logout');
+      }
     } catch (error) {
       console.error(t('errorSigningOut'), error);
       Alert.alert(t('errorUnknown'), t('errorSigningOut'));

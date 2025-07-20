@@ -213,9 +213,15 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
 
   async function fetchStories() {
     try {
+      // Get current user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) throw new Error(t('notAuthenticated'));
+
       const { data: stories, error } = await supabase
         .from('stories')
         .select('id, title, language, cover_image_url, total_pages, theme, last_accessed, difficulty, last_viewed_page')
+        .eq('user_id', user.id)
         .eq('archived', false)
         .order('last_accessed', { ascending: false });
 
@@ -230,10 +236,16 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
 
   const handleArchive = async (story: Story) => {
     try {
+      // Get current user
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) throw new Error(t('notAuthenticated'));
+
       const { error } = await supabase
         .from('stories')
         .update({ archived: true })
-        .eq('id', story.id);
+        .eq('id', story.id)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       
@@ -364,11 +376,16 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
         // Add version parameter to the URL
         const versionedUrl = `${publicUrl}?v=${Date.now()}`;
 
-        // Update story record with new cover image URL
+        // Update story record with new cover image URL (only if user owns the story)
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        if (!user) throw new Error(t('notAuthenticated'));
+
         const { error: updateError } = await supabase
           .from('stories')
           .update({ cover_image_url: versionedUrl })
-          .eq('id', selectedStory.id);
+          .eq('id', selectedStory.id)
+          .eq('user_id', user.id);
 
         if (updateError) throw updateError;
 
@@ -475,17 +492,32 @@ export default function BookshelfScreen({ coinCounterRef }: BookshelfScreenProps
       )}
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>{t('myStories')}</Text>
-        <TouchableOpacity
-          ref={addStoryButtonRef}
-          style={styles.newButton}
-          onPress={() => navigation.navigate('NewStory')}
-        >
-          <Icon name="add" type="ionicon" color={COLORS.card} size={28} containerStyle={{ backgroundColor: COLORS.accent, borderRadius: 24, padding: 8 }} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.catalogButton}
+            onPress={() => navigation.navigate('Catalog')}
+          >
+            <Icon name="library" type="ionicon" color={COLORS.primary} size={24} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            ref={addStoryButtonRef}
+            style={styles.newButton}
+            onPress={() => navigation.navigate('NewStory')}
+          >
+            <Icon name="add" type="ionicon" color={COLORS.card} size={28} containerStyle={{ backgroundColor: COLORS.accent, borderRadius: 24, padding: 8 }} />
+          </TouchableOpacity>
+        </View>
       </View>
       {stories.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>{t('noStoriesMessage')}</Text>
+          <TouchableOpacity
+            style={styles.exploreCatalogButton}
+            onPress={() => navigation.navigate('Catalog')}
+          >
+            <Icon name="library" type="ionicon" color={COLORS.card} size={20} style={{ marginRight: 8 }} />
+            <Text style={styles.exploreCatalogButtonText}>{t('exploreCatalogButton')}</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -580,6 +612,21 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontFamily: 'Poppins-Bold',
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  catalogButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.bright,
+    shadowColor: COLORS.primary,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
   newButton: {
     backgroundColor: COLORS.accent,
     borderRadius: 24,
@@ -646,6 +693,27 @@ const styles = StyleSheet.create({
     color: COLORS.bright,
     textAlign: 'center',
     fontFamily: 'Poppins-Regular',
+    marginBottom: 24,
+  },
+  exploreCatalogButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.accent,
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    shadowColor: COLORS.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  exploreCatalogButtonText: {
+    color: COLORS.card,
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Poppins-Bold',
   },
   loadingText: {
     fontSize: 16,

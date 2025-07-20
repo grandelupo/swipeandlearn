@@ -115,6 +115,7 @@ export const pl = {
   archive: 'Archiwum',
   bookshelf: 'Biblioteka',
   story: 'Historia',
+  catalog: 'Katalog',
 
   // Tutorial
   gotIt: 'Rozumiem!',
@@ -142,6 +143,7 @@ export const pl = {
   pages: 'strony',
   generatingFirstPage: 'Generowanie pierwszej strony...',
   noStoriesMessage: 'Nie masz jeszcze żadnych historii. Kliknij przycisk + aby stworzyć nową historię.',
+  exploreCatalogButton: 'Przeglądaj Bibliotekę Publiczną',
 
   // StoryReader screen
   loadingStory: 'Ładowanie historii...',
@@ -248,6 +250,8 @@ export const pl = {
   invalidCredentials: 'Nieprawidłowy email lub hasło',
   termsAndConditions: 'Rejestrując się, zgadzasz się z naszym Regulaminem',
   privacyPolicy: 'Polityką Prywatności',
+  referral: 'Polecenie',
+  referralCodePlaceholder: 'Opcjonalny kod polecający',
 
   // Tutorial steps - AudioPlayer
   audioPlayerTutorialVoiceChange: 'Możesz zmienić głos klikając na nazwę głosu.',
@@ -294,9 +298,63 @@ export const pl = {
   errorTranslatingSentence: 'Nie udało się przetłumaczyć zdania',
 
   // Ad rewards
-  watchAdForCoins: 'Obejrzyj reklamę, aby dostać {0} monet',
+  watchAdForCoins: 'Obejrzyj reklamę, aby otrzymać {0} monet',
   loadingAd: 'Ładowanie reklamy...',
   adRewardSuccess: 'Otrzymałeś {0} monet!',
-  adError: 'Nie udało się wyświetlić reklamy. Proszę spróbować ponownie później.',
-  adCooldown: 'Proszę poczekać godzinę między oglądaniem reklam',
+  adError: 'Błąd podczas wyświetlania reklamy. Spróbuj ponownie później.',
+  adCooldown: 'Poczekaj godzinę między oglądaniem reklam',
+
+  // Catalog and Publishing
+  publishedStories: 'Opublikowane Historie',
+  noPublishedStories: 'Nie znaleziono opublikowanych historii.',
+  publishStory: 'Opublikuj Historię',
+  unpublishStory: 'Usuń Historię',
+  publishToCatalog: 'Opublikuj w Katalogu Publicznym',
+  createShareLink: 'Utwórz Link Udostępniania',
+  shareWithFriends: 'Udostępnij Przyjaciołom',
+  publishSuccess: 'Historia opublikowana pomyślnie!',
+  unpublishSuccess: 'Historia usunięta pomyślnie!',
+  shareLinkCreated: 'Link udostępniania utworzony!',
+  copyLink: 'Kopiuj Link',
+  linkCopied: 'Link skopiowany do schowka!',
+  likeStory: 'Polub Historię',
+  unlikeStory: 'Nie Lubię Historii',
+  likes: 'Polubienia',
+  sortByNewest: 'Najnowsze',
+  sortByMostLiked: 'Najbardziej Lubiane',
+  publishedBy: 'Opublikowane przez',
+  publishedOn: 'Opublikowane dnia',
+  shareCode: 'Kod Udostępniania',
+  shareCodeDescription: 'Udostępnij ten kod przyjaciołom, aby mogli przeczytać Twoją historię',
+  publishDescription: 'Udostępnij swoją historię w katalogu publicznym',
+  unpublishDescription: 'Usuń swoją historię z katalogu publicznego',
+  publishConfirmation: 'Czy na pewno chcesz opublikować tę historię?',
+  unpublishConfirmation: 'Czy na pewno chcesz usunąć tę historię?',
+  errorPublishingStory: 'Błąd podczas publikowania historii',
+  errorUnpublishingStory: 'Błąd podczas usuwania historii',
+  errorLikingStory: 'Błąd podczas polubienia historii',
+  errorCreatingShare: 'Błąd podczas tworzenia linku udostępniania',
+  errorFetchingCatalog: 'Błąd podczas pobierania katalogu',
+  loadingCatalog: 'Ładowanie katalogu...',
+  myPublishedStories: 'Moje Opublikowane Historie',
+  noMyPublishedStories: 'Nie opublikowałeś jeszcze żadnych historii.',
+  tutorialPublish: 'Dotknij przycisk publikuj, aby udostępnić swoją historię innym',
+  tutorialLike: 'Dotknij serce, aby polubić historie, które Ci się podobają',
+  tutorialCatalog: 'Przeglądaj i odkrywaj historie innych uczniów',
+
+  // Deep linking
+  deepLinkShareTitle: 'Udostępnij Historię',
+  deepLinkShareMessage: 'Sprawdź tę historię: "{0}"',
+  deepLinkAppLink: '📱 Otwórz w aplikacji',
+  deepLinkWebLink: '🌐 Lub przeczytaj online',
+  deepLinkCopied: 'Link głęboki skopiowany do schowka!',
+  deepLinkError: 'Błąd podczas tworzenia linku głębokiego',
+
+  // Catalog filters
+  allLanguages: 'Wszystkie Języki',
+  allDifficulties: 'Wszystkie Poziomy',
+  filters: 'Filtry',
+  language: 'Język',
+  difficulty: 'Poziom',
+  clearFilters: 'Wyczyść Filtry',
 }; 

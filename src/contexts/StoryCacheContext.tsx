@@ -21,6 +21,7 @@ interface StoryCacheContextType {
   getCachedPage: (storyId: string, pageNumber: number) => StoryPage | null;
   getCachedStory: (storyId: string) => Story | null;
   cachePage: (storyId: string, story: Story, page: StoryPage) => void;
+  updateCachedStory: (storyId: string, story: Story) => void;
   clearCache: () => void;
 }
 
@@ -50,6 +51,16 @@ export function StoryCacheProvider({ children }: { children: React.ReactNode }) 
     }));
   }, []);
 
+  const updateCachedStory = useCallback((storyId: string, story: Story) => {
+    setCache(prevCache => ({
+      ...prevCache,
+      [storyId]: {
+        ...prevCache[storyId],
+        story,
+      },
+    }));
+  }, []);
+
   const clearCache = useCallback(() => {
     setCache({});
   }, []);
@@ -61,6 +72,7 @@ export function StoryCacheProvider({ children }: { children: React.ReactNode }) 
         getCachedPage,
         getCachedStory,
         cachePage,
+        updateCachedStory,
         clearCache,
       }}
     >

@@ -115,6 +115,7 @@ export const it = {
   archive: 'Archivio',
   bookshelf: 'Libreria',
   story: 'Storia',
+  catalog: 'Catalogo',
 
   // Tutorial
   gotIt: 'Capito!',
@@ -136,6 +137,7 @@ export const it = {
   pages: 'Pagine',
   generatingFirstPage: 'Generazione prima pagina...',
   noStoriesMessage: 'Non hai ancora creato nessuna storia. Clicca il pulsante + per creare una nuova storia.',
+  exploreCatalogButton: 'Esplora Biblioteca Pubblica',
 
   // Archive screen
   archivedStories: 'Storie Archiviate',
@@ -248,6 +250,8 @@ export const it = {
   invalidCredentials: 'Email o password non valide',
   termsAndConditions: 'Registrandoti, accetti i nostri Termini e Condizioni',
   privacyPolicy: 'Informativa sulla Privacy',
+  referral: 'Riferimento',
+  referralCodePlaceholder: 'Codice di riferimento opzionale',
 
   // Tutorial steps - AudioPlayer
   audioPlayerTutorialVoiceChange: 'Puoi cambiare la voce cliccando sul nome della voce.',
@@ -294,9 +298,63 @@ export const it = {
   errorTranslatingSentence: 'Errore nella traduzione della frase',
 
   // Ad rewards
-  watchAdForCoins: 'Guarda un annuncio per ottenere {0} monete',
-  loadingAd: 'Caricamento annuncio...',
+  watchAdForCoins: 'Guarda una pubblicità per ottenere {0} monete',
+  loadingAd: 'Caricamento pubblicità...',
   adRewardSuccess: 'Hai ricevuto {0} monete!',
-  adError: 'Errore nella visualizzazione dell\'annuncio. Riprova più tardi.',
-  adCooldown: 'Attendi un\'ora tra la visualizzazione degli annunci',
+  adError: 'Errore nel mostrare la pubblicità. Riprova più tardi.',
+  adCooldown: 'Aspetta un\'ora tra la visione delle pubblicità',
+
+  // Catalog and Publishing
+  publishedStories: 'Storie Pubblicate',
+  noPublishedStories: 'Nessuna storia pubblicata trovata.',
+  publishStory: 'Pubblica Storia',
+  unpublishStory: 'Rimuovi Storia',
+  publishToCatalog: 'Pubblica nel Catalogo Pubblico',
+  createShareLink: 'Crea Link Condivisione',
+  shareWithFriends: 'Condividi con Amici',
+  publishSuccess: 'Storia pubblicata con successo!',
+  unpublishSuccess: 'Storia rimossa con successo!',
+  shareLinkCreated: 'Link di condivisione creato!',
+  copyLink: 'Copia Link',
+  linkCopied: 'Link copiato negli appunti!',
+  likeStory: 'Mi Piace Storia',
+  unlikeStory: 'Non Mi Piace Storia',
+  likes: 'Mi Piace',
+  sortByNewest: 'Più Recenti',
+  sortByMostLiked: 'Più Piaciute',
+  publishedBy: 'Pubblicato da',
+  publishedOn: 'Pubblicato il',
+  shareCode: 'Codice Condivisione',
+  shareCodeDescription: 'Condividi questo codice con gli amici per far leggere loro la tua storia',
+  publishDescription: 'Rendi la tua storia disponibile nel catalogo pubblico',
+  unpublishDescription: 'Rimuovi la tua storia dal catalogo pubblico',
+  publishConfirmation: 'Sei sicuro di voler pubblicare questa storia?',
+  unpublishConfirmation: 'Sei sicuro di voler rimuovere questa storia?',
+  errorPublishingStory: 'Errore nella pubblicazione della storia',
+  errorUnpublishingStory: 'Errore nella rimozione della storia',
+  errorLikingStory: 'Errore nel mettere mi piace alla storia',
+  errorCreatingShare: 'Errore nella creazione del link di condivisione',
+  errorFetchingCatalog: 'Errore nel caricamento del catalogo',
+  loadingCatalog: 'Caricamento catalogo...',
+  myPublishedStories: 'Le Mie Storie Pubblicate',
+  noMyPublishedStories: 'Non hai ancora pubblicato nessuna storia.',
+  tutorialPublish: 'Tocca il pulsante pubblica per condividere la tua storia con altri',
+  tutorialLike: 'Tocca il cuore per mettere mi piace alle storie che ti piacciono',
+  tutorialCatalog: 'Sfoglia e scopri storie di altri studenti',
+
+  // Deep linking
+  deepLinkShareTitle: 'Condividi Storia',
+  deepLinkShareMessage: 'Guarda questa storia: "{0}"',
+  deepLinkAppLink: '📱 Apri in app',
+  deepLinkWebLink: '🌐 O leggi online',
+  deepLinkCopied: 'Link profondo copiato negli appunti!',
+  deepLinkError: 'Errore nella creazione del link profondo',
+
+  // Catalog filters
+  allLanguages: 'Tutte le Lingue',
+  allDifficulties: 'Tutte le Difficoltà',
+  filters: 'Filtri',
+  language: 'Lingua',
+  difficulty: 'Difficoltà',
+  clearFilters: 'Cancella Filtri',
 }; 

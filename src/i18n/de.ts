@@ -115,6 +115,7 @@ export const de = {
   archive: 'Archiv',
   bookshelf: 'Bücherregal',
   story: 'Geschichte',
+  catalog: 'Katalog',
 
   // Tutorial
   gotIt: 'Verstanden!',
@@ -136,6 +137,7 @@ export const de = {
   pages: 'Seiten',
   generatingFirstPage: 'Erste Seite wird generiert...',
   noStoriesMessage: 'Sie haben noch keine Geschichten erstellt. Klicken Sie die + Taste, um eine neue Geschichte zu erstellen.',
+  exploreCatalogButton: 'Öffentliche Bibliothek erkunden',
 
   // Archive screen
   archivedStories: 'Archivierte Geschichten',
@@ -248,6 +250,8 @@ export const de = {
   invalidCredentials: 'Ungültige E-Mail oder Passwort',
   termsAndConditions: 'Mit der Registrierung stimmen Sie unseren Allgemeinen Geschäftsbedingungen zu',
   privacyPolicy: 'Datenschutzrichtlinie',
+  referral: 'Empfehlung',
+  referralCodePlaceholder: 'Optionaler Empfehlungscode',
 
   // Tutorial steps - AudioPlayer
   audioPlayerTutorialVoiceChange: 'Sie können die Stimme ändern, indem Sie auf den Stimmnamen klicken.',
@@ -294,9 +298,63 @@ export const de = {
   errorTranslatingSentence: 'Fehler beim Übersetzen des Satzes',
 
   // Ad rewards
-  watchAdForCoins: 'Schauen Sie eine Werbung, um {0} Münzen zu erhalten',
+  watchAdForCoins: 'Schau dir eine Werbung an, um {0} Münzen zu erhalten',
   loadingAd: 'Werbung wird geladen...',
-  adRewardSuccess: 'Sie haben {0} Münzen erhalten!',
-  adError: 'Fehler beim Anzeigen der Werbung. Bitte versuchen Sie es später erneut.',
-  adCooldown: 'Bitte warten Sie eine Stunde zwischen dem Anschauen von Werbungen',
+  adRewardSuccess: 'Du hast {0} Münzen erhalten!',
+  adError: 'Fehler beim Anzeigen der Werbung. Bitte versuche es später erneut.',
+  adCooldown: 'Bitte warte eine Stunde zwischen dem Anschauen von Werbung',
+
+  // Catalog and Publishing
+  publishedStories: 'Veröffentlichte Geschichten',
+  noPublishedStories: 'Keine veröffentlichten Geschichten gefunden.',
+  publishStory: 'Geschichte veröffentlichen',
+  unpublishStory: 'Geschichte zurückziehen',
+  publishToCatalog: 'Im öffentlichen Katalog veröffentlichen',
+  createShareLink: 'Teil-Link erstellen',
+  shareWithFriends: 'Mit Freunden teilen',
+  publishSuccess: 'Geschichte erfolgreich veröffentlicht!',
+  unpublishSuccess: 'Geschichte erfolgreich zurückgezogen!',
+  shareLinkCreated: 'Teil-Link erstellt!',
+  copyLink: 'Link kopieren',
+  linkCopied: 'Link in die Zwischenablage kopiert!',
+  likeStory: 'Geschichte mögen',
+  unlikeStory: 'Geschichte nicht mehr mögen',
+  likes: 'Likes',
+  sortByNewest: 'Neueste',
+  sortByMostLiked: 'Beliebteste',
+  publishedBy: 'Veröffentlicht von',
+  publishedOn: 'Veröffentlicht am',
+  shareCode: 'Teil-Code',
+  shareCodeDescription: 'Teile diesen Code mit Freunden, damit sie deine Geschichte lesen können',
+  publishDescription: 'Mache deine Geschichte im öffentlichen Katalog verfügbar',
+  unpublishDescription: 'Entferne deine Geschichte aus dem öffentlichen Katalog',
+  publishConfirmation: 'Bist du sicher, dass du diese Geschichte veröffentlichen möchtest?',
+  unpublishConfirmation: 'Bist du sicher, dass du diese Geschichte zurückziehen möchtest?',
+  errorPublishingStory: 'Fehler beim Veröffentlichen der Geschichte',
+  errorUnpublishingStory: 'Fehler beim Zurückziehen der Geschichte',
+  errorLikingStory: 'Fehler beim Liken der Geschichte',
+  errorCreatingShare: 'Fehler beim Erstellen des Teil-Links',
+  errorFetchingCatalog: 'Fehler beim Laden des Katalogs',
+  loadingCatalog: 'Katalog wird geladen...',
+  myPublishedStories: 'Meine veröffentlichten Geschichten',
+  noMyPublishedStories: 'Du hast noch keine Geschichten veröffentlicht.',
+  tutorialPublish: 'Tippe auf den Veröffentlichen-Button, um deine Geschichte mit anderen zu teilen',
+  tutorialLike: 'Tippe auf das Herz, um Geschichten zu liken, die dir gefallen',
+  tutorialCatalog: 'Durchsuche und entdecke Geschichten von anderen Lernenden',
+
+  // Deep linking
+  deepLinkShareTitle: 'Geschichte teilen',
+  deepLinkShareMessage: 'Schau dir diese Geschichte an: "{0}"',
+  deepLinkAppLink: '📱 In App öffnen',
+  deepLinkWebLink: '🌐 Oder online lesen',
+  deepLinkCopied: 'Deep Link in die Zwischenablage kopiert!',
+  deepLinkError: 'Fehler beim Erstellen des Deep Links',
+
+  // Catalog filters
+  allLanguages: 'Alle Sprachen',
+  allDifficulties: 'Alle Schwierigkeitsgrade',
+  filters: 'Filter',
+  language: 'Sprache',
+  difficulty: 'Schwierigkeitsgrad',
+  clearFilters: 'Filter löschen',
 }; 

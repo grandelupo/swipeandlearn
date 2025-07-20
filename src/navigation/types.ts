@@ -19,6 +19,9 @@ export type MainStackParamList = {
   };
   Profile: undefined;
   Archive: undefined;
+  Catalog: {
+    sortBy?: 'newest' | 'most_liked';
+  };
 };
 
 export type BookshelfStackParamList = {

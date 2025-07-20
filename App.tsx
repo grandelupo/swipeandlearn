@@ -14,6 +14,8 @@ import { CoinProvider } from './src/contexts/CoinContext';
 import { initializeRevenueCat } from './src/services/revenuecat';
 import { FeedbackButtonProvider } from '@/contexts/FeedbackButtonContext';
 import { getOrCreateGuestSession, shouldShowRegisterScreen } from './src/services/guestAuth';
+import { DeepLinkingService } from './src/services/deepLinking';
+import { navigationService } from './src/services/navigationService';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -38,6 +40,18 @@ export default function App() {
   useEffect(() => {
     initializeApp();
   }, []);
+
+  useEffect(() => {
+    // Set up deep link listeners
+    const cleanup = DeepLinkingService.setupDeepLinkListeners((storyId, pageNumber) => {
+      // Navigate to the story when a deep link is opened
+      if (session) {
+        navigationService.navigateToStory(storyId, pageNumber);
+      }
+    });
+
+    return cleanup;
+  }, [session]);
 
   const initializeApp = async () => {
     try {
@@ -83,7 +97,7 @@ export default function App() {
       <StoryCacheProvider>
         <CoinProvider>
           <FeedbackButtonProvider>
-            <NavigationContainer>
+            <NavigationContainer ref={(navigator) => navigationService.setNavigator(navigator)}>
               <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {isInitializing ? (
                   // Show loading screen while initializing

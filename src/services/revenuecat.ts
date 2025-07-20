@@ -130,6 +130,34 @@ export async function purchasePackage(packageId: CoinPackage): Promise<boolean> 
       throw updateError;
     }
     
+    // Record referral earnings if user was referred
+    console.log('About to record referral earnings for user:', user.id);
+    try {
+      console.log('Importing ReferralService...');
+      const { ReferralService } = await import('./referralService');
+      console.log('ReferralService imported successfully');
+      
+      console.log('Calling recordTransaction with:', {
+        userId: user.id,
+        amount: packageToPurchase.rawPrice,
+        type: 'coin_purchase'
+      });
+      
+      await ReferralService.recordTransaction(
+        user.id,
+        packageToPurchase.rawPrice,
+        'coin_purchase'
+      );
+      
+      console.log('Referral transaction recorded successfully');
+    } catch (error) {
+      console.error('Error recording referral earnings:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+    }
+    
     console.log(`Added ${packageToPurchase.coins} coins. New balance: ${newCoinBalance}`);
     return true;
   } catch (error) {

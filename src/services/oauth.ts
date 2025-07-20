@@ -2,6 +2,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 import { supabase } from './supabase';
 import { statusCodes } from '@react-native-google-signin/google-signin';
+import { clearStoredGuestMigrationData, isGuestUser } from './guestAuth';
 
 // Initialize Google Sign-In
 GoogleSignin.configure({
@@ -103,6 +104,10 @@ export const OAuthService = {
 
   async signOut() {
     try {
+      // Check if current user is a guest before signing out
+      const { data: { user } } = await supabase.auth.getUser();
+      const isGuest = user && isGuestUser(user.email);
+      
       // Sign out from Supabase
       await supabase.auth.signOut();
       
@@ -118,6 +123,13 @@ export const OAuthService = {
         LoginManager.logOut();
       } catch (error) {
         console.log('Facebook sign out error:', error);
+      }
+      
+      // If the user was NOT a guest, clear any stored migration data
+      // This prevents data from being copied to new accounts when regular users sign out
+      if (!isGuest) {
+        await clearStoredGuestMigrationData();
+        console.log('Cleared stored migration data for regular user OAuth logout');
       }
     } catch (error) {
       console.error('Sign out error:', error);

@@ -115,6 +115,7 @@ export const es = {
   archive: 'Archivo',
   bookshelf: 'Estantería',
   story: 'Historia',
+  catalog: 'Catálogo',
 
   // Tutorial
   gotIt: '¡Entendido!',
@@ -136,6 +137,7 @@ export const es = {
   pages: 'Páginas',
   generatingFirstPage: 'Generando primera página...',
   noStoriesMessage: 'Aún no has creado ninguna historia. Haz clic en el botón + para crear una nueva historia.',
+  exploreCatalogButton: 'Explorar Biblioteca Pública',
 
   // Archive screen
   archivedStories: 'Historias Archivadas',
@@ -248,6 +250,8 @@ export const es = {
   invalidCredentials: 'Correo electrónico o contraseña inválidos',
   termsAndConditions: 'Al registrarte, aceptas nuestros Términos y Condiciones',
   privacyPolicy: 'Política de Privacidad',
+  referral: 'Referido',
+  referralCodePlaceholder: 'Código de referido opcional',
 
   // Tutorial steps - AudioPlayer
   audioPlayerTutorialVoiceChange: 'Puedes cambiar la voz haciendo clic en el nombre de la voz.',
@@ -299,4 +303,58 @@ export const es = {
   adRewardSuccess: '¡Recibiste {0} monedas!',
   adError: 'Error al mostrar el anuncio. Por favor intenta de nuevo más tarde.',
   adCooldown: 'Por favor espera una hora entre ver anuncios',
+
+  // Catalog and Publishing
+  publishedStories: 'Historias Publicadas',
+  noPublishedStories: 'No se encontraron historias publicadas.',
+  publishStory: 'Publicar Historia',
+  unpublishStory: 'Retirar Historia',
+  publishToCatalog: 'Publicar en Catálogo Público',
+  createShareLink: 'Crear Enlace Compartir',
+  shareWithFriends: 'Compartir con Amigos',
+  publishSuccess: '¡Historia publicada exitosamente!',
+  unpublishSuccess: '¡Historia retirada exitosamente!',
+  shareLinkCreated: '¡Enlace de compartir creado!',
+  copyLink: 'Copiar Enlace',
+  linkCopied: '¡Enlace copiado al portapapeles!',
+  likeStory: 'Me Gusta Historia',
+  unlikeStory: 'No Me Gusta Historia',
+  likes: 'Me Gusta',
+  sortByNewest: 'Más Recientes',
+  sortByMostLiked: 'Más Gustados',
+  publishedBy: 'Publicado por',
+  publishedOn: 'Publicado el',
+  shareCode: 'Código Compartir',
+  shareCodeDescription: 'Comparte este código con amigos para que lean tu historia',
+  publishDescription: 'Haz tu historia disponible en el catálogo público',
+  unpublishDescription: 'Retira tu historia del catálogo público',
+  publishConfirmation: '¿Estás seguro de que quieres publicar esta historia?',
+  unpublishConfirmation: '¿Estás seguro de que quieres retirar esta historia?',
+  errorPublishingStory: 'Error al publicar historia',
+  errorUnpublishingStory: 'Error al retirar historia',
+  errorLikingStory: 'Error al dar me gusta a la historia',
+  errorCreatingShare: 'Error al crear enlace de compartir',
+  errorFetchingCatalog: 'Error al cargar catálogo',
+  loadingCatalog: 'Cargando catálogo...',
+  myPublishedStories: 'Mis Historias Publicadas',
+  noMyPublishedStories: 'Aún no has publicado ninguna historia.',
+  tutorialPublish: 'Toca el botón de publicar para compartir tu historia con otros',
+  tutorialLike: 'Toca el corazón para dar me gusta a las historias que disfrutes',
+  tutorialCatalog: 'Navega y descubre historias de otros estudiantes',
+
+  // Deep linking
+  deepLinkShareTitle: 'Compartir Historia',
+  deepLinkShareMessage: 'Mira esta historia: "{0}"',
+  deepLinkAppLink: '📱 Abrir en app',
+  deepLinkWebLink: '🌐 O leer en línea',
+  deepLinkCopied: '¡Enlace profundo copiado al portapapeles!',
+  deepLinkError: 'Error al crear enlace profundo',
+
+  // Catalog filters
+  allLanguages: 'Todos los Idiomas',
+  allDifficulties: 'Todas las Dificultades',
+  filters: 'Filtros',
+  language: 'Idioma',
+  difficulty: 'Dificultad',
+  clearFilters: 'Limpiar Filtros',
 }; 

@@ -32,6 +32,8 @@ import AnimatedBackground from '@/components/AnimatedBackground';
 import { t } from '@/i18n/translations';
 import { Story } from '@/types/story';
 import CoinCounter, { CoinCounterRef } from '@/components/CoinCounter';
+import PublishingModal from '@/components/PublishingModal';
+import { catalogService } from '@/services/catalog';
 
 interface StoryPage {
   content: string;
@@ -72,7 +74,7 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
   const { storyId, pageNumber: initialPageNumber = 1 } = route.params;
   const [pageNumber, setPageNumber] = useState(initialPageNumber);
   const scrollViewRef = useRef<ScrollView>(null);
-  const { getCachedPage, getCachedStory, cachePage } = useStoryCache();
+  const { getCachedPage, getCachedStory, cachePage, updateCachedStory } = useStoryCache();
   const { useCoins, showInsufficientCoinsAlert } = useCoinContext();
   const [preferredLanguage, setPreferredLanguage] = useState('en');
 
@@ -103,10 +105,14 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
   const [selectedDictionaryType, setSelectedDictionaryType] = useState<DictionaryType>('defaultDictionary');
   const [lastTapTimestamp, setLastTapTimestamp] = useState(0);
   const DOUBLE_TAP_DELAY = 300; // milliseconds
+  const [showPublishingModal, setShowPublishingModal] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
 
   // Add refs for tutorial targets
   const contentRef = useRef<View>(null);
   const audioButtonRef = useRef<View>(null);
+  const publishButtonRef = useRef<View>(null);
   const lastTapRef = useRef<number>(0);
   const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -115,6 +121,7 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
     fetchTranslationLanguage();
     fetchUserVoicePreference();
     checkAvailableAudioRecordings();
+    checkUserLikeStatus();
   }, [storyId, pageNumber]);
 
   const fetchTranslationLanguage = async () => {
@@ -227,6 +234,9 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
 
       console.log('result', result);
 
+      // Update like count from story data
+      setLikeCount(storyData.like_count || 0);
+
       // Generate cache when reaching the last page
       if (pageNumber === storyData.total_pages) {
         console.log('Generating page cache for last page');
@@ -278,6 +288,56 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
       }
     } catch (error) {
       console.error('Error checking available audio recordings:', error);
+    }
+  };
+
+  const checkUserLikeStatus = async () => {
+    try {
+      const hasLiked = await catalogService.hasUserLikedStory(storyId);
+      setIsLiked(hasLiked);
+    } catch (error) {
+      console.error('Error checking user like status:', error);
+    }
+  };
+
+  const handleLikeStory = async () => {
+    try {
+      if (isLiked) {
+        await catalogService.unlikeStory(storyId);
+        setIsLiked(false);
+        setLikeCount(prev => prev - 1);
+      } else {
+        await catalogService.likeStory(storyId);
+        setIsLiked(true);
+        setLikeCount(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error(t('errorLikingStory'), error);
+      Alert.alert(t('error'), t('errorLikingStory'));
+    }
+  };
+
+  const handlePublishStory = () => {
+    setShowPublishingModal(true);
+  };
+
+  const handleStoryPublished = () => {
+    // Update local story state to reflect published status
+    if (story) {
+      const updatedStory = { ...story, is_published: true, published_at: new Date().toISOString() };
+      setStory(updatedStory);
+      // Update the cache with the new story data
+      updateCachedStory(storyId, updatedStory);
+    }
+  };
+
+  const handleStoryUnpublished = () => {
+    // Update local story state to reflect unpublished status
+    if (story) {
+      const updatedStory = { ...story, is_published: false, published_at: undefined };
+      setStory(updatedStory);
+      // Update the cache with the new story data
+      updateCachedStory(storyId, updatedStory);
     }
   };
 
@@ -864,6 +924,11 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
       message: t('storyReaderTutorialAudiobook'),
       targetRef: audioButtonRef,
     },
+    {
+      id: 'publish',
+      message: t('tutorialPublish'),
+      targetRef: publishButtonRef,
+    },
   ];
 
   const generatePageCache = async (pageNumber: number) => {
@@ -981,17 +1046,52 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
           <View style={styles.headerInfo}>
             <Text style={styles.headerMeta}>Page {pageNumber} of {story.total_pages || 1}</Text>
             <Text style={styles.difficultyBadge}>CEFR {story.difficulty}</Text>
-            <TouchableOpacity
-              ref={audioButtonRef}
-              style={styles.audioIconButton}
-              onPress={() => setShowAudioPlayer(!showAudioPlayer)}
-            >
-              <Icon 
-                name={showAudioPlayer ? "cancel" : "headphones"} 
-                size={20} 
-                color={COLORS.accent}
-              />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={[
+                  styles.likeButton,
+                  isLiked && styles.likeButtonSelected
+                ]}
+                onPress={handleLikeStory}
+              >
+                <Icon 
+                  name={isLiked ? "favorite" : "favorite-border"} 
+                  color={isLiked ? COLORS.card : COLORS.primary} 
+                  size={20} 
+                />
+                {likeCount > 0 && (
+                  <Text style={[
+                    styles.likeCount,
+                    isLiked && styles.likeCountSelected
+                  ]}>{likeCount}</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                ref={publishButtonRef}
+                style={[
+                  styles.publishButton,
+                  story.is_published && styles.publishButtonSelected
+                ]}
+                onPress={handlePublishStory}
+              >
+                <Icon 
+                  name={story.is_published ? "public" : "share"} 
+                  color={story.is_published ? COLORS.card : COLORS.primary} 
+                  size={20} 
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                ref={audioButtonRef}
+                style={styles.audioIconButton}
+                onPress={() => setShowAudioPlayer(!showAudioPlayer)}
+              >
+                <Icon 
+                  name={showAudioPlayer ? "cancel" : "headphones"} 
+                  size={20} 
+                  color={COLORS.primary}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -1135,6 +1235,13 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
             />
         </View>
       )}
+      <PublishingModal
+        isVisible={showPublishingModal}
+        onClose={() => setShowPublishingModal(false)}
+        story={story}
+        onStoryPublished={handleStoryPublished}
+        onStoryUnpublished={handleStoryUnpublished}
+      />
       <TutorialOverlay
         screenName="story_reader"
         steps={storyReaderTutorialSteps}
@@ -1166,27 +1273,72 @@ const styles = StyleSheet.create({
   headerInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    gap: 8,
+    justifyContent: 'space-between',
+    marginTop: 12,
+    width: '100%',
   },
   headerMeta: {
     color: COLORS.accent,
     fontFamily: 'Poppins-SemiBold',
-    fontSize: 15,
-    marginRight: 8,
+    fontSize: 14,
+    flex: 1,
   },
   difficultyBadge: {
     backgroundColor: COLORS.bright,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
     fontSize: 12,
     fontWeight: 'bold',
     color: COLORS.primary,
     fontFamily: 'Poppins-Bold',
+    marginHorizontal: 8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 8,
+    gap: 4,
+    backgroundColor: COLORS.bright,
+    borderRadius: 20,
+    minWidth: 40,
+    justifyContent: 'center',
+  },
+  likeButtonSelected: {
+    backgroundColor: COLORS.accent,
+  },
+  likeCount: {
+    fontSize: 12,
+    color: COLORS.accent,
+    fontFamily: 'Poppins-SemiBold',
+    marginLeft: 2,
+  },
+  likeCountSelected: {
+    color: COLORS.card,
+  },
+  publishButton: {
+    padding: 8,
+    backgroundColor: COLORS.bright,
+    borderRadius: 20,
+    minWidth: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  publishButtonSelected: {
+    backgroundColor: COLORS.accent,
   },
   audioIconButton: {
-    padding: 4,
+    padding: 8,
+    backgroundColor: COLORS.bright,
+    borderRadius: 20,
+    minWidth: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,

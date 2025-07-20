@@ -115,6 +115,7 @@ export const en = {
   archive: 'Archive',
   bookshelf: 'Bookshelf',
   story: 'Story',
+  catalog: 'Catalog',
 
   // Tutorial
   gotIt: 'Got it!',
@@ -136,6 +137,7 @@ export const en = {
   pages: 'Pages',
   generatingFirstPage: 'Generating first page...',
   noStoriesMessage: 'You haven\'t created any stories yet. Click the + button to create a new story.',
+  exploreCatalogButton: 'Explore Public Library',
 
   // Archive screen
   archivedStories: 'Archived Stories',
@@ -247,6 +249,8 @@ export const en = {
   invalidCredentials: 'Invalid email or password',
   termsAndConditions: 'By signing up, you agree to our Terms and Conditions',
   privacyPolicy: 'Privacy Policy',
+  referral: 'Referral',
+  referralCodePlaceholder: 'Optional referral code',
 
   // Tutorial steps - AudioPlayer
   audioPlayerTutorialVoiceChange: 'You can change the voice by clicking on the voice name.',
@@ -298,4 +302,58 @@ export const en = {
   adRewardSuccess: 'You received {0} coins!',
   adError: 'Failed to show ad. Please try again later.',
   adCooldown: 'Please wait an hour between watching ads',
+
+  // Catalog and Publishing
+  publishedStories: 'Published Stories',
+  noPublishedStories: 'No published stories found.',
+  publishStory: 'Publish Story',
+  unpublishStory: 'Take Down Story',
+  publishToCatalog: 'Publish to Public Catalog',
+  createShareLink: 'Create Share Link',
+  shareWithFriends: 'Share with Friends',
+  publishSuccess: 'Story published successfully!',
+  unpublishSuccess: 'Story taken down successfully!',
+  shareLinkCreated: 'Share link created!',
+  copyLink: 'Copy Link',
+  linkCopied: 'Link copied to clipboard!',
+  likeStory: 'Like Story',
+  unlikeStory: 'Unlike Story',
+  likes: 'Likes',
+  sortByNewest: 'Newest',
+  sortByMostLiked: 'Most Liked',
+  publishedBy: 'Published by',
+  publishedOn: 'Published on',
+  shareCode: 'Share Code',
+  shareCodeDescription: 'Share this code with friends to let them read your story',
+  publishDescription: 'Make your story available to the public catalog',
+  unpublishDescription: 'Remove your story from the public catalog',
+  publishConfirmation: 'Are you sure you want to publish this story?',
+  unpublishConfirmation: 'Are you sure you want to take down this story?',
+  errorPublishingStory: 'Failed to publish story',
+  errorUnpublishingStory: 'Failed to take down story',
+  errorLikingStory: 'Failed to like story',
+  errorCreatingShare: 'Failed to create share link',
+  errorFetchingCatalog: 'Failed to fetch catalog',
+  loadingCatalog: 'Loading catalog...',
+  myPublishedStories: 'My Published Stories',
+  noMyPublishedStories: 'You haven\'t published any stories yet.',
+  tutorialPublish: 'Tap the publish button to share your story with others',
+  tutorialLike: 'Tap the heart to like stories you enjoy',
+  tutorialCatalog: 'Browse and discover stories from other learners',
+
+  // Deep linking
+  deepLinkShareTitle: 'Share Story',
+  deepLinkShareMessage: 'Check out this story: "{0}"',
+  deepLinkAppLink: '📱 Open in app',
+  deepLinkWebLink: '🌐 Or read online',
+  deepLinkCopied: 'Deep link copied to clipboard!',
+  deepLinkError: 'Failed to create deep link',
+
+  // Catalog filters
+  allLanguages: 'All Languages',
+  allDifficulties: 'All Difficulties',
+  filters: 'Filters',
+  language: 'Language',
+  difficulty: 'Difficulty',
+  clearFilters: 'Clear Filters',
 }; 

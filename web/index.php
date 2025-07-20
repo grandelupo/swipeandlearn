@@ -1575,6 +1575,7 @@ $t = $translations[$lang];
                         <li><a href="privacy.php?lang=<?php echo $lang; ?>"><?php echo $t['footer_privacy_policy']; ?></a></li>
                         <li><a href="terms.php?lang=<?php echo $lang; ?>"><?php echo $t['footer_terms_service']; ?></a></li>
                         <li><a href="#coming-soon"><?php echo $t['nav_join_waitlist']; ?></a></li>
+                        <li><a href="influencer-login.php">Influencer Dashboard</a></li>
                     </ul>
                 </div>
                 

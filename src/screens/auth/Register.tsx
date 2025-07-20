@@ -7,6 +7,7 @@ import {
   Platform,
   TouchableOpacity,
   Text as RNText,
+  ScrollView,
 } from 'react-native';
 import { Input, Text } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
@@ -26,6 +27,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | null>(null);
   const [isConverting, setIsConverting] = useState(false);
@@ -91,26 +93,49 @@ export default function RegisterScreen() {
         } else {
           throw new Error(t('errorConvertingAccount'));
         }
-      } else {
-        // Regular registration for non-guest users
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        
-        if (error) throw error;
-        
-        if (data.session) {
-          // User is immediately signed in
-          return;
+              } else {
+          // Regular registration for non-guest users
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+          });
+          
+          if (error) throw error;
+          
+          if (data.session && data.user) {
+            // Apply referral code if provided
+            if (referralCode.trim()) {
+              try {
+                const { data: referralResult, error: referralError } = await supabase.rpc(
+                  'use_referral_code',
+                  {
+                    referral_code: referralCode.trim().toUpperCase(),
+                    new_user_id: data.user.id
+                  }
+                );
+                
+                if (referralError) {
+                  console.error('Referral code error:', referralError);
+                } else if (referralResult) {
+                  console.log('Referral code applied successfully');
+                } else {
+                  console.log('Invalid referral code');
+                }
+              } catch (referralError) {
+                console.error('Error applying referral code:', referralError);
+              }
+            }
+            
+            // User is immediately signed in
+            return;
+          }
+          
+          Alert.alert(
+            t('register'),
+            t('registrationSuccess'),
+            [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+          );
         }
-        
-        Alert.alert(
-          t('register'),
-          t('registrationSuccess'),
-          [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-        );
-      }
     } catch (error: any) {
       Alert.alert(t('error'), error.message || t('errorUnknown'));
     } finally {
@@ -188,6 +213,29 @@ export default function RegisterScreen() {
             migrationMessage,
             [{ text: 'OK' }]
           );
+        } else if (newUser) {
+          // Apply referral code for new OAuth users
+          if (referralCode.trim()) {
+            try {
+              const { data: referralResult, error: referralError } = await supabase.rpc(
+                'use_referral_code',
+                {
+                  referral_code: referralCode.trim().toUpperCase(),
+                  new_user_id: newUser.id
+                }
+              );
+              
+              if (referralError) {
+                console.error('Referral code error:', referralError);
+              } else if (referralResult) {
+                console.log('Referral code applied successfully');
+              } else {
+                console.log('Invalid referral code');
+              }
+            } catch (referralError) {
+              console.error('Error applying referral code:', referralError);
+            }
+          }
         }
         
         console.log('Google registration successful');
@@ -207,102 +255,123 @@ export default function RegisterScreen() {
       style={styles.outerContainer}
     >
       <AnimatedBackground variant="auth" />
-      <View style={styles.container}>
-        <Text style={styles.title} h3>{t('register')}</Text>
-        <View style={{ height: 32 }} />
-        <View style={styles.inputBox}>
-          {/* Email Row */}
-          <View style={styles.inputRow}>
-            <RNText style={styles.label}>{t('email')}</RNText>
-            <Input
-              inputContainerStyle={styles.inputContainer}
-              inputStyle={styles.input}
-              containerStyle={styles.inputFlex}
-              placeholder="brzeczyski@gmail.com"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              placeholderTextColor={COLORS.bright}
-            />
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          <Text style={styles.title} h3>{t('register')}</Text>
+          <View style={{ height: 16 }} />
+          <View style={styles.inputBox}>
+            {/* Email Row */}
+            <View style={styles.inputRow}>
+              <RNText style={styles.label}>{t('email')}</RNText>
+              <Input
+                inputContainerStyle={styles.inputContainer}
+                inputStyle={styles.input}
+                containerStyle={styles.inputFlex}
+                placeholder="brzeczyski@gmail.com"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholderTextColor={COLORS.bright}
+              />
+            </View>
+            {/* Password Row */}
+            <View style={styles.inputRow}>
+              <RNText style={styles.label}>{t('password')}</RNText>
+              <Input
+                inputContainerStyle={styles.inputContainer}
+                inputStyle={styles.input}
+                containerStyle={styles.inputFlex}
+                placeholder={t('password')}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                placeholderTextColor={COLORS.bright}
+              />
+            </View>
+            {/* Confirm Password Row */}
+            <View style={styles.inputRow}>
+              <RNText style={styles.label}>{t('confirmPassword')}</RNText>
+              <Input
+                inputContainerStyle={styles.inputContainer}
+                inputStyle={styles.input}
+                containerStyle={styles.inputFlex}
+                placeholder={t('confirmPassword')}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                placeholderTextColor={COLORS.bright}
+              />
+            </View>
+            {/* Referral Code Row */}
+            <View style={styles.inputRow}>
+              <RNText style={styles.label}>{t('referral')}</RNText>
+              <Input
+                inputContainerStyle={styles.inputContainer}
+                inputStyle={styles.input}
+                containerStyle={styles.inputFlex}
+                placeholder={t('referralCodePlaceholder')}
+                value={referralCode}
+                onChangeText={setReferralCode}
+                autoCapitalize="characters"
+                placeholderTextColor={COLORS.bright}
+              />
+            </View>
           </View>
-          {/* Password Row */}
-          <View style={styles.inputRow}>
-            <RNText style={styles.label}>{t('password')}</RNText>
-            <Input
-              inputContainerStyle={styles.inputContainer}
-              inputStyle={styles.input}
-              containerStyle={styles.inputFlex}
-              placeholder={t('password')}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              placeholderTextColor={COLORS.bright}
-            />
-          </View>
-          {/* Confirm Password Row */}
-          <View style={styles.inputRow}>
-            <RNText style={styles.label}>{t('confirmPassword')}</RNText>
-            <Input
-              inputContainerStyle={styles.inputContainer}
-              inputStyle={styles.input}
-              containerStyle={styles.inputFlex}
-              placeholder={t('confirmPassword')}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              autoCapitalize="none"
-              placeholderTextColor={COLORS.bright}
-            />
-          </View>
-        </View>
-        <View style={{ height: 24 }} />
-        <TouchableOpacity
-          style={styles.signUpButton}
-          onPress={handleRegister}
-          disabled={loading || isConverting}
-        >
-          <Text style={styles.signUpText}>
-            {isConverting ? t('convertingAccount') : t('signUp')}
-          </Text>
-          <View style={styles.arrowCircle}>
-            <Ionicons name="arrow-forward" size={24} color={COLORS.background} />
-          </View>
-        </TouchableOpacity>
-
-        {/* Divider */}
-        <View style={styles.dividerContainer}>
-          <View style={styles.dividerLine} />
-          <RNText style={styles.dividerText}>{t('or')}</RNText>
-          <View style={styles.dividerLine} />
-        </View>
-
-        {/* OAuth Buttons */}
-        <View style={styles.oauthContainer}>
+          <View style={{ height: 16 }} />
           <TouchableOpacity
-            style={[styles.oauthButton, styles.googleButton]}
-            onPress={handleGoogleRegister}
-            disabled={oauthLoading === 'google' || isConverting}
+            style={styles.signUpButton}
+            onPress={handleRegister}
+            disabled={loading || isConverting}
           >
-            <Ionicons 
-              name="logo-google" 
-              size={24} 
-              color={COLORS.accent} 
-              style={styles.oauthIcon} 
-            />
-            <RNText style={styles.oauthButtonText}>
-              {oauthLoading === 'google' ? t('loading') : t('continueWithGoogle')}
-            </RNText>
+            <Text style={styles.signUpText}>
+              {isConverting ? t('convertingAccount') : t('signUp')}
+            </Text>
+            <View style={styles.arrowCircle}>
+              <Ionicons name="arrow-forward" size={24} color={COLORS.background} />
+            </View>
           </TouchableOpacity>
-        </View>
 
-        <View style={styles.bottomLinksContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <RNText style={styles.linkText}>{t('alreadyHaveAccount')}</RNText>
-          </TouchableOpacity>
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <RNText style={styles.dividerText}>{t('or')}</RNText>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* OAuth Buttons */}
+          <View style={styles.oauthContainer}>
+            <TouchableOpacity
+              style={[styles.oauthButton, styles.googleButton]}
+              onPress={handleGoogleRegister}
+              disabled={oauthLoading === 'google' || isConverting}
+            >
+              <Ionicons 
+                name="logo-google" 
+                size={24} 
+                color={COLORS.accent} 
+                style={styles.oauthIcon} 
+              />
+              <RNText style={styles.oauthButtonText}>
+                {oauthLoading === 'google' ? t('loading') : t('continueWithGoogle')}
+              </RNText>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.bottomLinksContainer}>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <RNText style={styles.linkText}>{t('alreadyHaveAccount')}</RNText>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -312,25 +381,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
   container: {
     flex: 1,
     zIndex: 1,
-    paddingHorizontal: 32,
-    paddingTop: 80,
+    paddingHorizontal: 24,
+    paddingTop: 60,
     justifyContent: 'flex-start',
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: COLORS.primary,
-    marginBottom: 8,
+    marginBottom: 4,
     fontFamily: 'Poppins-Bold',
   },
   inputBox: {
     backgroundColor: COLORS.background,
-    borderRadius: 18,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -340,14 +416,14 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.primary,
     fontWeight: '600',
     fontFamily: 'Poppins-SemiBold',
-    width: 80,
+    width: 70,
     marginRight: 8,
     marginBottom: 0,
   },
@@ -365,7 +441,7 @@ const styles = StyleSheet.create({
     marginBottom: -8,
   },
   input: {
-    fontSize: 16,
+    fontSize: 14,
     color: COLORS.primary,
     fontWeight: '500',
     fontFamily: 'Poppins-Regular',
@@ -375,20 +451,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    marginTop: 16,
+    marginTop: 12,
     backgroundColor: 'transparent',
   },
   signUpText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.primary,
-    marginRight: 16,
+    marginRight: 12,
     fontFamily: 'Poppins-Bold',
   },
   arrowCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: COLORS.accent,
     alignItems: 'center',
     justifyContent: 'center',
@@ -399,21 +475,21 @@ const styles = StyleSheet.create({
   },
   bottomLinksContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 48,
+    justifyContent: 'center',
+    marginTop: 24,
     marginHorizontal: 4,
   },
   linkText: {
     color: COLORS.accent,
     textDecorationLine: 'underline',
     fontWeight: '600',
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Poppins-SemiBold',
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: 16,
   },
   dividerLine: {
     flex: 1,
@@ -423,21 +499,21 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     color: COLORS.bright,
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'Poppins-Regular',
-    marginHorizontal: 16,
+    marginHorizontal: 12,
   },
   oauthContainer: {
-    gap: 12,
-    marginBottom: 24,
+    gap: 8,
+    marginBottom: 16,
   },
   oauthButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: COLORS.bright,
     backgroundColor: COLORS.card,
@@ -451,10 +527,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS.accent,
   },
   oauthIcon: {
-    marginRight: 12,
+    marginRight: 10,
   },
   oauthButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: COLORS.primary,
     fontFamily: 'Poppins-SemiBold',

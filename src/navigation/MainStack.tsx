@@ -6,6 +6,7 @@ import BookshelfScreen from '../screens/Bookshelf';
 import StoryReader from '../screens/StoryReader';
 import NewStoryScreen from '../screens/NewStory';
 import ProfileScreen from '../screens/Profile';
+import CatalogScreen from '../screens/Catalog';
 import { MainStackParamList } from './types';
 import CoinCounter, { CoinCounterRef } from '@/components/CoinCounter';
 import ArchiveScreen from '@/screens/Archive';
@@ -99,6 +100,21 @@ function MainStackContent() {
             </View>
           ),
           title: t('archive'),
+        }}
+      />
+      <Stack.Screen
+        name="Catalog"
+        component={(props: NativeStackScreenProps<MainStackParamList, 'Catalog'>) => (
+          <CatalogScreen {...props} coinCounterRef={coinCounterRef} feedbackButtonRef={feedbackButtonRef} />
+        )}
+        options={{
+          headerRight: () => (
+            <View style={styles.headerRightContainer}>
+              <CoinCounter ref={coinCounterRef} />
+              <FeedbackButton />
+            </View>
+          ),
+          title: t('catalog'),
         }}
       />
     </Stack.Navigator>
