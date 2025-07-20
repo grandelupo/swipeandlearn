@@ -2,282 +2,22 @@
 // Language detection
 function detectLanguage() {
     if (isset($_GET['lang'])) {
-        return $_GET['lang'] === 'pl' ? 'pl' : 'en';
+        if ($_GET['lang'] === 'pl') return 'pl';
+        if ($_GET['lang'] === 'uk') return 'uk';
+        return 'en';
     }
     
     $acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-    return strpos($acceptLanguage, 'pl') !== false ? 'pl' : 'en';
+    if (strpos($acceptLanguage, 'pl') !== false) return 'pl';
+    if (strpos($acceptLanguage, 'uk') !== false) return 'uk';
+    return 'en';
 }
 
 $lang = detectLanguage();
 
-// Translations
-$translations = [
-    'en' => [
-        'title' => 'Swipe and Learn - AI-Powered Language Learning Through Stories',
-        'description' => 'Learn languages through AI-generated personalized stories. Choose from 12 languages, multiple difficulty levels, and famous author writing styles. Coming Soon!',
-        'keywords' => 'language learning, AI stories, vocabulary building, translation app, language education, coming soon',
-        'og_title' => 'Swipe and Learn - AI-Powered Language Learning',
-        'og_description' => 'Revolutionary language learning through AI-generated personalized stories - Coming Soon!',
-        'twitter_title' => 'Swipe and Learn - AI-Powered Language Learning',
-        'twitter_description' => 'Revolutionary language learning through AI-generated personalized stories - Coming Soon!',
-        
-        // Navigation
-        'nav_features' => 'Features',
-        'nav_languages' => 'Languages',
-        'nav_coming_soon' => 'Coming Soon',
-        'nav_faq' => 'FAQ',
-        'nav_privacy' => 'Privacy',
-        'nav_terms' => 'Terms',
-        'nav_join_waitlist' => 'Join Waitlist',
-        
-        // Hero Section
-        'hero_title' => 'Learn Languages Through AI-Generated Stories',
-        'hero_description' => 'Revolutionary language learning that adapts to you. Create personalized stories with your target vocabulary, choose from famous author styles, and learn through immersive storytelling.',
-        'hero_join_waitlist' => 'Join Waitlist',
-        'hero_see_features' => 'See Features',
-        
-        // Features Section
-        'features_title' => 'Powerful Features for Effective Learning',
-        'features_subtitle' => 'Everything you need to master new languages through engaging, personalized content',
-        
-        'feature_stories_title' => 'AI-Generated Stories',
-        'feature_stories_desc' => 'Create unlimited personalized stories in your target language, perfectly tailored to your vocabulary goals and skill level.',
-        
-        'feature_vocabulary_title' => 'Professional Word Packages',
-        'feature_vocabulary_desc' => 'Choose from specialized vocabulary sets for medicine, law, business, technology, and more. Your chosen words are naturally woven into engaging stories.',
-        
-        'feature_translation_title' => 'Instant Translation',
-        'feature_translation_desc' => 'Tap any word for instant translation, double-tap sentences for full translation. Context-aware translations ensure accuracy.',
-        
-        'feature_audio_title' => 'AI-Generated Audiobooks',
-        'feature_audio_desc' => 'Listen to your stories with high-quality AI voices. Multiple voice options including native speakers in various languages and accents.',
-        
-        'feature_authors_title' => 'Famous Author Styles',
-        'feature_authors_desc' => 'Learn through the writing styles of literary masters like Hemingway, Orwell, Terry Pratchett, and more. Each brings their unique voice to your learning.',
-        
-        'feature_personalized_title' => 'Personalized Learning',
-        'feature_personalized_desc' => 'Choose your language, difficulty level from A1 to "Divine", themes, and target vocabulary. Every story is unique and tailored to your learning goals.',
-        
-        // Unique Features
-        'unique_title' => 'What Makes Us Different',
-        'unique_subtitle' => 'Features you won\'t find anywhere else in language learning',
-        
-        'unique_divine_title' => '"Divine" Difficulty Level',
-        'unique_divine_desc' => 'Beyond traditional levels - master archaic forms, complex metaphysical concepts, and literary devices that challenge even native speakers.',
-        
-        'unique_authors_title' => 'Famous Author Styles',
-        'unique_authors_desc' => 'Learn through the lens of literary masters like Hemingway, Orwell, Terry Pratchett, and more. Each brings their unique voice to your learning.',
-        
-        'unique_professional_title' => 'Professional Word Packages',
-        'unique_professional_desc' => 'Specialized vocabulary sets for medicine, law, business, technology, and more. Perfect for career-focused language learning.',
-        
-        'unique_ai_title' => 'Context-Aware AI',
-        'unique_ai_desc' => 'Our AI understands word position and context, providing more accurate translations and definitions than traditional apps.',
-        
-        // Languages
-        'languages_title' => '12 Languages Supported',
-        'languages_subtitle' => 'From beginner to native-level proficiency across major world languages',
-        
-        // Coming Soon
-        'coming_soon_title' => 'Coming Soon!',
-        'coming_soon_desc' => 'Swipe and Learn is currently in development. Join our waitlist to be the first to know when we launch.',
-        'waitlist_form_title' => 'Join the Waitlist',
-        'waitlist_form_desc' => 'Be among the first to experience revolutionary AI-powered language learning',
-        'waitlist_email_label' => 'Email Address',
-        'waitlist_email_placeholder' => 'your@email.com',
-        'waitlist_name_label' => 'Name (Optional)',
-        'waitlist_name_placeholder' => 'Your name',
-        'waitlist_language_label' => 'Preferred Language to Learn',
-        'waitlist_language_placeholder' => 'e.g. Spanish, French, German...',
-        'waitlist_submit' => 'Join Waitlist',
-        
-        // FAQ
-        'faq_title' => 'Frequently Asked Questions',
-        'faq_subtitle' => 'Everything you need to know about Swipe and Learn',
-        
-        'faq_when_q' => 'When will Swipe and Learn be available?',
-        'faq_when_a' => 'We\'re currently in active development and plan to launch in 2024. Join our waitlist to be the first to know when we\'re ready for beta testing and the official launch.',
-        
-        'faq_ai_q' => 'How does the AI story generation work?',
-        'faq_ai_a' => 'Our AI uses advanced language models (GPT-4 and Grok) to create personalized stories based on your chosen difficulty level, target vocabulary, and preferred author style. The AI carefully weaves your target words into engaging narratives that feel natural and contextually appropriate.',
-        
-        'faq_divine_q' => 'What makes the "Divine" difficulty level special?',
-        'faq_divine_a' => 'The Divine level goes beyond traditional language learning. It features archaic forms, complex metaphysical concepts, and intricate literary devices that challenge even educated native speakers. It\'s perfect for those who want to master the deepest nuances of a language.',
-        
-        'faq_free_q' => 'Will there be a free version?',
-        'faq_free_a' => 'Yes! We plan to offer a freemium model with a coin system. You\'ll get free coins to start, and basic features will be available for free. Premium features like cover image generation, advanced voices, and unlimited story creation will require coins, which can be earned or purchased.',
-        
-        'faq_authors_q' => 'What author styles will be available?',
-        'faq_authors_a' => 'You\'ll be able to choose from various famous author styles including Ernest Hemingway (concise, powerful), Terry Pratchett (witty, satirical), Douglas Adams (absurdist humor), George Orwell (clear, political), Joan Didion (elegant, psychological), and many more. Each style brings unique linguistic patterns to your learning.',
-        
-        'faq_professional_q' => 'Can I learn professional vocabulary?',
-        'faq_professional_a' => 'Absolutely! We\'ll offer specialized word packages for various fields including medicine, law, business, technology, engineering, psychology, and more. These packages contain industry-specific vocabulary that gets naturally integrated into your stories.',
-        
-        'faq_platforms_q' => 'Which platforms will be supported?',
-        'faq_platforms_a' => 'Swipe and Learn will be available on both iOS and Android devices. We\'re building with React Native to ensure a consistent, high-quality experience across both platforms.',
-        
-        'faq_updates_q' => 'How can I stay updated on the development?',
-        'faq_updates_a' => 'Join our waitlist to receive email updates about our progress, beta testing opportunities, and launch announcement. You can also follow the development on our GitHub repository and visit the developer\'s portfolio for updates.',
-        
-        // Footer
-        'footer_description' => 'Revolutionary AI-powered language learning through personalized storytelling. Master new languages with engaging, contextual content tailored to your goals.',
-        'footer_developer' => 'Full-Stack Developer & Creator',
-        'footer_portfolio' => 'Visit Portfolio →',
-        'footer_features' => 'Features',
-        'footer_support' => 'Support',
-        'footer_connect' => 'Connect',
-        'footer_copyright' => '2024 Swipe and Learn. Created by',
-        'footer_rights' => 'All rights reserved.',
-        
-        // Footer Links
-        'footer_ai_stories' => 'AI Story Generation',
-        'footer_translation' => 'Instant Translation',
-        'footer_audiobooks' => 'Audio Books',
-        'footer_dictionary' => 'Dictionary Integration',
-        'footer_author_styles' => 'Author Styles',
-        'footer_professional_vocab' => 'Professional Vocabulary',
-        'footer_contact_support' => 'Contact Support',
-        'footer_privacy_policy' => 'Privacy Policy',
-        'footer_terms_service' => 'Terms of Service',
-        'footer_github' => 'GitHub',
-        'footer_developer_portfolio' => 'Developer Portfolio',
-        'footer_email_developer' => 'Email Developer',
-    ],
-    'pl' => [
-        'title' => 'Swipe and Learn - Nauka Języków z AI przez Opowiadania',
-        'description' => 'Ucz się języków przez personalizowane opowiadania generowane przez AI. Wybieraj spośród 12 języków, wielu poziomów trudności i stylów słynnych autorów. Już wkrótce!',
-        'keywords' => 'nauka języków, opowiadania AI, budowanie słownictwa, aplikacja do tłumaczeń, edukacja językowa, już wkrótce',
-        'og_title' => 'Swipe and Learn - Nauka Języków z AI',
-        'og_description' => 'Rewolucyjna nauka języków przez personalizowane opowiadania generowane przez AI - Już wkrótce!',
-        'twitter_title' => 'Swipe and Learn - Nauka Języków z AI',
-        'twitter_description' => 'Rewolucyjna nauka języków przez personalizowane opowiadania generowane przez AI - Już wkrótce!',
-        
-        // Navigation
-        'nav_features' => 'Funkcje',
-        'nav_languages' => 'Języki',
-        'nav_coming_soon' => 'Już Wkrótce',
-        'nav_faq' => 'FAQ',
-        'nav_privacy' => 'Prywatność',
-        'nav_terms' => 'Regulamin',
-        'nav_join_waitlist' => 'Dołącz do Listy',
-        
-        // Hero Section
-        'hero_title' => 'Ucz się Języków przez Opowiadania Generowane przez AI',
-        'hero_description' => 'Rewolucyjna nauka języków, która dostosowuje się do Ciebie. Twórz personalizowane opowiadania z docelowym słownictwem, wybieraj style słynnych autorów i ucz się przez immersyjne narracje.',
-        'hero_join_waitlist' => 'Dołącz do Listy',
-        'hero_see_features' => 'Zobacz Funkcje',
-        
-        // Features Section
-        'features_title' => 'Potężne Funkcje dla Skutecznej Nauki',
-        'features_subtitle' => 'Wszystko czego potrzebujesz do opanowania nowych języków przez angażujące, personalizowane treści',
-        
-        'feature_stories_title' => 'Opowiadania Generowane przez AI',
-        'feature_stories_desc' => 'Twórz nieograniczoną liczbę personalizowanych opowiadań w docelowym języku, idealnie dopasowanych do Twoich celów słownikowych i poziomu umiejętności.',
-        
-        'feature_vocabulary_title' => 'Profesjonalne Pakiety Słów',
-        'feature_vocabulary_desc' => 'Wybieraj ze specjalistycznych zestawów słownictwa dla medycyny, prawa, biznesu, technologii i więcej. Twoje wybrane słowa są naturalnie wplecione w angażujące opowiadania.',
-        
-        'feature_translation_title' => 'Natychmiastowe Tłumaczenie',
-        'feature_translation_desc' => 'Dotknij dowolnego słowa dla natychmiastowego tłumaczenia, podwójnie dotknij zdania dla pełnego tłumaczenia. Kontekstowe tłumaczenia zapewniają dokładność.',
-        
-        'feature_audio_title' => 'Audiobooki Generowane przez AI',
-        'feature_audio_desc' => 'Słuchaj swoich opowiadań z wysokiej jakości głosami AI. Wiele opcji głosowych, w tym rodzimi mówcy w różnych językach i akcentach.',
-        
-        'feature_authors_title' => 'Style Słynnych Autorów',
-        'feature_authors_desc' => 'Ucz się przez style pisarskie mistrzów literatury jak Hemingway, Orwell, Terry Pratchett i wielu innych. Każdy wnosi swój unikalny głos do Twojej nauki.',
-        
-        'feature_personalized_title' => 'Personalizowana Nauka',
-        'feature_personalized_desc' => 'Wybierz język, poziom trudności od A1 do "Boskiego", tematy i docelowe słownictwo. Każde opowiadanie jest unikalne i dostosowane do Twoich celów nauki.',
-        
-        // Unique Features
-        'unique_title' => 'Co Nas Wyróżnia',
-        'unique_subtitle' => 'Funkcje, których nie znajdziesz nigdzie indziej w nauce języków',
-        
-        'unique_divine_title' => 'Poziom Trudności "Boski"',
-        'unique_divine_desc' => 'Poza tradycyjnymi poziomami - opanuj archaiczne formy, złożone koncepcje metafizyczne i środki stylistyczne, które stanowią wyzwanie nawet dla rodzimych mówców.',
-        
-        'unique_authors_title' => 'Style Słynnych Autorów',
-        'unique_authors_desc' => 'Ucz się przez pryzmat mistrzów literatury jak Hemingway, Orwell, Terry Pratchett i wielu innych. Każdy wnosi swój unikalny głos do Twojej nauki.',
-        
-        'unique_professional_title' => 'Profesjonalne Pakiety Słów',
-        'unique_professional_desc' => 'Specjalistyczne zestawy słownictwa dla medycyny, prawa, biznesu, technologii i więcej. Idealne dla nauki języka ukierunkowanej na karierę.',
-        
-        'unique_ai_title' => 'AI Świadome Kontekstu',
-        'unique_ai_desc' => 'Nasze AI rozumie pozycję słów i kontekst, zapewniając dokładniejsze tłumaczenia i definicje niż tradycyjne aplikacje.',
-        
-        // Languages
-        'languages_title' => '12 Obsługiwanych Języków',
-        'languages_subtitle' => 'Od poziomu początkującego do biegłości na poziomie rodzimego mówcy w głównych językach świata',
-        
-        // Coming Soon
-        'coming_soon_title' => 'Już Wkrótce!',
-        'coming_soon_desc' => 'Swipe and Learn jest obecnie w fazie rozwoju. Dołącz do naszej listy oczekujących, aby być pierwszym, który dowie się o naszym uruchomieniu.',
-        'waitlist_form_title' => 'Dołącz do Listy Oczekujących',
-        'waitlist_form_desc' => 'Bądź wśród pierwszych, którzy doświadczą rewolucyjnej nauki języków z AI',
-        'waitlist_email_label' => 'Adres Email',
-        'waitlist_email_placeholder' => 'twoj@email.com',
-        'waitlist_name_label' => 'Imię (Opcjonalne)',
-        'waitlist_name_placeholder' => 'Twoje imię',
-        'waitlist_language_label' => 'Preferowany Język do Nauki',
-        'waitlist_language_placeholder' => 'np. Hiszpański, Francuski, Niemiecki...',
-        'waitlist_submit' => 'Dołącz do Listy',
-        
-        // FAQ
-        'faq_title' => 'Często Zadawane Pytania',
-        'faq_subtitle' => 'Wszystko co musisz wiedzieć o Swipe and Learn',
-        
-        'faq_when_q' => 'Kiedy Swipe and Learn będzie dostępne?',
-        'faq_when_a' => 'Obecnie jesteśmy w aktywnej fazie rozwoju i planujemy uruchomienie w 2024 roku. Dołącz do naszej listy oczekujących, aby być pierwszym, który dowie się o gotowości do testów beta i oficjalnego uruchomienia.',
-        
-        'faq_ai_q' => 'Jak działa generowanie opowiadań przez AI?',
-        'faq_ai_a' => 'Nasze AI używa zaawansowanych modeli językowych (GPT-4 i Grok) do tworzenia personalizowanych opowiadań na podstawie wybranego poziomu trudności, docelowego słownictwa i preferowanego stylu autora. AI starannie wplata Twoje docelowe słowa w angażujące narracje, które wydają się naturalne i kontekstowo odpowiednie.',
-        
-        'faq_divine_q' => 'Co czyni poziom trudności "Boski" wyjątkowym?',
-        'faq_divine_a' => 'Poziom Boski wykracza poza tradycyjną naukę języków. Zawiera archaiczne formy, złożone koncepcje metafizyczne i skomplikowane środki stylistyczne, które stanowią wyzwanie nawet dla wykształconych rodzimych mówców. Jest idealny dla tych, którzy chcą opanować najgłębsze niuanse języka.',
-        
-        'faq_free_q' => 'Czy będzie darmowa wersja?',
-        'faq_free_a' => 'Tak! Planujemy oferować model freemium z systemem monet. Otrzymasz darmowe monety na start, a podstawowe funkcje będą dostępne za darmo. Funkcje premium jak generowanie okładek, zaawansowane głosy i nieograniczone tworzenie opowiadań będą wymagać monet, które można zdobyć lub kupić.',
-        
-        'faq_authors_q' => 'Jakie style autorów będą dostępne?',
-        'faq_authors_a' => 'Będziesz mógł wybierać z różnych stylów słynnych autorów, włączając Ernesta Hemingwaya (zwięzły, mocny), Terry\'ego Pratchetta (dowcipny, satyryczny), Douglasa Adamsa (absurdalny humor), George\'a Orwella (jasny, polityczny), Joan Didion (elegancki, psychologiczny) i wielu innych. Każdy styl wnosi unikalne wzorce językowe do Twojej nauki.',
-        
-        'faq_professional_q' => 'Czy mogę uczyć się profesjonalnego słownictwa?',
-        'faq_professional_a' => 'Absolutnie! Będziemy oferować specjalistyczne pakiety słów dla różnych dziedzin, włączając medycynę, prawo, biznes, technologię, inżynierię, psychologię i więcej. Te pakiety zawierają słownictwo specyficzne dla branży, które naturalnie integruje się z Twoimi opowiadaniami.',
-        
-        'faq_platforms_q' => 'Które platformy będą obsługiwane?',
-        'faq_platforms_a' => 'Swipe and Learn będzie dostępne na urządzeniach iOS i Android. Budujemy z React Native, aby zapewnić spójne, wysokiej jakości doświadczenie na obu platformach.',
-        
-        'faq_updates_q' => 'Jak mogę być na bieżąco z rozwojem?',
-        'faq_updates_a' => 'Dołącz do naszej listy oczekujących, aby otrzymywać emailowe aktualizacje o naszym postępie, możliwościach testów beta i ogłoszeniu uruchomienia. Możesz też śledzić rozwój w naszym repozytorium GitHub i odwiedzać portfolio developera dla aktualizacji.',
-        
-        // Footer
-        'footer_description' => 'Rewolucyjna nauka języków z AI przez personalizowane narracje. Opanuj nowe języki z angażującymi, kontekstowymi treściami dostosowanymi do Twoich celów.',
-        'footer_developer' => 'Full-Stack Developer i Twórca',
-        'footer_portfolio' => 'Odwiedź Portfolio →',
-        'footer_features' => 'Funkcje',
-        'footer_support' => 'Wsparcie',
-        'footer_connect' => 'Kontakt',
-        'footer_copyright' => '2024 Swipe and Learn. Stworzone przez',
-        'footer_rights' => 'Wszystkie prawa zastrzeżone.',
-        
-        // Footer Links
-        'footer_ai_stories' => 'Generowanie Opowiadań AI',
-        'footer_translation' => 'Natychmiastowe Tłumaczenie',
-        'footer_audiobooks' => 'Audiobooki',
-        'footer_dictionary' => 'Integracja ze Słownikiem',
-        'footer_author_styles' => 'Style Autorów',
-        'footer_professional_vocab' => 'Profesjonalne Słownictwo',
-        'footer_contact_support' => 'Kontakt z Wsparciem',
-        'footer_privacy_policy' => 'Polityka Prywatności',
-        'footer_terms_service' => 'Regulamin',
-        'footer_github' => 'GitHub',
-        'footer_developer_portfolio' => 'Portfolio Developera',
-        'footer_email_developer' => 'Email do Developera',
-    ]
-];
-
-$t = $translations[$lang];
+// Load translations from separate files
+$translationsPath = __DIR__ . '/translations/';
+$t = include $translationsPath . $lang . '.php';
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>">
@@ -1160,6 +900,7 @@ $t = $translations[$lang];
     <div class="language-switcher">
         <a href="?lang=en" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">EN</a>
         <a href="?lang=pl" class="<?php echo $lang === 'pl' ? 'active' : ''; ?>">PL</a>
+        <a href="?lang=uk" class="<?php echo $lang === 'uk' ? 'active' : ''; ?>">UK</a>
     </div>
 
     <!-- Header -->
@@ -1196,6 +937,7 @@ $t = $translations[$lang];
         <div class="mobile-language-switcher">
             <a href="?lang=en" class="<?php echo $lang === 'en' ? 'active' : ''; ?>">EN</a>
             <a href="?lang=pl" class="<?php echo $lang === 'pl' ? 'active' : ''; ?>">PL</a>
+            <a href="?lang=uk" class="<?php echo $lang === 'uk' ? 'active' : ''; ?>">UK</a>
         </div>
     </div>
 
@@ -1405,6 +1147,12 @@ $t = $translations[$lang];
                         <img src="assets/images/flags/pl.svg" alt="Polish Flag">
                     </div>
                     <div class="language-name"><?php echo $lang === 'pl' ? 'Polski' : 'Polish'; ?></div>
+                </div>
+                <div class="language-card animate-on-scroll">
+                    <div class="language-flag">
+                        <img src="assets/images/flags/ua.svg" alt="Ukrainian Flag">
+                    </div>
+                    <div class="language-name"><?php echo $lang === 'pl' ? 'Ukraiński' : ($lang === 'uk' ? 'Українська' : 'Ukrainian'); ?></div>
                 </div>
             </div>
         </div>
