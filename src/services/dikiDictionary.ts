@@ -1,4 +1,6 @@
 import { Definition } from '@/components/Dictionary';
+import { DictionaryType } from './dictionary';
+import { getDikiUrl } from './dictionary';
 
 // Helper function to clean up HTML content and handle entities
 function cleanDikiText(text: string): string {
@@ -17,9 +19,11 @@ function cleanDikiText(text: string): string {
     .trim();
 }
 
-async function fetchDikiDefinitions(word: string): Promise<Definition[]> {
+// Change fetchDikiDefinitions to accept dictionaryType
+async function fetchDikiDefinitions(word: string, dictionaryType: DictionaryType = 'diki'): Promise<Definition[]> {
   try {
-    const response = await fetch(`https://www.diki.pl/slownik-angielskiego?q=${encodeURIComponent(word)}`);
+    const url = getDikiUrl(word, dictionaryType);
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error('Failed to fetch from Diki.pl');

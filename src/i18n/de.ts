@@ -166,8 +166,13 @@ export const de = {
   of: 'von',
   dictionary: 'Wörterbuch',
   defaultDictionary: 'Standard',
-  wiktionary: 'Wiktionary',
-  diki: 'Diki (polnisch)',
+  wiktionary: 'Wiktionary (Englisch)',
+  'wiktionary-pl': 'Wiktionary (Polnisch)',
+  diki: 'Diki (Englisch-Polnisch)',
+  'diki-de-pl': 'Diki (Deutsch-Polnisch)',
+  'diki-it-pl': 'Diki (Italienisch-Polnisch)',
+  'diki-es-pl': 'Diki (Spanisch-Polnisch)',
+  'diki-fr-pl': 'Diki (Französisch-Polnisch)',
   wordNotFoundInDictionary: 'Wort im Wörterbuch nicht gefunden',
 
   // Components - AudioPlayer

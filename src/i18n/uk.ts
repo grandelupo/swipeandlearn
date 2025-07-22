@@ -166,8 +166,13 @@ export const uk = {
   of: 'з',
   dictionary: 'Словник',
   defaultDictionary: 'Стандартний',
-  wiktionary: 'Вікісловник',
-  diki: 'Diki (польський)',
+  wiktionary: 'Вікісловник (англійська)',
+  'wiktionary-pl': 'Вікісловник (польська)',
+  diki: 'Diki (англійсько-польський)',
+  'diki-de-pl': 'Diki (німецько-польський)',
+  'diki-it-pl': 'Diki (італійсько-польський)',
+  'diki-es-pl': 'Diki (іспансько-польський)',
+  'diki-fr-pl': 'Diki (французько-польський)',
   wordNotFoundInDictionary: 'Слово не знайдено в словнику',
 
   // Components - AudioPlayer

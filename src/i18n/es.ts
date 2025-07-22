@@ -166,8 +166,13 @@ export const es = {
   of: 'de',
   dictionary: 'Diccionario',
   defaultDictionary: 'Predeterminado',
-  wiktionary: 'Wiktionary',
-  diki: 'Diki (polaco)',
+  wiktionary: 'Wiktionary (inglés)',
+  'wiktionary-pl': 'Wiktionary (polaco)',
+  diki: 'Diki (inglés-polaco)',
+  'diki-de-pl': 'Diki (alemán-polaco)',
+  'diki-it-pl': 'Diki (italiano-polaco)',
+  'diki-es-pl': 'Diki (español-polaco)',
+  'diki-fr-pl': 'Diki (francés-polaco)',
   wordNotFoundInDictionary: 'Palabra no encontrada en el diccionario',
 
   // Components - AudioPlayer

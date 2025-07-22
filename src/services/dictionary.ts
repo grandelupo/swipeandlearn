@@ -6,7 +6,15 @@ import { t } from '@/i18n/translations';
 const ENGLISH_DICTIONARY_API = 'https://api.dictionaryapi.dev/api/v2/entries/en';
 
 // Dictionary types
-export type DictionaryType = 'defaultDictionary' | 'wiktionary' | 'diki';
+export type DictionaryType =
+  | 'defaultDictionary'
+  | 'wiktionary'
+  | 'wiktionary-pl'
+  | 'diki' // English-Polish
+  | 'diki-de-pl'
+  | 'diki-it-pl'
+  | 'diki-es-pl'
+  | 'diki-fr-pl';
 
 // Language codes mapping for Wiktionary
 const WIKTIONARY_LANG_CODES: Record<string, string> = {
@@ -129,21 +137,22 @@ export async function fetchDefinitions(
   dictionaryType: DictionaryType = 'defaultDictionary'
 ): Promise<Definition[]> {
   try {
-    // Use Diki.pl for Polish translations
-    if (dictionaryType === 'diki') {
-      return await fetchDikiDefinitions(word);
+    // Use Diki.pl for Polish translations and bilingual dictionaries
+    if (dictionaryType.startsWith('diki')) {
+      return await fetchDikiDefinitions(word, dictionaryType);
     }
-    
     // Use English dictionary API for English words with default dictionary
     if (language === 'English' && dictionaryType === 'defaultDictionary') {
       return await fetchEnglishDefinitions(word);
     }
-    
     // Use Wiktionary for other languages or when explicitly selected
-    if (dictionaryType === 'wiktionary' || language !== 'English') {
+    if (dictionaryType === 'wiktionary' || (language !== 'English' && dictionaryType !== 'wiktionary-pl')) {
       return await fetchWiktionaryDefinitions(word, language);
     }
-    
+    // Use Polish Wiktionary if selected
+    if (dictionaryType === 'wiktionary-pl') {
+      return await fetchWiktionaryDefinitions(word, 'Polish');
+    }
     throw new Error('Unsupported dictionary type and language combination');
   } catch (error: any) {
     console.error('Error fetching definitions:', {
@@ -191,6 +200,33 @@ export function getAvailableDictionaryTypes(language: string): DictionaryType[] 
   if (language in WIKTIONARY_LANG_CODES) {
     types.push('wiktionary');
   }
+  // For Polish, add more options
+  if (language === 'Polish') {
+    types.push('wiktionary-pl');
+    types.push('diki');
+    types.push('diki-de-pl');
+    types.push('diki-it-pl');
+    types.push('diki-es-pl');
+    types.push('diki-fr-pl');
+  }
   
   return types;
+} 
+
+// Helper to get Diki URL for a given dictionary type
+export function getDikiUrl(word: string, dictionaryType: DictionaryType): string {
+  switch (dictionaryType) {
+    case 'diki':
+      return `https://www.diki.pl/slownik-angielskiego?q=${encodeURIComponent(word)}`;
+    case 'diki-de-pl':
+      return `https://www.diki.pl/slownik-niemieckiego?q=${encodeURIComponent(word)}`;
+    case 'diki-it-pl':
+      return `https://www.diki.pl/slownik-wloskiego?q=${encodeURIComponent(word)}`;
+    case 'diki-es-pl':
+      return `https://www.diki.pl/slownik-hiszpanskiego?q=${encodeURIComponent(word)}`;
+    case 'diki-fr-pl':
+      return `https://www.diki.pl/slownik-francuskiego?q=${encodeURIComponent(word)}`;
+    default:
+      return `https://www.diki.pl/slownik-angielskiego?q=${encodeURIComponent(word)}`;
+  }
 } 

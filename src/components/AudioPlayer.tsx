@@ -24,6 +24,7 @@ interface AudioPlayerProps {
   selectedVoice: VoiceId;
   onPlay: (voiceId: VoiceId) => void;
   availableVoices?: VoiceId[];
+  storyLanguage: string; // ISO code, e.g., 'en', 'de', etc.
 }
 
 const getCountryFlag = (country: 'US' | 'GB' | 'US-African-American' | 'AU') => {
@@ -48,6 +49,7 @@ export default function AudioPlayer({
   selectedVoice,
   onPlay,
   availableVoices = [],
+  storyLanguage,
 }: AudioPlayerProps) {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -57,6 +59,7 @@ export default function AudioPlayer({
   const [showVoices, setShowVoices] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
   const [isVip, setIsVip] = useState(false);
+  const [voiceFilter, setVoiceFilter] = useState<'all' | 'story'>('all');
   
   const soundRef = useRef(sound);
   soundRef.current = sound;
@@ -219,7 +222,8 @@ export default function AudioPlayer({
   };
 
   const availableVoicesList = AVAILABLE_VOICES.filter(voice => 
-    (!voice.requiresVip || isVip)
+    (!voice.requiresVip || isVip) &&
+    (voiceFilter === 'all' || voice.language === storyLanguage)
   );
 
   const selectedVoiceData = AVAILABLE_VOICES.find(v => v.id === selectedVoice);
@@ -348,6 +352,20 @@ export default function AudioPlayer({
         screenName="audio_player"
         steps={audioPlayerTutorialSteps}
       />
+      <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
+        <TouchableOpacity
+          style={[styles.voiceFilterButton, voiceFilter === 'all' && styles.voiceFilterButtonActive]}
+          onPress={() => setVoiceFilter('all')}
+        >
+          <Text style={[styles.voiceFilterText, voiceFilter === 'all' && styles.voiceFilterTextActive]}>All Voices</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.voiceFilterButton, voiceFilter === 'story' && styles.voiceFilterButtonActive]}
+          onPress={() => setVoiceFilter('story')}
+        >
+          <Text style={[styles.voiceFilterText, voiceFilter === 'story' && styles.voiceFilterTextActive]}>Story Language</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -543,5 +561,23 @@ const styles = StyleSheet.create({
   },
   countryFlag: {
     fontSize: 16,
+  },
+  voiceFilterButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: COLORS.brighter,
+    marginHorizontal: 4,
+  },
+  voiceFilterButtonActive: {
+    backgroundColor: COLORS.accent,
+  },
+  voiceFilterText: {
+    color: COLORS.primary,
+    fontFamily: 'Poppins-SemiBold',
+    fontSize: 14,
+  },
+  voiceFilterTextActive: {
+    color: COLORS.card,
   },
 }); 

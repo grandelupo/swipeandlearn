@@ -166,8 +166,13 @@ export const en = {
   of: 'of',
   dictionary: 'Dictionary',
   defaultDictionary: 'Default',
-  wiktionary: 'Wiktionary',
-  diki: 'Diki (polski)',
+  wiktionary: 'Wiktionary (English)',
+  'wiktionary-pl': 'Wiktionary (Polish)',
+  diki: 'Diki (English-Polish)',
+  'diki-de-pl': 'Diki (German-Polish)',
+  'diki-it-pl': 'Diki (Italian-Polish)',
+  'diki-es-pl': 'Diki (Spanish-Polish)',
+  'diki-fr-pl': 'Diki (French-Polish)',
   wordNotFoundInDictionary: 'Word not found in dictionary',
 
   // Components - AudioPlayer

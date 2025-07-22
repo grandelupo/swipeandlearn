@@ -169,8 +169,13 @@ export const pl = {
   of: 'z',
   dictionary: 'Słownik',
   defaultDictionary: 'Domyślny',
-  wiktionary: 'Wikisłownik',
-  diki: 'Diki (polski)',
+  wiktionary: 'Wikisłownik (angielski)',
+  'wiktionary-pl': 'Wikisłownik (polski)',
+  diki: 'Diki (angielsko-polski)',
+  'diki-de-pl': 'Diki (niemiecko-polski)',
+  'diki-it-pl': 'Diki (włosko-polski)',
+  'diki-es-pl': 'Diki (hiszpańsko-polski)',
+  'diki-fr-pl': 'Diki (francusko-polski)',
   wordNotFoundInDictionary: 'Słowo nie znalezione w słowniku',
 
   // Components - AudioPlayer
