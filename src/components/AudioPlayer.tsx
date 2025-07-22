@@ -42,6 +42,15 @@ const getCountryFlag = (country: 'US' | 'GB' | 'US-African-American' | 'AU') => 
   }
 };
 
+const LANGUAGE_DISPLAY_NAMES: Record<string, string> = {
+  English: t('english'),
+  German: t('german'),
+  Italian: t('italian'),
+  Spanish: t('spanish'),
+  Polish: t('polish'),
+  Ukrainian: t('ukrainian'),
+};
+
 export default function AudioPlayer({
   audioUrl,
   isLoading,
@@ -341,7 +350,7 @@ export default function AudioPlayer({
                     <Icon name="check-circle" size={16} color={COLORS.accent} />
                   )}
                 </View>
-                <Text style={styles.voiceDescription}>{t(`voice${voice.name}`)}</Text>
+                <Text style={styles.voiceDescription}>{t(`voice${voice.name}Description`)}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -352,20 +361,24 @@ export default function AudioPlayer({
         screenName="audio_player"
         steps={audioPlayerTutorialSteps}
       />
-      <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
-        <TouchableOpacity
-          style={[styles.voiceFilterButton, voiceFilter === 'all' && styles.voiceFilterButtonActive]}
-          onPress={() => setVoiceFilter('all')}
-        >
-          <Text style={[styles.voiceFilterText, voiceFilter === 'all' && styles.voiceFilterTextActive]}>All Voices</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.voiceFilterButton, voiceFilter === 'story' && styles.voiceFilterButtonActive]}
-          onPress={() => setVoiceFilter('story')}
-        >
-          <Text style={[styles.voiceFilterText, voiceFilter === 'story' && styles.voiceFilterTextActive]}>Story Language</Text>
-        </TouchableOpacity>
-      </View>
+      {showVoices && (
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
+          <TouchableOpacity
+            style={[styles.voiceFilterButton, voiceFilter === 'all' && styles.voiceFilterButtonActive]}
+            onPress={() => setVoiceFilter('all')}
+          >
+            <Text style={[styles.voiceFilterText, voiceFilter === 'all' && styles.voiceFilterTextActive]}>{t('audioAllVoices')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.voiceFilterButton, voiceFilter === 'story' && styles.voiceFilterButtonActive]}
+            onPress={() => setVoiceFilter('story')}
+          >
+            <Text style={[styles.voiceFilterText, voiceFilter === 'story' && styles.voiceFilterTextActive]}>
+              {t('audioLanguageVoices', LANGUAGE_DISPLAY_NAMES[storyLanguage] || storyLanguage)}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }

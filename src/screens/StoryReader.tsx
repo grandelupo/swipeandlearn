@@ -1232,6 +1232,7 @@ export default function StoryReaderScreen({ route, coinCounterRef }: StoryReader
               selectedVoice={selectedVoice}
               onPlay={generatePageAudio}
               availableVoices={availableVoices}
+              storyLanguage={story.language}
             />
         </View>
       )}

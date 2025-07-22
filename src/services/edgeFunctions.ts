@@ -104,7 +104,7 @@ export async function generateFullStory(params: FullStoryGenerationParams): Prom
 }
 
 export async function generateBookCover(params: { theme: string; title: string; storyId: string }): Promise<string> {
-  const { data, error } = await supabase.functions.invoke('generate-cover', {
+  const { data, error } = await supabase.functions.invoke('generate-image', {
     body: params,
   })
 

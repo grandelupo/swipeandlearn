@@ -191,25 +191,41 @@ export function isDictionaryAvailable(language: string): boolean {
 // Helper function to get available dictionary types for a language
 export function getAvailableDictionaryTypes(language: string): DictionaryType[] {
   const types: DictionaryType[] = [];
-  
-  if (language === 'English') {
-    types.push('defaultDictionary');
-    types.push('diki');
+
+  // Always offer both Wiktionary versions
+  types.push('wiktionary');
+  // types.push('wiktionary-pl'); //temporarily disabled, because it's not working
+
+  // Offer Diki bilingual dictionaries based on story language
+  switch (language) {
+    case 'English':
+      types.push('defaultDictionary');
+      types.push('diki');
+      break;
+    case 'German':
+      types.push('diki-de-pl');
+      break;
+    case 'Italian':
+      types.push('diki-it-pl');
+      break;
+    case 'Spanish':
+      types.push('diki-es-pl');
+      break;
+    case 'French':
+      types.push('diki-fr-pl');
+      break;
+    case 'Polish':
+      types.push('diki');
+      types.push('diki-de-pl');
+      types.push('diki-it-pl');
+      types.push('diki-es-pl');
+      types.push('diki-fr-pl');
+      break;
+    default:
+      // No Diki for other languages
+      break;
   }
-  
-  if (language in WIKTIONARY_LANG_CODES) {
-    types.push('wiktionary');
-  }
-  // For Polish, add more options
-  if (language === 'Polish') {
-    types.push('wiktionary-pl');
-    types.push('diki');
-    types.push('diki-de-pl');
-    types.push('diki-it-pl');
-    types.push('diki-es-pl');
-    types.push('diki-fr-pl');
-  }
-  
+
   return types;
 } 
 
